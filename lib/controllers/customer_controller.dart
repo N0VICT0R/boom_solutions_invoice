@@ -70,16 +70,17 @@ class CustomerController extends GetxController {
   final isLoading = true.obs;
   final errorMessage = ''.obs;
   final salesData = Rx<SalesData?>(null);
-
+   final selectedIndex = Rxn<int>();
+  final Rx<Product?> selectedProduct = Rx<Product?>(null);
   get hasError => null;
 
   @override
   void onInit() {
-    fetchSalesData();
+    fetchSalesData(10); // Replace 5 with the appropriate partnerId value
     super.onInit();
   }
 
-  Future<void> fetchSalesData() async {
+  Future<void> fetchSalesData(partnerId) async {
     try {
       isLoading(true);
       errorMessage('');

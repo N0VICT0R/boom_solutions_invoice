@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 class ThemeController extends GetxController {
   final _box = GetStorage();
   final _isDarkMode = false.obs;
+  
 
   bool get isDarkMode => _isDarkMode.value;
 
@@ -39,16 +40,17 @@ class ThemeController extends GetxController {
 }
 
 class AppColors {
-  static const Color primaryLight = Colors.black;
+  static const Color primaryLight = Color.fromARGB(255, 21, 21, 21);
   static const Color primaryDark = Colors.white;
-  static const Color backgroundLight = Color.fromARGB(237, 255, 255, 255);
-  static const Color backgroundDark = Color(0xff141414);
+  static const Color backgroundLight = Color.fromARGB(239, 249, 249, 255);
+  static const Color backgroundDark = Color(0xff181818);
   static const Color textLight = Colors.black;
   static const Color textDark = Colors.white;
-  static const Color cardLight = Color.fromARGB(255, 255, 255, 255);
+  static const Color cardLight = Colors.white;  
   static Color cardDark =  Color.fromARGB(255, 26, 25, 25);
-  static const Color buttonLight = Colors.black;
-  static Color buttonDark = Colors.black54;
+  static const Color buttonLight = Colors.white;
+  static Color buttonDark = Color.fromARGB(255, 43, 41, 41);
+
   static const Color containerLight = Colors.white70;
   static const Color containerDark = Colors.black54;
 }

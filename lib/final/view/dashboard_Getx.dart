@@ -151,7 +151,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: isDark ? Colors.black : Colors.white,
+        // backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
         title: const Text(
           'Sales Dashboard',
@@ -171,7 +171,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 24.0 : 16.0, vertical: 12.0),
+            horizontal: isTablet ? 24.0 : 10.0, vertical: 12.0),
         child: LayoutBuilder(builder: (context, constraints) {
           return SingleChildScrollView(
             controller: _scrollController,
@@ -193,76 +193,87 @@ class _SalesDashboardState extends State<SalesDashboard> {
                 //     ],
                 //   ),
                 // ),
-                Padding(
-                  padding: const EdgeInsets.all(5.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _formatDateRange(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.grey[100],
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: selectedRange,
-                                icon: const Icon(Icons.keyboard_arrow_down,
-                                    size: 16),
-                                borderRadius: BorderRadius.circular(8),
-                                itemHeight: 48,
-                                elevation: 1,
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      selectedRange = newValue;
-                                      if (newValue == 'custom') {
-                                        _showCustomDatePicker();
-                                      } else {
-                                        _filterDataByTimeRange(newValue);
-                                      }
-                                    });
-                                  }
-                                },
-                                items: [
-                                  DropdownMenuItem(
-                                      value: '7d', child: Text('7 Days')),
-                                  DropdownMenuItem(
-                                      value: '1m', child: Text('1 Month')),
-                                  DropdownMenuItem(
-                                      value: '3m', child: Text('3 Months')),
-                                  DropdownMenuItem(
-                                      value: 'q', child: Text('Quarter')),
-                                  DropdownMenuItem(
-                                      value: '1y', child: Text('Year')),
-                                  DropdownMenuItem(
-                                      value: 'custom', child: Text('Custom')),
-                                ],
+                Container(
+                  // color: Colors.greenAccent,
+                   decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _formatDateRange(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        height: 180, // Reduced height for minimalism
-                        width: double.infinity,
-                        child: displayData.isEmpty
-                            ? const Center(child: Text('No data available'))
-                            : MinimalLineChart(
-                                data: displayData, timeRange: selectedRange),
-                      ),
-                    ],
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                // color: Colors.grey[100],
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: selectedRange,
+                                  icon: const Icon(Icons.keyboard_arrow_down,
+                                      size: 16),
+                                  borderRadius: BorderRadius.circular(8),
+                                  itemHeight: 48,
+                                  elevation: 1,
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        selectedRange = newValue;
+                                        if (newValue == 'custom') {
+                                          _showCustomDatePicker();
+                                        } else {
+                                          _filterDataByTimeRange(newValue);
+                                        }
+                                      });
+                                    }
+                                  },
+                                  items: [
+                                    DropdownMenuItem(
+                                        value: '7d', child: Text('7 Days')),
+                                    DropdownMenuItem(
+                                        value: '1m', child: Text('1 Month')),
+                                    DropdownMenuItem(
+                                        value: '3m', child: Text('3 Months')),
+                                    DropdownMenuItem(
+                                        value: 'q', child: Text('Quarter')),
+                                    DropdownMenuItem(
+                                        value: '1y', child: Text('Year')),
+                                    DropdownMenuItem(
+                                        value: 'custom', child: Text('Custom')),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          height: 180, // Reduced height for minimalism
+                          width: double.infinity,
+                          child: displayData.isEmpty
+                              ? const Center(child: Text('No data available'))
+                              : MinimalLineChart(
+                                  data: displayData, timeRange: selectedRange),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -950,8 +961,8 @@ class _MetricCard extends StatelessWidget {
 
     // Fix: Use valid Colors.grey values
     final Color cardColor = isDark
-        ? (shade % 2 == 0 ? Colors.grey[800]! : Colors.grey[900]!)
-        : (shade % 2 == 0 ? Colors.grey[100]! : Colors.grey[50]!);
+        ? (shade % .5 == 0 ? Colors.grey[800]! : Colors.grey[900]!)
+        : (shade % .5 == 0 ? Colors.white! : Colors.grey[100]!);
 
     return Container(
       decoration: BoxDecoration(
@@ -972,7 +983,7 @@ class _MetricCard extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    // color: isDark ? Colors.grey[400] : Colors.grey[700],
                   ),
             ),
             const SizedBox(height: 6),
@@ -1028,7 +1039,7 @@ class _ActionButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor,
+        // backgroundColor: buttonColor,
         foregroundColor: isDark ? Colors.white : Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
@@ -1038,7 +1049,9 @@ class _ActionButton extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18),
+          Icon(icon, size: 18,
+          color: Colors.grey[600],
+          ),
           const SizedBox(width: 8),
           Text(
             label,

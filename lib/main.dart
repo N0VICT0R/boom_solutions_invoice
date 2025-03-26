@@ -1,8 +1,12 @@
 // import 'package:boom_solutions_invoice/final/view/add_Customers.dart';
+
 import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/screens/CustomerStatementPage.dart';
+import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
 import 'package:boom_solutions_invoice/screens/customer_detail.dart';
-import 'package:boom_solutions_invoice/screens/new1.dart';
+import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
+
+import 'package:boom_solutions_invoice/screens/splashScreen.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,51 +17,57 @@ import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart
 import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 import 'package:boom_solutions_invoice/final/view/auth_Getx.dart';
 import 'package:boom_solutions_invoice/final/view/dashboard_Getx.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// import 'controllers/customer_details_controller.dart';
+import 'CustomerDetail/controllers/CustomerDetailController.dart';
 import 'screens/invoice_detail_screen.dart';
 import 'screens/invoice_list_screen.dart';
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
-
-  // Initialize controllers that need to persist throughout the app's lifecycle
+  await Get.putAsync(() => SharedPreferences.getInstance());
+  
+  // Initialize controllers
+  Get.put(ThemeController());
+  Get.put(AuthController());
+  Get.put(CustomerDetailController());
+  Get.put(CustomerListController());
+  // Controllers that should persist throughout the app
   Get.put(ThemeController(), permanent: true);
-  Get.put(CustomWebViewController(), permanent: true); // Add this line
- final controller = Get.put(SalesController());
+  Get.put(CustomWebViewController(), permanent: true);
+  Get.put(SalesController());
+  
   runApp(InvoiceApp());
 }
 
 class InvoiceApp extends StatelessWidget {
-  InvoiceApp({super.key});
+  InvoiceApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Register other controllers
-   
-    Get.put(CustomerController());
+    // Register additional controllers
     Get.put(DashboardController());
-    Get.lazyPut(() => AuthController());
-
+    Get.put(PartnerController());
+    
     return GetMaterialApp(
       title: 'Invoice App',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: Get.find<ThemeController>().theme,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/splash',
       getPages: [
-        GetPage(name: '/', page: () => SalesDashboard()),
-        // GetPage(name: '/', page: () => TimeSeriesChartPage()),
+        GetPage(name: '/splash', page: () => SplashScreen()),
+        GetPage(name: '/auth', page: () => const AuthScreen()),
+        GetPage(name: '/dashboard', page: () => SalesDashboard()),
+        GetPage(name: '/settings', page: () => SettingsScreen()),
+        GetPage(name: '/login', page: () => const AuthScreen()),
         GetPage(name: '/aaa', page: () => DashboardChartScreen()),
+        GetPage(name: '/PaymentPost', page: () => PaymentPostScreen()),
         GetPage(name: '/a', page: () => CustomerDetailScreen()),
-        GetPage(name: '/settings ', page: () => CustomerDetailScreen()),
-         GetPage(name: '/customers', page: () => CustomersListScreen()),
-        // GetPage(name: '/addCustomer', page: () => CustomerAddPage()),
+        GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
         GetPage(
@@ -68,7 +78,8 @@ class InvoiceApp extends StatelessWidget {
         ),
         GetPage(
           name: '/webView',
-          page: () => WebViewScreen(url: 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F'),
+          page: () => WebViewScreen(
+              url: 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F'),
           transition: Transition.fade,
           preventDuplicates: false,
         ),
@@ -76,5 +87,3 @@ class InvoiceApp extends StatelessWidget {
     );
   }
 }
-
-

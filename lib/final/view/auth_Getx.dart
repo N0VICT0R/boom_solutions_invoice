@@ -1,664 +1,374 @@
-// import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
-// import 'package:boom_solutions_invoice/final/controller/themeController.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_svg/svg.dart';
-// import 'package:get/get.dart';
-// import 'package:flutter/animation.dart';
-
-// class AuthScreen extends StatefulWidget {
-//   const AuthScreen({super.key});
-
-//   @override
-//   State<AuthScreen> createState() => _AuthScreenState();
-// }
-
-// class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
-//   late AnimationController _controller;
-//   late Animation<double> _fadeAnimation;
-//   late Animation<Offset> _slideAnimation;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _controller = AnimationController(
-//       vsync: this,
-//       duration: const Duration(milliseconds: 1000),
-//     );
-
-//     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-//       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-//     );
-
-//     _slideAnimation = Tween<Offset>(
-//       begin: const Offset(0, 0.1),
-//       end: Offset.zero,
-//     ).animate(CurvedAnimation(
-//       parent: _controller,
-//       curve: Curves.fastOutSlowIn,
-//     ));
-
-//     _controller.forward();
-//   }
-
-//   @override
-//   void dispose() {
-//     _controller.dispose();
-//     super.dispose();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Stack(
-//         children: [
-//           // Animated Background
-//           Positioned.fill(
-//             child: AnimatedContainer(
-//               duration: const Duration(milliseconds: 500),
-//               decoration: BoxDecoration(
-//                 gradient: LinearGradient(
-//                   begin: Alignment.topLeft,
-//                   end: Alignment.bottomRight,
-//                   colors: Get.find<ThemeController>().isDarkMode
-//                       ? [const Color.fromARGB(255, 0, 33, 60), ]
-//                       : [const Color.fromARGB(255, 0, 33, 60), Colors.black],
-//                 ),
-//               ),
-//             ),
-//           ),
-
-//           SingleChildScrollView(
-//             padding: const EdgeInsets.all(24),
-//             child: Column(
-//               children: [
-//                 const SizedBox(height: 80),
-//                 // Animated Logo
-//                 FadeTransition(
-//                   opacity: _fadeAnimation,
-//                   child: SlideTransition(
-//                   position: _slideAnimation,
-//                   child: CircleAvatar(
-//                     radius: 55,
-//                     backgroundColor: Colors.transparent,
-//                     child: ClipOval(
-//                     child: SvgPicture.asset(
-//                       "lib/assets/boomLogo.svg",
-//                       fit: BoxFit.cover,
-//                       width: 110,
-//                       height: 110,
-//                     ),
-//                     ),
-//                   ),
-//                   ),
-//                 ),
-
-//                 const SizedBox(height: 40),
-//                 AnimatedAuthCard(),
-
-//                 const SizedBox(height: 30),
-//                 // Social Login
-//                 FadeTransition(
-//                   opacity: _fadeAnimation,
-//                   child: const SocialLoginRow(),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// class AnimatedAuthCard extends StatelessWidget {
-//   final AuthController authController = Get.find();
-
-//   AnimatedAuthCard({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SingleChildScrollView(
-//       child: Obx(() => AnimatedContainer(
-//             duration: const Duration(milliseconds: 400),
-//             curve: Curves.easeInOut,
-//             height: authController.isLogin.value ? 480 : 520,
-//             child: _DashboardCard(
-//               child: Form(
-//                 key: authController.formKey,
-//                 child: Column(
-//                   children: [
-//                     AnimatedSwitcher(
-//                       duration: const Duration(milliseconds: 300),
-//                       child: Text(
-//                         authController.isLogin.value ? 'Welcome Back!' : 'Create Account',
-//                         key: ValueKey(authController.isLogin.value),
-//                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-//                               fontWeight: FontWeight.w800,
-//                               letterSpacing: -0.5,
-//                             ),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 30),
-//                     if (!authController.isLogin.value)
-//                       AnimatedTextField(
-//                         controller: authController.nameController,
-//                         label: 'Full Name',
-//                         icon: Icons.person_outline,
-//                         validator: (value) =>
-//                             value!.isEmpty ? 'Enter your name' : null,
-//                       ),
-//                     AnimatedTextField(
-//                       controller: authController.emailController,
-//                       label: 'Email Address',
-//                       icon: Icons.email_outlined,
-//                       validator: (value) =>
-//                           GetUtils.isEmail(value!) ? null : 'Invalid email',
-//                     ),
-//                     const SizedBox(height: 20),
-//                     AnimatedTextField(
-//                       controller: authController.passwordController,
-//                       label: 'Password',
-//                       icon: Icons.lock_outline,
-//                       obscureText: true,
-//                       validator: (value) => value!.length >= 6
-//                           ? null
-//                           : 'Minimum 6 characters required',
-//                     ),
-//                     const SizedBox(height: 30),
-//                     AnimatedAuthButton(),
-//                     const SizedBox(height: 20),
-//                     AnimatedAuthSwitch(),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           )),
-//     );
-//   }
-// }
-
-// class AnimatedTextField extends StatelessWidget {
-//   final TextEditingController controller;
-//   final String label;
-//   final IconData icon;
-//   final bool obscureText;
-//   final String? Function(String?)? validator;
-
-//   const AnimatedTextField({
-//     super.key,
-//     required this.controller,
-//     required this.label,
-//     required this.icon,
-//     this.obscureText = false,
-//     this.validator,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 8),
-//       child: TextFormField(
-//         controller: controller,
-//         obscureText: obscureText,
-//         validator: validator,
-//         style: Theme.of(context).textTheme.bodyLarge,
-//         decoration: InputDecoration(
-//           labelText: label,
-//           prefixIcon: Icon(icon, size: 22),
-//           border: const UnderlineInputBorder(),
-//           floatingLabelBehavior: FloatingLabelBehavior.auto,
-//           labelStyle: TextStyle(
-//             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// class AnimatedAuthButton extends StatelessWidget {
-//   final AuthController authController = Get.find();
-
-//   AnimatedAuthButton({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SingleChildScrollView(
-//       child: Obx(() => AnimatedContainer(
-//             duration: const Duration(milliseconds: 300),
-//             width: authController.isLoading.value ? 60 : double.infinity,
-//             height: 50,
-//             decoration: BoxDecoration(
-//               borderRadius: BorderRadius.circular(authController.isLoading.value ? 30 : 8),
-//               color: Theme.of(context).primaryColor,
-//             ),
-//             child: Material(
-//               color: Colors.transparent,
-//               child: InkWell(
-//                 borderRadius: BorderRadius.circular(8),
-//                 onTap: authController.isLoading.value
-//                     ? null
-//                     : () => authController.isLogin.value
-//                         ? authController.signIn()
-//                         : authController.signUp(),
-//                 child: AnimatedSwitcher(
-//                   duration: const Duration(milliseconds: 300),
-//                   child: authController.isLoading.value
-//                       ? const Padding(
-//                           padding: EdgeInsets.all(12),
-//                           child: CircularProgressIndicator(color: Colors.white),
-//                         )
-//                       : Center(
-//                           child: Text(
-//                             authController.isLogin.value ? 'Sign In' : 'Register',
-//                             style: const TextStyle(
-//                               color: Colors.white,
-//                               fontSize: 16,
-//                               fontWeight: FontWeight.w600,
-//                             ),
-//                           ),
-//                         ),
-//                 ),
-//               ),
-//             ),
-//           )),
-//     );
-//   }
-// }
-
-// class AnimatedAuthSwitch extends StatelessWidget {
-//   final AuthController authController = Get.find();
-
-//   AnimatedAuthSwitch({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SingleChildScrollView(
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Text(
-//             authController.isLogin.value ? 'New here? ' : 'Have an account? ',
-//             style: TextStyle(color: Theme.of(context).hintColor),
-//           ),
-//           GestureDetector(
-//             onTap: () => authController.toggleAuthMode(),
-//             child: Container(
-//               decoration: BoxDecoration(
-//                 border: Border(
-//                   bottom: BorderSide(
-//                     color: Theme.of(context).hintColor,
-//                     width: 1.5,
-//                   ),
-//                 ),
-//               ),
-//               child: Text(
-//                 authController.isLogin.value ? 'Create Account' : 'Sign In',
-//                 style: TextStyle(
-//                   color: Colors.purple,
-//                   fontWeight: FontWeight.w600,
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-// class _DashboardCard extends StatelessWidget {
-//   final Widget child;
-//   const _DashboardCard({required this.child});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).cardColor,
-//         borderRadius: BorderRadius.circular(12),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.black.withOpacity(0.1),
-//             blurRadius: 6,
-//             offset: const Offset(0, 2),
-//           )
-//         ],
-//       ),
-//       child: Padding(
-//         padding: const EdgeInsets.all(16),
-//         child: child,
-//       ),
-//     );
-//   }
-// }
-
-
-
-
-  
-// }
-
-// // Reuse the existing _DashboardCard widget from previous implementations// auth_screen.dart
-import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
-import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:flutter/animation.dart';
-class SocialLoginRow extends StatelessWidget {
-  const SocialLoginRow({super.key});
+import 'package:boom_solutions_invoice/final/controller/themeController.dart';
+import '../controller/auth_controller.dart';
+
+/// Helper function that returns the current route's animation or a fallback.
+Animation<double> getAnimation(BuildContext context) {
+  final route = ModalRoute.of(context);
+  return route?.animation ?? kAlwaysCompleteAnimation;
+}
+
+class AuthScreen extends StatelessWidget {
+  const AuthScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 24),
-          child: Text('Or continue with'),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            SocialLoginButton(icon: Icons.g_mobiledata, provider: 'Google'),
-            SizedBox(width: 20),
-            SocialLoginButton(icon: Icons.apple, provider: 'Apple'),
-            SizedBox(width: 20),
-            SocialLoginButton(icon: Icons.facebook, provider: 'Facebook'),
-          ],
-        ),
-      ],
-    );
-  }
-}
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
-
-  @override
-  State<AuthScreen> createState() => _AuthScreenState();
-}
-
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.fastOutSlowIn,
-    ));
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-         Positioned.fill(
-  child: AnimatedContainer(
+    final themeController = Get.find<ThemeController>();
     
-    duration: const Duration(milliseconds: 500),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: Get.find<ThemeController>().isDarkMode
-            ? [
-                const Color.fromARGB(255, 0, 33, 60),
-                const Color.fromARGB(255, 0, 33, 60), // Add second color
-              ]
-            : [
-                const Color.fromARGB(255, 0, 33, 60),
-                Colors.black
-              ],
-      ),
-    ),
-  ),
-),
-
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 80),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: CircleAvatar(
-                      radius: 55,
-                      backgroundColor: Colors.transparent,
-                      child: ClipOval(
-                        child: SvgPicture.asset(
-                          "lib/assets/boomLogo.svg",
-                          fit: BoxFit.cover,
-                          width: 110,
-                          height: 110,
-                        ),
-                      ),
+                // Logo with scale animation
+                AnimatedScale(
+                  scale: 1.0,
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.elasticOut,
+                  child: Hero(
+                    tag: 'logo',
+                    child: SvgPicture.asset(
+                      "lib/assets/boomLogo.svg",
+                      width: 120,
+                      height: 120,
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 40),
-                _AuthForm(),
-                const SizedBox(height: 30),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child:  SocialLoginRow(),
+                // Auth form with slide up animation
+                SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.3),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: getAnimation(context),
+                      curve: Curves.easeOutQuart,
+                    ),
+                  ),
+                  child: const _ProfessionalAuthForm(),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Converted _ProfessionalAuthForm to a StatefulWidget to create a local GlobalKey.
+class _ProfessionalAuthForm extends StatefulWidget {
+  const _ProfessionalAuthForm({Key? key}) : super(key: key);
+
+  @override
+  State<_ProfessionalAuthForm> createState() => _ProfessionalAuthFormState();
+}
+
+class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
+  // Create a unique GlobalKey for this instance.
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+    final isDarkMode = Get.find<ThemeController>().isDarkMode;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AuthForm extends StatelessWidget {
-  final AuthController authController = Get.find();
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-       width: MediaQuery.of(context).size.width,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-      height: 400,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            )
+      child: Form(
+        key: _formKey, // Use the locally created key.
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Title with fade animation
+            FadeTransition(
+              opacity: Tween<double>(begin: 0, end: 1).animate(
+                CurvedAnimation(
+                  parent: getAnimation(context),
+                  curve: const Interval(0.3, 0.6, curve: Curves.easeIn),
+                ),
+              ),
+              child: Text(
+                'Welcome Back',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            // Email field with slide animation
+            SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(-0.5, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: getAnimation(context),
+                  curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
+                ),
+              ),
+              child: _ProfessionalEmailField(
+                controller: authController.emailController,
+                isDarkMode: isDarkMode,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Token field with slide animation
+            SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.5, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: getAnimation(context),
+                  curve: const Interval(0.5, 0.8, curve: Curves.easeOut),
+                ),
+              ),
+              child: _ProfessionalTokenField(
+                controller: authController.apiTokenController,
+                isDarkMode: isDarkMode,
+              ),
+            ),
+            const SizedBox(height: 40),
+            // Sign in button with loading animation
+            _ProfessionalSignInButton(),
+            const SizedBox(height: 20),
+            // Forgot token link with fade animation
+            FadeTransition(
+              opacity: Tween<double>(begin: 0, end: 1).animate(
+                CurvedAnimation(
+                  parent: getAnimation(context),
+                  curve: const Interval(0.7, 1.0, curve: Curves.easeIn),
+                ),
+              ),
+              child: _ForgotTokenLink(isDarkMode: isDarkMode),
+            ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: authController.formKey,
-            child: Column(
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    'Welcome Back!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
+      ),
+    );
+  }
+}
+
+class _ProfessionalEmailField extends StatelessWidget {
+  final TextEditingController controller;
+  final bool isDarkMode;
+
+  const _ProfessionalEmailField({
+    Key? key,
+    required this.controller,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      validator: (value) => GetUtils.isEmail(value!) ? null : 'Invalid email',
+      keyboardType: TextInputType.emailAddress,
+      style: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black87,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Enter your email',
+        hintStyle: TextStyle(
+          color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+        ),
+        prefixIcon: Icon(
+          Icons.email_outlined,
+          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        ),
+        filled: true,
+        fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        errorStyle: TextStyle(
+          color: Colors.red[300],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfessionalTokenField extends StatelessWidget {
+  final TextEditingController controller;
+  final bool isDarkMode;
+
+  const _ProfessionalTokenField({
+    Key? key,
+    required this.controller,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      validator: (value) => value!.isEmpty ? 'Enter API token' : null,
+      obscureText: true,
+      style: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black87,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        hintText: 'API Token',
+        hintStyle: TextStyle(
+          color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+        ),
+        prefixIcon: Icon(
+          Icons.vpn_key_outlined,
+          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        ),
+        filled: true,
+        fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        errorStyle: TextStyle(
+          color: Colors.red[300],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfessionalSignInButton extends StatelessWidget {
+  const _ProfessionalSignInButton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+    final isDarkMode = Get.find<ThemeController>().isDarkMode;
+
+    return Obx(() => AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          width: double.infinity,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: authController.isLoading.value
+                ? null
+                : LinearGradient(
+                    colors: [
+                      isDarkMode ? Colors.blueAccent : Colors.blue,
+                      isDarkMode ? Colors.lightBlueAccent : Colors.lightBlue,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+            color: authController.isLoading.value
+                ? (isDarkMode ? Colors.grey[800] : Colors.grey[300])
+                : null,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              if (!authController.isLoading.value)
+                BoxShadow(
+                  color: Colors.blue.withOpacity(isDarkMode ? 0.3 : 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                const SizedBox(height: 30),
-                _AnimatedTextField(
-                  controller: authController.emailController,
-                  label: 'Email Address',
-                  icon: Icons.email_outlined,
-                  validator: (value) =>
-                      GetUtils.isEmail(value!) ? null : 'Invalid email',
-                ),
-                const SizedBox(height: 20),
-                _AnimatedTextField(
-                  controller: authController.apiTokenController,
-                  label: 'API Token',
-                  icon: Icons.vpn_key_outlined,
-                  obscureText: false,
-                  validator: (value) =>
-                      value!.isEmpty ? 'Enter API token' : null,
-                ),
-                const SizedBox(height: 30),
-                _AuthButton(),
-              ],
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: authController.isLoading.value ? null : authController.signIn,
+              splashColor: Colors.white.withOpacity(0.2),
+              highlightColor: Colors.transparent,
+              child: Center(
+                child: authController.isLoading.value
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: isDarkMode ? Colors.white : Colors.blue,
+                        ),
+                      )
+                    : const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+              ),
             ),
           ),
+        ));
+  }
+}
+
+class _ForgotTokenLink extends StatelessWidget {
+  final bool isDarkMode;
+
+  const _ForgotTokenLink({Key? key, required this.isDarkMode}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Contact your system administrator for a new API token.',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      },
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.all(12),
+      ),
+      child: Text(
+        'Forgot your API Token?',
+        style: TextStyle(
+          color: isDarkMode ? Colors.blue[200] : Colors.blue[600],
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 }
-
-class _AnimatedTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final IconData icon;
-  final bool obscureText;
-  final String? Function(String?)? validator;
-
-  const _AnimatedTextField({
-    required this.controller,
-    required this.label,
-    required this.icon,
-    this.obscureText = false,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        validator: validator,
-        style: Theme.of(context).textTheme.bodyLarge,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 22),
-          border: const UnderlineInputBorder(),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
-          labelStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthButton extends StatelessWidget {
-  final AuthController authController = Get.find();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() =>AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-        width: authController.isLoading.value  ? 200.0 : 100.0, 
-      height: 50,
-      
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(
-          authController.isLoading.value ? 30 : 8,
-        ),
-        color: Theme.of(context).primaryColor,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          
-          borderRadius: BorderRadius.circular(8),
-          onTap: authController.isLoading.value 
-              ? null 
-              : authController.signIn,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 3000),
-            child: authController.isLoading.value
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(
-                      color: Colors.black,
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'Sign In',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    ));
-  
-  }
-  
-}
-class SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String provider;
-
-  const SocialLoginButton({
-    super.key,
-    required this.icon,
-    required this.provider,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Sign in with $provider',
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Icon(icon, size: 28),
-          ),
-        ),
-      ),
-    );
-  }}
-// Keep other UI components (SocialLoginRow, etc.) as provided
