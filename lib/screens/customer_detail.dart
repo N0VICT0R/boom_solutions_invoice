@@ -1,8 +1,10 @@
 import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
+import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
@@ -220,6 +222,7 @@ class CustomerListController extends GetxController {
   final filteredPartners = <PartnerList>[].obs;
   final isDarkMode = true.obs;
 
+  // Toggle dark mode.
   void toggleTheme() => isDarkMode.value = !isDarkMode.value;
 
   @override
@@ -228,15 +231,27 @@ class CustomerListController extends GetxController {
     fetchCustomers();
   }
 
+  /// Fetches customers/partners from the API.
   Future<void> fetchCustomers() async {
     try {
       isLoading(true);
       hasError(false);
-      final response = await http.get(Uri.parse('http://137.184.205.67:2710/api/v1/partners?api_token=VKwmwcRzwAIY9ef6A7Gp2qBOISwwPCke&limit=10&page=1&state_id='));
+
+      // Retrieve the saved API token from GetStorage.
+      final token = GetStorage().read('token') ?? '';
+
+      // Build the URL using the token variable.
+      final url = 'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['partners'] is List) {
-          partners.assignAll((data['partners'] as List).map((e) => PartnerList.fromJson(e)).toList());
+          partners.assignAll(
+            (data['partners'] as List)
+                .map((e) => PartnerList.fromJson(e))
+                .toList(),
+          );
           filteredPartners.assignAll(partners);
         }
       } else {
@@ -249,6 +264,7 @@ class CustomerListController extends GetxController {
     }
   }
 
+  /// Filters the partner list based on a search query.
   void searchCustomers(String query) {
     if (query.isEmpty) {
       filteredPartners.assignAll(partners);
@@ -259,11 +275,13 @@ class CustomerListController extends GetxController {
     }
   }
 
+  /// Sorts the partner list alphabetically.
   void sortCustomers() {
     filteredPartners.sort((a, b) => a.name.compareTo(b.name));
   }
 }
 
+/// Controller to manage customer-related sales data.
 class CustomerController extends GetxController {
   final isDarkMode = true.obs;
   final isLoading = true.obs;
@@ -272,13 +290,23 @@ class CustomerController extends GetxController {
   final selectedProduct = Rx<Product?>(null);
   final selectedIndex = Rx<int?>(null);
 
+  @override
+  void onInit() {
+    super.onInit();
+  }
+
+  /// Fetches sales data for a specific partner.
   Future<void> fetchSalesData(int partnerId) async {
     try {
       isLoading(true);
       hasError(false);
 
-      final response = await http.get(Uri.parse(
-          'http://137.184.205.67:2710/api/v1/partners/$partnerId/sales_customer_products_chart?api_token=VKwmwcRzwAIY9ef6A7Gp2qBOISwwPCke'));
+      // Retrieve the saved API token from GetStorage.
+      final token = GetStorage().read('token') ?? '';
+
+      // Build the URL using the token variable.
+      final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/sales_customer_products_chart?api_token=$token';
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         salesData.value = SalesData.fromJson(json.decode(response.body));
@@ -293,11 +321,11 @@ class CustomerController extends GetxController {
     }
   }
 
+  /// Toggle dark mode.
   void toggleTheme() {
     isDarkMode.value = !isDarkMode.value;
   }
 }
-
 //=======================
 // Customer List Screen
 //=======================
@@ -651,15 +679,15 @@ class CustomerDetailScreen extends StatelessWidget {
       // backgroundColor: controller.isDarkMode.value ? Colors.black : Colors.white12,
       elevation: 0,
       actions: [
-        IconButton(
-          icon: Icon(
-            controller.isDarkMode.value
-                ? Icons.light_mode_outlined
-                : Icons.dark_mode_outlined,
-            // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-          ),
-          onPressed: controller.toggleTheme,
-        ),
+        // IconButton(
+        //   icon: Icon(
+        //     controller.isDarkMode.value
+        //         ? Icons.light_mode_outlined
+        //         : Icons.dark_mode_outlined,
+        //     // color: controller.isDarkMode.value ? Colors.white : Colors.black,
+        //   ),
+        //   onPressed: controller.toggleTheme,
+        // ),
       ],
     );
   }
@@ -759,29 +787,31 @@ class Payment extends GetView<CustomerController> {
       if (salesData == null) return Container();
 
       return InkWell(
-        onTap: () => Get.to(() => PaymentPostScreen()),
+        onTap: () {
+
+           final partnerId = Get.arguments['partnerId'];
+  Get.to(() => InvoicePaymentPage(partnerId: partnerId,), arguments: {'partnerId': partnerId});
+        },
         child: _buildCard(
-          height: MediaQuery.of(context).size.height * 0.15,
+          height: MediaQuery.of(context).size.height * 0.10,
           child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                'Make Payment',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  // color: controller.isDarkMode.value ? Colors.white : Colors.black,
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  'Make Payment',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    // color: controller.isDarkMode.value ? Colors.white : Colors.black,
+                  ),
                 ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54,
+                ),
+                // onTap: () => Get.to(() => PaymentPostScreen()),
               ),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54,
-              ),
-              // onTap: () => Get.to(() => PaymentPostScreen()),
-            ),
-          ]),
         ),
       );
     });
@@ -860,7 +890,7 @@ class SalesChart extends GetView<CustomerController> {
 
       return Card(
         child: buildCard(
-          height: MediaQuery.of(context).size.height * 0.75,
+          height: MediaQuery.of(context).size.height * 0.60,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1094,14 +1124,14 @@ class PartnerController extends GetxController {
   var partnerDetails = Rxn<PartnerDetails>();
   var isLoading = true.obs;
   var hasError = false.obs; // Add error state
-
+final token = GetStorage().read('token') ?? '';
   Future<void> fetchPartnerDetails(int partnerId) async {
     try {
       isLoading(true);
       hasError(false);
 
       final response = await http.get(Uri.parse(
-          'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=VKwmwcRzwAIY9ef6A7Gp2qBOISwwPCke'));
+          'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1182,7 +1212,8 @@ class MetricsGrid extends StatelessWidget {
                   title: 'Statement of Account',
                   subtitle: 'View your complete transaction history',
                   onTap: () {
-                    // TODO: Implement navigation
+                       final pdfController = Get.put(PdfController());
+                       pdfController.downloadAndOpenPdf(8, '01-01-2024', '01-01-2027');
                   },
                 ),
 

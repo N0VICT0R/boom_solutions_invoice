@@ -15,8 +15,10 @@ class AuthScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Make sure both ThemeController and AuthController are available via GetX.
     final themeController = Get.find<ThemeController>();
-    
+    Get.put(AuthController()); // Ensures the AuthController is created
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -72,11 +74,9 @@ class _ProfessionalAuthForm extends StatefulWidget {
 }
 
 class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
-  // Create a unique GlobalKey for this instance.
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   @override
   Widget build(BuildContext context) {
+    // Retrieve the controllers using Get.find
     final authController = Get.find<AuthController>();
     final isDarkMode = Get.find<ThemeController>().isDarkMode;
 
@@ -96,8 +96,9 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
           ),
         ],
       ),
+      // Use the controller's form key for validation.
       child: Form(
-        key: _formKey, // Use the locally created key.
+        key: authController.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -189,7 +190,7 @@ class _ProfessionalEmailField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      validator: (value) => GetUtils.isEmail(value!) ? null : 'Invalid email',
+      // validator: (value) => GetUtils.isEmail(value!) ? null : 'Invalid email',
       keyboardType: TextInputType.emailAddress,
       style: TextStyle(
         color: isDarkMode ? Colors.white : Colors.black87,
@@ -272,64 +273,64 @@ class _ProfessionalSignInButton extends StatelessWidget {
     final isDarkMode = Get.find<ThemeController>().isDarkMode;
 
     return Obx(() => AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: authController.isLoading.value
-                ? null
-                : LinearGradient(
-                    colors: [
-                      isDarkMode ? Colors.blueAccent : Colors.blue,
-                      isDarkMode ? Colors.lightBlueAccent : Colors.lightBlue,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            color: authController.isLoading.value
-                ? (isDarkMode ? Colors.grey[800] : Colors.grey[300])
-                : null,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              if (!authController.isLoading.value)
-                BoxShadow(
-                  color: Colors.blue.withOpacity(isDarkMode ? 0.3 : 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: authController.isLoading.value ? null : authController.signIn,
-              splashColor: Colors.white.withOpacity(0.2),
-              highlightColor: Colors.transparent,
-              child: Center(
-                child: authController.isLoading.value
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: isDarkMode ? Colors.white : Colors.blue,
-                        ),
-                      )
-                    : const Text(
-                        'Sign In',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: authController.isLoading.value
+            ? null
+            : LinearGradient(
+          colors: [
+            isDarkMode ? Colors.blueAccent : Colors.blue,
+            isDarkMode ? Colors.lightBlueAccent : Colors.lightBlue,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        color: authController.isLoading.value
+            ? (isDarkMode ? Colors.grey[800] : Colors.grey[300])
+            : null,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          if (!authController.isLoading.value)
+            BoxShadow(
+              color: Colors.blue.withOpacity(isDarkMode ? 0.3 : 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: authController.isLoading.value ? null : authController.signIn,
+          splashColor: Colors.white.withOpacity(0.2),
+          highlightColor: Colors.transparent,
+          child: Center(
+            child: authController.isLoading.value
+                ? SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: isDarkMode ? Colors.white : Colors.blue,
+              ),
+            )
+                : const Text(
+              'Sign In',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    ));
   }
 }
 

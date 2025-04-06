@@ -3,6 +3,7 @@
 import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/screens/CustomerStatementPage.dart';
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
+import 'package:boom_solutions_invoice/screens/Stock.dart';
 import 'package:boom_solutions_invoice/screens/customer_detail.dart';
 import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 
@@ -38,7 +39,7 @@ void main() async {
   Get.put(ThemeController(), permanent: true);
   Get.put(CustomWebViewController(), permanent: true);
   Get.put(SalesController());
-  
+    // GetStorage().write('token', 'mmxEzzEtpqV63877J1EzAXgWajAbUgVg');
   runApp(InvoiceApp());
 }
 
@@ -50,7 +51,8 @@ class InvoiceApp extends StatelessWidget {
     // Register additional controllers
     Get.put(DashboardController());
     Get.put(PartnerController());
-    
+    Get.put(InvoiceController());
+
     return GetMaterialApp(
       title: 'Invoice App',
       theme: lightTheme,
@@ -60,16 +62,17 @@ class InvoiceApp extends StatelessWidget {
       initialRoute: '/splash',
       getPages: [
         GetPage(name: '/splash', page: () => SplashScreen()),
-        GetPage(name: '/auth', page: () => const AuthScreen()),
+        GetPage(name: '/auth', page: () =>  AuthScreen()),
         GetPage(name: '/dashboard', page: () => SalesDashboard()),
         GetPage(name: '/settings', page: () => SettingsScreen()),
-        GetPage(name: '/login', page: () => const AuthScreen()),
+        GetPage(name: '/login', page: () =>  AuthScreen()),
         GetPage(name: '/aaa', page: () => DashboardChartScreen()),
-        GetPage(name: '/PaymentPost', page: () => PaymentPostScreen()),
+        // GetPage(name: '/PaymentPost', page: () => InvoicePaymentPage()),
         GetPage(name: '/a', page: () => CustomerDetailScreen()),
         GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
+        GetPage(name: '/Stock', page: () => InventoryScreen()),
         GetPage(
           name: '/dashboard',
           page: () => SalesDashboard(),

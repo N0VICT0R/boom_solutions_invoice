@@ -1,0 +1,2 @@
+C:/Users/PC/Desktop/boomSolutions/boom_solutions_invoice/android/app/.cxx/Debug/um6g1841/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/PC/Desktop/boomSolutions/boom_solutions_invoice/android/app/.cxx/Debug/um6g1841/x86_64/CMakeFiles/rebuild_cache.dir

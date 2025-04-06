@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 import 'package:boom_solutions_invoice/screens/new1.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -148,25 +149,25 @@ class _SalesDashboardState extends State<SalesDashboard> {
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
+      final authController = Get.put<AuthController>(AuthController());
     return Scaffold(
       appBar: AppBar(
         // backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
         title: const Text(
-          'Sales Dashboard',
+          'Sales Dashboard ',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            icon: Obx(() => Icon(
-                  Get.find<ThemeController>().isDarkMode
-                      ? Icons.dark_mode
-                      : Icons.light_mode,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                )),
-            onPressed: () => Get.find<ThemeController>().toggleTheme(),
-          ),
+          // IconButton(
+          //   icon: Obx(() => Icon(
+          //         Get.find<ThemeController>().isDarkMode
+          //             ? Icons.dark_mode
+          //             : Icons.light_mode,
+          //         color: isDark ? Colors.white70 : Colors.black87,
+          //       )),
+          //   onPressed: () => Get.find<ThemeController>().toggleTheme(),
+          // ),
         ],
       ),
       body: Padding(
@@ -337,8 +338,9 @@ class _SalesDashboardState extends State<SalesDashboard> {
                         {
                           'icon': Icons.pin_drop,
                           'label': 'Log Visit',
-                          'action': () =>
-                              Get.find<DashboardController>().logVisit()
+                          // 'action': () =>
+                          //     Get.find<DashboardController>().logVisit()
+                               'action': () => Get.toNamed('/Stock')
                         },
                         {
                           'icon': Icons.people_alt_outlined,
