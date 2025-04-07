@@ -55,7 +55,7 @@ class InvoiceApp extends StatelessWidget {
     Get.put(InvoiceController());
 
     return GetMaterialApp(
-      title: 'Invoice App',
+      title: 'Invoice App' ,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: Get.find<ThemeController>().theme,
