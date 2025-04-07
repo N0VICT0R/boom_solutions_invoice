@@ -40,7 +40,7 @@ void main() async {
   Get.put(ThemeController(), permanent: true);
   Get.put(CustomWebViewController(), permanent: true);
   Get.put(SalesController());
-    // GetStorage().write('token', 'mmxEzzEtpqV63877J1EzAXgWajAbUgVg');
+   
   runApp(InvoiceApp());
 }
 
@@ -73,8 +73,8 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
-        // GetPage(name: '/Stock', page: () => InventoryScreen()),
-        GetPage(name: '/Stock', page: () => LiveTrackingPage()),
+        GetPage(name: '/Stock', page: () => InventoryScreen()),
+        // GetPage(name: '/Stock', page: () => LiveTrackingPage()),
         GetPage(
           name: '/dashboard',
           page: () => SalesDashboard(),

@@ -270,7 +270,7 @@ class AuthController extends GetxController {
         final user = User.fromJson(data['user']);
         await _saveUserData(user: user);
         currentUser.value = user;
-
+         GetStorage().write('token', '${apiTokenController.text.trim()}');
         // Navigate to the dashboard.
         Get.offAllNamed('/dashboard');
         Get.snackbar('Success', 'Welcome ${user.name}!');

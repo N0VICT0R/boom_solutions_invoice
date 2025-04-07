@@ -238,7 +238,7 @@ class CustomerListController extends GetxController {
       hasError(false);
 
       // Retrieve the saved API token from GetStorage.
-      final token = GetStorage().read('token') ?? '';
+      final token = GetStorage().read('token')??''  ;
 
       // Build the URL using the token variable.
       final url = 'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
@@ -302,7 +302,7 @@ class CustomerController extends GetxController {
       hasError(false);
 
       // Retrieve the saved API token from GetStorage.
-      final token = GetStorage().read('token') ?? '';
+      final token = GetStorage().read('token')??"" ;
 
       // Build the URL using the token variable.
       final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/sales_customer_products_chart?api_token=$token';
