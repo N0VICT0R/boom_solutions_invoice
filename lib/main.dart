@@ -6,6 +6,7 @@ import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
 import 'package:boom_solutions_invoice/screens/Stock.dart';
 import 'package:boom_solutions_invoice/screens/customer_detail.dart';
 import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
+import 'package:boom_solutions_invoice/screens/liveTracking.dart';
 
 import 'package:boom_solutions_invoice/screens/splashScreen.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
@@ -72,7 +73,8 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
-        GetPage(name: '/Stock', page: () => InventoryScreen()),
+        // GetPage(name: '/Stock', page: () => InventoryScreen()),
+        GetPage(name: '/Stock', page: () => LiveTrackingPage()),
         GetPage(
           name: '/dashboard',
           page: () => SalesDashboard(),

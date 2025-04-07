@@ -2,7 +2,8 @@
     <!-- Internet permission is required for WebView -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
     <application
         android:label="boom_solutions_invoice"
         android:name="${applicationName}"
