@@ -16,7 +16,7 @@ class PdfController extends GetxController {
     super.onInit();
     // Initialize the token from GetStorage.
     // You can update this token later if needed.
-    apiToken = GetStorage().read('token') ?? 'default_token_here';
+    apiToken = GetStorage().read('token') ?? '';
   }
 
   Future<void> downloadAndOpenPdf(int partnerId, String dateFrom, String dateTo) async {

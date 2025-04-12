@@ -151,70 +151,7 @@ class Product {
   }
 }
 
-//=======================
-// Controllers
-//=======================
-// class CustomerListController extends GetxController {
-//   final isLoading = true.obs;
-//   final hasError = false.obs;
-//   final partners = <PartnerList>[].obs;
-//   final isDarkMode = true.obs;
-//   var partnerDetails = Rxn<PartnerDetails>();
 
-//   void toggleTheme() {
-//     isDarkMode.value = !isDarkMode.value;
-//   }
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     fetchCustomers();
-    
-//   }
-
-//   Future<void> fetchCustomers() async {
-//     try {
-//       isLoading(true);
-//       hasError(false);
-
-//       final response = await http.get(Uri.parse(
-//           'http://137.184.205.67:2710/api/v1/partners?api_token=VKwmwcRzwAIY9ef6A7Gp2qBOISwwPCke&limit=10&page=1&state_id='));
-
-//       if (response.statusCode == 200) {
-//         final data = json.decode(response.body);
-//         if (data['partners'] is List) {
-//           partners.assignAll((data['partners'] as List)
-//               .map((e) => PartnerList.fromJson(e))
-//               .toList());
-//         }
-//       } else {
-//         hasError(true);
-//       }
-//     } catch (e) {
-//       hasError(true);
-//       print('Error fetching customers: $e');
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-
-//   Future<void> fetchPartnerData() async {
-//     try {
-//       final response = await http.get(Uri.parse("YOUR_API_URL"));
-
-//       if (response.statusCode == 200) {
-//         final data = jsonDecode(response.body);
-//         partnerDetails.value = PartnerDetails.fromJson(data['partner']);
-//       } else {
-//         throw Exception("Failed to load data");
-//       }
-//     } catch (e) {
-//       print("Error: $e");
-//     } finally {
-//       isLoading(false);
-//     }
-//   }
-// }
 class CustomerListController extends GetxController {
   final isLoading = true.obs;
   final hasError = false.obs;
@@ -315,7 +252,7 @@ class CustomerController extends GetxController {
       }
     } catch (e) {
       hasError(true);
-      print('Error fetching data: $e');
+      print('Error fetching data');
     } finally {
       isLoading(false);
     }
@@ -326,179 +263,7 @@ class CustomerController extends GetxController {
     isDarkMode.value = !isDarkMode.value;
   }
 }
-//=======================
-// Customer List Screen
-//=======================
-// class CustomersListScreen extends StatelessWidget {
-//   final CustomerListController controller = Get.put(CustomerListController());
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Obx(() => Scaffold(
-//           appBar: AppBar(
-//             title: Text(
-//               'Customers',
-//               style: TextStyle(
-//                   // color: controller.isDarkMode.value ? Colors.white : Colors.black
-//                   ),
-//             ),
-//             // backgroundColor: controller.isDarkMode.value ? Colors.black : Colors.white,
-//             elevation: 0,
-//             actions: [
-//               IconButton(
-//                 icon: Icon(
-//                   controller.isDarkMode.value
-//                       ? Icons.light_mode
-//                       : Icons.dark_mode,
-//                   // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-//                 ),
-//                 onPressed: controller.toggleTheme,
-//               ),
-//             ],
-//           ),
-//           body: _buildBody(),
-//         ));
-//   }
-
-//   Widget _buildBody() {
-//     return Obx(() {
-//       if (controller.isLoading.value) return _buildLoading();
-//       if (controller.hasError.value) return _buildError();
-//       if (controller.partners.isEmpty) return _buildEmptyState();
-//       return _buildCustomerList();
-//     });
-//   }
-
-//   Widget _buildLoading() {
-//     return Center(
-//       child: CircularProgressIndicator(
-//           // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-//           ),
-//     );
-//   }
-
-//   Widget _buildError() {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Text(
-//             'Failed to load customers',
-//             style: TextStyle(
-//                 // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-//                 ),
-//           ),
-//           ElevatedButton(
-//             onPressed: controller.fetchCustomers,
-//             child: Text('Retry'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildEmptyState() {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Icon(
-//             Icons.people_alt_outlined,
-//             size: 64,
-//           ),
-//           SizedBox(height: 16),
-//           Text(
-//             'No customers found',
-//             style: TextStyle(
-//               fontSize: 18,
-//               // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildCustomerList() {
-//     return ListView.builder(
-//       padding: EdgeInsets.all(16),
-//       itemCount: controller.partners.length,
-//       itemBuilder: (context, index) {
-//         final partner = controller.partners[index];
-//         return _buildCustomerCard(partner);
-//       },
-//     );
-//   }
-
-//   Widget _buildCustomerCard(PartnerList partner) {
-//     return Card(
-//       // color: controller.isDarkMode.value ? Colors.grey[900] : Colors.white,
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(15),
-//       ),
-//       child: ListTile(
-//         contentPadding: EdgeInsets.all(16),
-//         title: Text(
-//           partner.name,
-//           style: TextStyle(
-//             fontSize: 18,
-//             fontWeight: FontWeight.bold,
-//           ),
-//         ),
-//         subtitle: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             SizedBox(height: 8),
-//             if (partner.address?.isNotEmpty ?? false)
-//               _buildInfoRow(Icons.location_on, partner.address!),
-//             if (partner.city?.isNotEmpty ?? false)
-//               _buildInfoRow(Icons.location_city, partner.city!),
-//             if (partner.state?.isNotEmpty ?? false)
-//               _buildInfoRow(Icons.map, partner.state!),
-//             if (partner.country?.isNotEmpty ?? false)
-//               _buildInfoRow(Icons.public, partner.country!),
-//             if (partner.phone != null && partner.phone != false)
-//               _buildInfoRow(Icons.phone, partner.phone.toString()),
-//             if (partner.mobile != null && partner.mobile != false)
-//               _buildInfoRow(Icons.phone_iphone, partner.mobile.toString()),
-//           ],
-//         ),
-//         trailing: Icon(
-//           Icons.chevron_right,
-//           // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54,
-//         ),
-//         onTap: () {
-//           Get.to(() => CustomerDetailScreen(),
-//               arguments: {'partnerId': partner.id});
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _buildInfoRow(IconData icon, String text) {
-//     return Visibility(
-//       visible: text.isNotEmpty,
-//       child: Row(
-//         children: [
-//           Icon(
-//             icon,
-//             size: 16,
-//             // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54
-//           ),
-//           SizedBox(width: 8),
-//           Expanded(
-//             child: Text(
-//               text,
-//               style: TextStyle(
-//                   // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54
-//                   ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 class CustomersListScreen extends StatelessWidget {
   final CustomerListController controller = Get.put(CustomerListController());
 
@@ -511,9 +276,11 @@ class CustomersListScreen extends StatelessWidget {
             actions: [
               IconButton(
                 icon: Icon(controller.isDarkMode.value
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-                onPressed: controller.toggleTheme,
+                    ? Icons.add_outlined
+                    : Icons.add),
+                onPressed:(){
+                  Get.toNamed("addcustomer");
+                },
               ),
             ],
           ),
@@ -646,7 +413,7 @@ class CustomerDetailScreen extends StatelessWidget {
   final CustomerController controller = Get.put(CustomerController());
    final PartnerController partnerController = Get.put(PartnerController());
   final List<Color> chartColors = [
-    Color(0xFFFF1744), // Neon Red
+  Color(0xFFFF1744), // Neon Red
   Color(0xFFFFD600), // Neon Yellow
   Color(0xFF76FF03), // Neon Green
   Color(0xFF00E5FF), // Neon Cyan
@@ -657,9 +424,9 @@ class CustomerDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = Get.arguments ?? {};
-    final partnerId = args['partnerId'] ?? 11;
+    final partnerId = args['partnerId'] ?? 0;
     controller.fetchSalesData(partnerId);
- 
+      
     partnerController.fetchPartnerDetails(partnerId);
     return Obx(() => Scaffold(
           // backgroundColor: controller.isDarkMode.value ? Colors.black : Colors.white70,
@@ -735,8 +502,10 @@ class CustomerDetailScreen extends StatelessWidget {
     final cardSpacing = size.height * 0.02;
 
     return RefreshIndicator(
-      onRefresh: () =>
-          controller.fetchSalesData(Get.arguments['partnerId'] ?? 11),
+      onRefresh: () async {
+        await controller.fetchSalesData(Get.arguments['partnerId'] ?? 11);
+        await partnerController.fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
+      },
          
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
@@ -1145,7 +914,7 @@ final token = GetStorage().read('token') ?? '';
       }
     } catch (e) {
       hasError(true);
-      print("Error fetching partner details: $e");
+      print("Error fetching partner details");
     } finally {
       isLoading(false);
     }

@@ -1,3 +1,4 @@
+import 'package:boom_solutions_invoice/screens/customer_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -129,6 +130,9 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                             token,
                             paymentMethodId,
                           );
+                          // Get.put(PartnerController());
+                          final partnerController = Get.lazyPut(PartnerController() as InstanceBuilderCallback);
+                          // partnerController.fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -503,7 +507,7 @@ Future<void> fetchInvoices(int partnerId, String token) async {
       getTotalPayment(); // Initial calculation
     }
   } catch (e) {
-    Get.snackbar("Error", "An error occurred: $e");
+    Get.snackbar("Error", "An error occurred");
   } finally {
     isLoading.value = false;
   }
@@ -550,6 +554,7 @@ Future<void> payAllInvoices(int partnerId, String token, int paymentMethodId) as
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       Get.snackbar(
+        overlayColor:Colors.green ,
         'Success',
         'Payment posted successfully',
         snackPosition: SnackPosition.BOTTOM,
@@ -568,7 +573,7 @@ Future<void> payAllInvoices(int partnerId, String token, int paymentMethodId) as
   } catch (e) {
     Get.snackbar(
       'Error',
-      'An error occurred: $e',
+      'An error occurred',
       snackPosition: SnackPosition.BOTTOM,
     );
   }

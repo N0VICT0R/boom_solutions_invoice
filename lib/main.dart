@@ -1,5 +1,6 @@
 // import 'package:boom_solutions_invoice/final/view/add_Customers.dart';
 
+import 'package:boom_solutions_invoice/final/view/add_Customers.dart';
 import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/screens/CustomerStatementPage.dart';
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
@@ -9,6 +10,7 @@ import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 import 'package:boom_solutions_invoice/screens/liveTracking.dart';
 
 import 'package:boom_solutions_invoice/screens/splashScreen.dart';
+import 'package:boom_solutions_invoice/screens/testlocationnav/navbotton.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -51,8 +53,9 @@ class InvoiceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Register additional controllers
     Get.put(DashboardController());
-    Get.put(PartnerController());
+    // Get.put(PartnerController());
     Get.put(InvoiceController());
+    Get.put(SalesController());
 
     return GetMaterialApp(
       title: 'Invoice App' ,
@@ -70,10 +73,12 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/aaa', page: () => DashboardChartScreen()),
         // GetPage(name: '/PaymentPost', page: () => InvoicePaymentPage()),
         GetPage(name: '/a', page: () => CustomerDetailScreen()),
+        GetPage(name: '/addcustomer', page: () => CustomerAddPage()),
         GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
-        GetPage(name: '/Stock', page: () => InventoryScreen()),
+        // GetPage(name: '/Stock', page: () => InventoryScreen()),
+        GetPage(name: '/Stock', page: () => MapScreen()),
         // GetPage(name: '/Stock', page: () => LiveTrackingPage()),
         GetPage(
           name: '/dashboard',
@@ -85,7 +90,7 @@ class InvoiceApp extends StatelessWidget {
           name: '/webView',
           page: () => WebViewScreen(
               url: 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F'),
-          transition: Transition.fade,
+          transition: Transition.leftToRightWithFade,
           preventDuplicates: false,
         ),
       ],
