@@ -1,4 +1,5 @@
 import 'package:boom_solutions_invoice/final/controller/themeController.dart';
+import 'package:boom_solutions_invoice/final/view/dashboard_Getx.dart';
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
 import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
@@ -144,14 +145,16 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      name: json['name']?['en_US'] ?? 'Unnamed Product',
+      name: json['name']?['en_US']?['en_US'] ?? 'Unnamed Product',
       amount: json['amount']?.toDouble() ?? 0.0,
       percentage: json['percentage']?.toDouble() ?? 0.0,
     );
   }
 }
 
-
+//=======================
+// Controllers
+//=======================
 class CustomerListController extends GetxController {
   final isLoading = true.obs;
   final hasError = false.obs;
@@ -159,7 +162,6 @@ class CustomerListController extends GetxController {
   final filteredPartners = <PartnerList>[].obs;
   final isDarkMode = true.obs;
 
-  // Toggle dark mode.
   void toggleTheme() => isDarkMode.value = !isDarkMode.value;
 
   @override
@@ -168,17 +170,13 @@ class CustomerListController extends GetxController {
     fetchCustomers();
   }
 
-  /// Fetches customers/partners from the API.
   Future<void> fetchCustomers() async {
     try {
       isLoading(true);
       hasError(false);
-
-      // Retrieve the saved API token from GetStorage.
-      final token = GetStorage().read('token')??''  ;
-
-      // Build the URL using the token variable.
-      final url = 'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
+      final token = GetStorage().read('token') ?? '';
+      final url =
+          'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -201,24 +199,23 @@ class CustomerListController extends GetxController {
     }
   }
 
-  /// Filters the partner list based on a search query.
   void searchCustomers(String query) {
     if (query.isEmpty) {
       filteredPartners.assignAll(partners);
     } else {
       filteredPartners.assignAll(
-        partners.where((partner) => partner.name.toLowerCase().contains(query.toLowerCase())).toList(),
+        partners
+            .where((partner) =>
+                partner.name.toLowerCase().contains(query.toLowerCase()))
+            .toList(),
       );
     }
   }
 
-  /// Sorts the partner list alphabetically.
   void sortCustomers() {
     filteredPartners.sort((a, b) => a.name.compareTo(b.name));
   }
 }
-
-/// Controller to manage customer-related sales data.
 class CustomerController extends GetxController {
   final isDarkMode = true.obs;
   final isLoading = true.obs;
@@ -227,70 +224,167 @@ class CustomerController extends GetxController {
   final selectedProduct = Rx<Product?>(null);
   final selectedIndex = Rx<int?>(null);
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
-
-  /// Fetches sales data for a specific partner.
   Future<void> fetchSalesData(int partnerId) async {
     try {
       isLoading(true);
       hasError(false);
 
-      // Retrieve the saved API token from GetStorage.
-      final token = GetStorage().read('token')??"" ;
+      final token = GetStorage().read('token') ?? "";
+      if (token.isEmpty) {
+        // print('Error: No token found in GetStorage');
+        hasError(true);
+        return;
+      }
 
-      // Build the URL using the token variable.
-      final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/sales_customer_products_chart?api_token=$token';
+      final url =
+          "http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token";
+      // print('Fetching data from: $url');
+
       final response = await http.get(Uri.parse(url));
 
+      // print('Response status: ${response.statusCode}');
+      // print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        salesData.value = SalesData.fromJson(json.decode(response.body));
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          salesData.value = SalesData.fromJson(jsonData);
+        } else {
+          // print('API returned success: false');
+          hasError(true);
+        }
+      } else if (response.statusCode == 401) {
+        // print('Unauthorized: Invalid or expired token');
+        hasError(true);
+      } else if (response.statusCode == 404) {
+        // print('Partner not found for ID: $partnerId');
+        hasError(true);
       } else {
+        // print('HTTP Error: ${response.statusCode}');
         hasError(true);
       }
     } catch (e) {
+      // print('Exception caught: $e');
       hasError(true);
-      print('Error fetching data');
     } finally {
       isLoading(false);
     }
   }
 
-  /// Toggle dark mode.
   void toggleTheme() {
     isDarkMode.value = !isDarkMode.value;
   }
 }
+class PartnerController extends GetxController {
+  var partnerDetails = Rxn<PartnerDetails>();
+  var isLoading = true.obs;
+  var hasError = false.obs;
+  final token = GetStorage().read('token') ?? '';
 
-class CustomersListScreen extends StatelessWidget {
+  Future<void> fetchPartnerDetails(int partnerId) async {
+    try {
+      isLoading(true);
+      hasError(false);
+
+      if (token.isEmpty) {
+        // print('Error: No token found in GetStorage');
+        hasError(true);
+        return;
+      }
+
+      final url =
+          'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token';
+      // print('Fetching partner details from: $url');
+
+      final response = await http.get(Uri.parse(url));
+
+      // print('Response status: ${response.statusCode}');
+      // print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success'] == true && jsonData['partner'] != null) {
+          partnerDetails.value = PartnerDetails.fromJson(jsonData['partner']);
+        } else {
+          // print('API returned success: false or no partner data');
+          hasError(true);
+        }
+      } else {
+        // print('HTTP Error: ${response.statusCode}');
+        hasError(true);
+      }
+    } catch (e) {
+      // print('Exception caught: $e');
+      hasError(true);
+    } finally {
+      isLoading(false);
+    }
+  }
+}
+
+//=======================
+// Screens
+//=======================
+class CustomersListScreen extends StatefulWidget {
+  @override
+  _CustomersListScreenState createState() => _CustomersListScreenState();
+}
+
+class _CustomersListScreenState extends State<CustomersListScreen>
+    with WidgetsBindingObserver {
   final CustomerListController controller = Get.put(CustomerListController());
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      controller.fetchCustomers();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Obx(() => Scaffold(
-          appBar: AppBar(
-            title: Text('Customers'),
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: Icon(controller.isDarkMode.value
-                    ? Icons.add_outlined
-                    : Icons.add),
-                onPressed:(){
-                  Get.toNamed("addcustomer");
-                },
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              _buildSearchAndSort(),
-              Expanded(child: _buildBody()),
-            ],
-          ),
-        ));
+    return Obx(
+      () => Scaffold(
+        appBar: AppBar(
+          title: Text('Customers'),
+          elevation: 0,
+        //    leading: 
+        // IconButton(
+        //   icon: Icon(Icons.arrow_back),
+        //   onPressed: () {
+        // Get.off(() => SalesDashboard());
+        //   },
+        // ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                  controller.isDarkMode.value ? Icons.add_outlined : Icons.add),
+              onPressed: () {
+                Get.toNamed("addcustomer");
+              },
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            _buildSearchAndSort(),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSearchAndSort() {
@@ -363,6 +457,10 @@ class CustomersListScreen extends StatelessWidget {
           Icon(Icons.people_alt_outlined, size: 64),
           SizedBox(height: 16),
           Text('No customers found', style: TextStyle(fontSize: 18)),
+          ElevatedButton(
+            onPressed: controller.fetchCustomers,
+            child: Text('Retry'),
+          ),
         ],
       ),
     );
@@ -373,20 +471,30 @@ class CustomersListScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         contentPadding: EdgeInsets.all(16),
-        title: Text(partner.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(
+          partner.name,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (partner.address?.isNotEmpty ?? false) _buildInfoRow(Icons.location_on, partner.address!),
-            if (partner.city?.isNotEmpty ?? false) _buildInfoRow(Icons.location_city, partner.city!),
-            if (partner.state?.isNotEmpty ?? false) _buildInfoRow(Icons.map, partner.state!),
-            if (partner.country?.isNotEmpty ?? false) _buildInfoRow(Icons.public, partner.country!),
-            if (partner.phone != null) _buildInfoRow(Icons.phone, partner.phone.toString()),
-            if (partner.mobile != null) _buildInfoRow(Icons.phone_iphone, partner.mobile.toString()),
+            if (partner.address?.isNotEmpty ?? false)
+              _buildInfoRow(Icons.location_on, partner.address!),
+            if (partner.city?.isNotEmpty ?? false)
+              _buildInfoRow(Icons.location_city, partner.city!),
+            if (partner.state?.isNotEmpty ?? false)
+              _buildInfoRow(Icons.map, partner.state!),
+            if (partner.country?.isNotEmpty ?? false)
+              _buildInfoRow(Icons.public, partner.country!),
+            if (partner.phone != null)
+              _buildInfoRow(Icons.phone, partner.phone.toString()),
+            if (partner.mobile != null)
+              _buildInfoRow(Icons.phone_iphone, partner.mobile.toString()),
           ],
         ),
         trailing: Icon(Icons.chevron_right),
-        onTap: () => Get.to(() => CustomerDetailScreen(), arguments: {'partnerId': partner.id}),
+        onTap: () => Get.to(() => CustomerDetailScreen(partnerId: partner.id),
+            arguments: {'partnerId': partner.id}),
       ),
     );
   }
@@ -405,31 +513,31 @@ class CustomersListScreen extends StatelessWidget {
   }
 }
 
-
-//=======================
-// Customer Detail Screen
-//=======================
 class CustomerDetailScreen extends StatelessWidget {
   final CustomerController controller = Get.put(CustomerController());
-   final PartnerController partnerController = Get.put(PartnerController());
+  final PartnerController partnerController = Get.put(PartnerController());
   final List<Color> chartColors = [
-  Color(0xFFFF1744), // Neon Red
-  Color(0xFFFFD600), // Neon Yellow
-  Color(0xFF76FF03), // Neon Green
-  Color(0xFF00E5FF), // Neon Cyan
-  Color(0xFFD500F9), // Neon Purple
-  Color(0xFFFF9100), // Neon Orange
+    Color(0xFFFF1744),
+    Color(0xFFFFD600),
+    Color(0xFF76FF03),
+    Color(0xFF00E5FF),
+    Color(0xFFD500F9),
+    Color(0xFFFF9100),
   ];
+
+  CustomerDetailScreen({Key? key, required int partnerId}) : super(key: key) {
+    final args = Get.arguments ?? {};
+    final id = args['partnerId'] ?? partnerId;
+    if (id == 0) {
+      // print('Warning: No valid partnerId provided');
+    }
+    controller.fetchSalesData(id);
+    partnerController.fetchPartnerDetails(id);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final args = Get.arguments ?? {};
-    final partnerId = args['partnerId'] ?? 0;
-    controller.fetchSalesData(partnerId);
-      
-    partnerController.fetchPartnerDetails(partnerId);
     return Obx(() => Scaffold(
-          // backgroundColor: controller.isDarkMode.value ? Colors.black : Colors.white70,
           appBar: _buildAppBar(),
           body: _buildBody(context),
         ));
@@ -439,23 +547,18 @@ class CustomerDetailScreen extends StatelessWidget {
     return AppBar(
       title: Obx(() => Text(
             controller.salesData.value?.partner.name ?? 'Dashboard',
-            style: TextStyle(
-                // color: controller.isDarkMode.value ? Colors.grey[100]: Colors.black,
-                ),
+            style: TextStyle(),
           )),
-      // backgroundColor: controller.isDarkMode.value ? Colors.black : Colors.white12,
       elevation: 0,
-      actions: [
-        // IconButton(
-        //   icon: Icon(
-        //     controller.isDarkMode.value
-        //         ? Icons.light_mode_outlined
-        //         : Icons.dark_mode_outlined,
-        //     // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-        //   ),
-        //   onPressed: controller.toggleTheme,
-        // ),
-      ],
+      // leading: 
+      //   IconButton(
+      //     icon: Icon(Icons.arrow_back),
+      //     onPressed: () {
+      //   Get.off(() => CustomersListScreen());
+      //     },
+      //   ),
+        
+      
     );
   }
 
@@ -467,11 +570,7 @@ class CustomerDetailScreen extends StatelessWidget {
   }
 
   Widget _buildLoading() {
-    return Center(
-      child: CircularProgressIndicator(
-          // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-          ),
-    );
+    return Center(child: CircularProgressIndicator());
   }
 
   Widget _buildError() {
@@ -480,11 +579,8 @@ class CustomerDetailScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Customer has no data ',
-            style: TextStyle(
-              fontSize: 25,
-              // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-            ),
+            'Customer has no data',
+            style: TextStyle(fontSize: 25),
           ),
           ElevatedButton(
             onPressed: () =>
@@ -504,9 +600,9 @@ class CustomerDetailScreen extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () async {
         await controller.fetchSalesData(Get.arguments['partnerId'] ?? 11);
-        await partnerController.fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
+        await partnerController
+            .fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
       },
-         
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         child: Padding(
@@ -516,7 +612,6 @@ class CustomerDetailScreen extends StatelessWidget {
             children: [
               SizedBox(height: cardSpacing),
               Payment(),
-              // SalesSummary(),
               SizedBox(height: cardSpacing),
               SalesChart(chartColors: chartColors),
               SizedBox(height: cardSpacing),
@@ -530,24 +625,9 @@ class CustomerDetailScreen extends StatelessWidget {
   }
 }
 
-Widget _buildCard({required double height, required Widget child}) {
-  return Card(
-    child: Container(
-      width: double.infinity,
-      height: height,
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        // color: controller.isDarkMode.value ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: child,
-      ),
-    ),
-  );
-}
-
+//=======================
+// Widgets
+//=======================
 class Payment extends GetView<CustomerController> {
   @override
   Widget build(BuildContext context) {
@@ -556,42 +636,50 @@ class Payment extends GetView<CustomerController> {
       if (salesData == null) return Container();
 
       return InkWell(
-        onTap: () {
-
-           final partnerId = Get.arguments['partnerId'];
-  Get.to(() => InvoicePaymentPage(partnerId: partnerId,), arguments: {'partnerId': partnerId});
+        onTap: () async { // غيرناها لـ async
+          final partnerId = Get.arguments['partnerId'];
+          
+          // استخدمنا await مع Get.to علشان نستنى النتيجة
+          final result = await Get.to<bool>(
+            () => InvoicePaymentPage(partnerId: partnerId),
+            arguments: {'partnerId': partnerId},
+          );
+          
+          // لو الدفع تم بنجاح (رجع true)
+          if (result == true) {
+            // روح جيب بيانات العميل من السيرڤر تاني
+            await Get.find<CustomerController>().fetchSalesData(partnerId);
+            // جيب تفاصيل البارتشر المحدثة
+            await Get.find<PartnerController>().fetchPartnerDetails(partnerId);
+          }
         },
         child: _buildCard(
           height: MediaQuery.of(context).size.height * 0.10,
-          child:
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'Make Payment',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    // color: controller.isDarkMode.value ? Colors.white : Colors.black,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  // color: controller.isDarkMode.value ? Colors.white54 : Colors.black54,
-                ),
-                // onTap: () => Get.to(() => PaymentPostScreen()),
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              'Make Payment',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+            ),
+          ),
         ),
       );
     });
   }
-
+}
   Widget _buildCard({required double height, required Widget child}) {
     return Card(
       child: Container(
         width: double.infinity,
         height: height,
-        margin: EdgeInsets.only(bottom: 16),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -602,51 +690,9 @@ class Payment extends GetView<CustomerController> {
       ),
     );
   }
-}
+
 
 class SalesChart extends GetView<CustomerController> {
-  Widget _buildMetricCard(String title, String value, IconData icon) {
-    return Container(
-      // width: 150,
-      decoration: BoxDecoration(
-        // color: controller.isDarkMode.value ? Colors.grey[900] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(5),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  // color: controller.isDarkMode.value
-                  //     ? Colors.white60
-                ),
-                SizedBox(width: 5),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   final List<Color> chartColors;
 
   SalesChart({required this.chartColors});
@@ -664,14 +710,14 @@ class SalesChart extends GetView<CustomerController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+
                   Text(
                     'Product Distribution',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      // color: controller.isDarkMode.value ? Colors.white70 : Colors.black87,
                     ),
                   ),
                   _buildMetricCard(
@@ -719,7 +765,6 @@ class SalesChart extends GetView<CustomerController> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
                     Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -728,20 +773,13 @@ class SalesChart extends GetView<CustomerController> {
                             'Total',
                             style: TextStyle(
                               fontSize: 16,
-                              // color: controller.isDarkMode.value
-                              //     ? Colors.white60
-                              //     : Colors.black54,
                             ),
                           ),
                           Text(
-                            '${salesData.totalSales.toStringAsFixed(0)}'
-                            ' ${salesData.currencySymbol}',
+                            '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              // color: controller.isDarkMode.value
-                              //     ? Colors.white
-                              //     : Colors.black,
                             ),
                           ),
                         ],
@@ -753,12 +791,10 @@ class SalesChart extends GetView<CustomerController> {
               Obx(() => controller.selectedProduct.value != null
                   ? Padding(
                       padding: const EdgeInsets.only(top: 16),
-                      child: Container(
-                        child: _buildProductDetails(
-                          controller.selectedProduct.value!,
-                          chartColors[controller.selectedIndex.value! %
-                              chartColors.length],
-                        ),
+                      child: _buildProductDetails(
+                        controller.selectedProduct.value!,
+                        chartColors[controller.selectedIndex.value! %
+                            chartColors.length],
                       ),
                     )
                   : const SizedBox.shrink()),
@@ -820,9 +856,6 @@ class SalesChart extends GetView<CustomerController> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      // color: controller.isDarkMode.value
-                      //     ? Colors.white
-                      //     : Colors.black87,
                     ),
                   ),
                 ),
@@ -851,9 +884,6 @@ class SalesChart extends GetView<CustomerController> {
             label,
             style: TextStyle(
               fontSize: 14,
-              // color: controller.isDarkMode.value
-              //     ? Colors.white70
-              //     : Colors.black54,
             ),
           ),
           Text(
@@ -861,9 +891,6 @@ class SalesChart extends GetView<CustomerController> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              // color: controller.isDarkMode.value
-              //     ? Colors.white
-              //     : Colors.black87,
             ),
           ),
         ],
@@ -876,7 +903,7 @@ class SalesChart extends GetView<CustomerController> {
       child: Container(
         width: double.infinity,
         height: height,
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -887,37 +914,31 @@ class SalesChart extends GetView<CustomerController> {
       ),
     );
   }
-}
 
-class PartnerController extends GetxController {
-  var partnerDetails = Rxn<PartnerDetails>();
-  var isLoading = true.obs;
-  var hasError = false.obs; // Add error state
-final token = GetStorage().read('token') ?? '';
-  Future<void> fetchPartnerDetails(int partnerId) async {
-    try {
-      isLoading(true);
-      hasError(false);
-
-      final response = await http.get(Uri.parse(
-          'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token'));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['partner'] != null) {
-          partnerDetails.value = PartnerDetails.fromJson(data['partner']);
-        } else {
-          hasError(true);
-        }
-      } else {
-        hasError(true);
-      }
-    } catch (e) {
-      hasError(true);
-      print("Error fetching partner details");
-    } finally {
-      isLoading(false);
-    }
+  Widget _buildMetricCard(String title, String value, IconData icon) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Icon(icon, size: 16),
+        SizedBox(width: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: 
+          [
+            Text(
+              title,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(width: 4,),
+            Text(value,
+              
+              style: TextStyle(fontSize: 12),
+            ),
+            
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -926,22 +947,18 @@ class MetricsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return GetX<PartnerController>(
       builder: (controller) {
-        // Loading state
         if (controller.isLoading.value) return CircularProgressIndicator();
         final partner = controller.partnerDetails.value;
         if (partner == null) return Text("No Data");
 
-        // Main content
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(5.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Metrics Grid
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -961,33 +978,54 @@ class MetricsGrid extends StatelessWidget {
                     );
                   },
                 ),
-
                 const SizedBox(height: 24),
-
-                // Details Section
                 Text(
                   'Details',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Details Cards
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.receipt_long,
                   title: 'Statement of Account',
                   subtitle: 'View your complete transaction history',
-                  onTap: () {
-                       final pdfController = Get.put(PdfController());
-                       pdfController.downloadAndOpenPdf(8, '01-01-2024', '01-01-2027');
+                  onTap: () async {
+                  final pickedFromDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                    helpText: 'Select Start Date', // Hint for "From" date
+                    confirmText: 'Next',
+                  );
+
+                  if (pickedFromDate != null) {
+                    final pickedToDate = await showDatePicker(
+                    context: context,
+                    initialDate: pickedFromDate,
+                    firstDate: pickedFromDate,
+                    lastDate: DateTime.now(),
+                    helpText: 'Select End Date', // Hint for "To" date
+                    confirmText: 'Confirm',
+                    );
+
+                    if (pickedToDate != null) {
+                    final pdfController = Get.put(PdfController());
+                    final partnerId = Get.arguments['partnerId'];
+                    pdfController.downloadAndOpenPdf(
+                      partnerId,
+                      pickedFromDate.toIso8601String(),
+                      pickedToDate.toIso8601String(),
+                    );
+                    }
+                  }
                   },
                 ),
-
+                  
+                
                 const SizedBox(height: 16),
-
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.map_outlined,
@@ -995,7 +1033,7 @@ class MetricsGrid extends StatelessWidget {
                   subtitle: 'Customer utilization patterns and frequency',
                   onTap: () {
                     // TODO: Implement navigation
-                  },
+                  },    
                 ),
               ],
             ),
@@ -1005,40 +1043,51 @@ class MetricsGrid extends StatelessWidget {
     );
   }
 
-  // Helper method to get metric title
   String _getMetricTitle(int index, dynamic partner) {
     switch (index) {
-      case 0: return 'Balance';
-      case 1: return 'Dues';
-      case 2: return 'AOV';
-      case 3: return 'OCT';
-      default: return '';
+      case 0:
+        return 'Balance';
+      case 1:
+        return 'Dues';
+      case 2:
+        return 'AOV';
+      case 3:
+        return 'OCT';
+      default:
+        return '';
     }
   }
 
-  // Helper method to get metric value
   String _getMetricValue(int index, dynamic partner) {
     switch (index) {
-      case 0: return '\$${partner.balance.abs().toStringAsFixed(1)}';
-      case 1: return '\$${partner.amountDueToday.abs().toStringAsFixed(0)}';
-      case 2: return '\$${partner.aov.toStringAsFixed(1)}';
-      case 3: return '${partner.oct.toStringAsFixed(2)} days';
-      default: return '';
+      case 0:
+        return '\$${partner.balance.abs().toStringAsFixed(1)}';
+      case 1:
+        return '\$${partner.amountDueToday.abs().toStringAsFixed(0)}';
+      case 2:
+        return '\$${partner.aov.toStringAsFixed(1)}';
+      case 3:
+        return '${partner.oct.toStringAsFixed(2)} days';
+      default:
+        return '';
     }
   }
 
-  // Helper method to get metric icon
   IconData _getMetricIcon(int index) {
     switch (index) {
-      case 0: return Icons.account_balance_wallet;
-      case 1: return Icons.attach_money;
-      case 2: return Icons.shopping_cart;
-      case 3: return Icons.calendar_today;
-      default: return Icons.error;
+      case 0:
+        return Icons.account_balance_wallet;
+      case 1:
+        return Icons.attach_money;
+      case 2:
+        return Icons.shopping_cart;
+      case 3:
+        return Icons.calendar_today;
+      default:
+        return Icons.error;
     }
   }
 
-  // Metric Card Widget
   Widget _buildMetricCard({
     required BuildContext context,
     required String title,
@@ -1076,7 +1125,6 @@ class MetricsGrid extends StatelessWidget {
     );
   }
 
-  // Details Card Widget
   Widget _buildDetailsCard({
     required BuildContext context,
     required IconData icon,

@@ -26,8 +26,8 @@ class PdfController extends GetxController {
       // Build the API URL using the variable apiToken
       final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/statement/pdf'
           '?api_token=$apiToken&date_from=$dateFrom&date_to=$dateTo';
-      print("Downloading from: $url");
-
+      // print("Downloading from: $url");
+        print("$partnerId");
       // Get directory to save the PDF file
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/statement.pdf';

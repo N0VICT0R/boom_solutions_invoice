@@ -428,19 +428,19 @@ class MapScreen extends StatelessWidget {
             
             const Divider(height: 24),
             
-            _buildInfoCard(
-              title: "Partner Details",
-              icon: Icons.info_outline,
-              color: Colors.blue,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoRow("ID", "${partner.id}"),
-                  _buildInfoRow("Location", 
-                    "${partner.latitude.toStringAsFixed(6)}, ${partner.longitude.toStringAsFixed(6)}"),
-                ],
-              ),
-            ),
+            // _buildInfoCard(
+            //   title: "Partner Details",
+            //   icon: Icons.info_outline,
+            //   color: Colors.blue,
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       _buildInfoRow("ID", "${partner.id}"),
+            //       _buildInfoRow("Location", 
+            //         "${partner.latitude.toStringAsFixed(6)}, ${partner.longitude.toStringAsFixed(6)}"),
+            //     ],
+            //   ),
+            // ),
             
             const SizedBox(height: 16),
             

@@ -47,116 +47,122 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
-        return Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: controller.invoices.length,
-                itemBuilder: (context, index) {
-                  final invoice = controller.invoices[index];
-                  return _buildBoardingPassCard(context, invoice);
-                },
+        return Container(
+          
+          child: Column(
+            
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: controller.invoices.length,
+                  itemBuilder: (context, index) {
+                    final invoice = controller.invoices[index];
+                    return _buildBoardingPassCard(context, invoice);
+                  },
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: DropdownButtonFormField<String>(
-                      value: selectedPaymentMethod,
-                      decoration: InputDecoration(
-                        labelText: 'Payment Method',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      items: paymentMethods.map((method) {
-                        return DropdownMenuItem<String>(
-                          value: method['id'],
-                          child: Text(method['name']),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedPaymentMethod = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a payment method';
-                        }
-                        return null;
-                      },
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Obx(() => Text(
-                        "Total: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (selectedPaymentMethod == null) {
-                            Get.snackbar('Error', 'Please select a payment method');
-                            return;
-                          }
-                          final paymentMethodId = int.parse(selectedPaymentMethod!);
-                          controller.payAllInvoices(
-                            widget.partnerId,
-                            token,
-                            paymentMethodId,
-                          );
-                          // Get.put(PartnerController());
-                          final partnerController = Get.lazyPut(PartnerController() as InstanceBuilderCallback);
-                          // partnerController.fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 25,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: DropdownButtonFormField<String>(
+                        value: selectedPaymentMethod,
+                        decoration: InputDecoration(
+                          labelText: 'Payment Method',
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                        ),
-                        child: Text(
-                          "    Pay All    ",
-                          style: TextStyle(
-                            color: Colors.green[600],
-                            fontWeight: FontWeight.bold,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                         ),
+                        items: paymentMethods.map((method) {
+                          return DropdownMenuItem<String>(
+                            value: method['id'],
+                            child: Text(method['name']),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedPaymentMethod = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a payment method';
+                          }
+                          return null;
+                        },
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Obx(() => Text(
+                          "Total: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                   ElevatedButton(
+            onPressed: () {
+              if (selectedPaymentMethod == null) {
+                Get.snackbar('Error', 'Please select a payment method');
+                return;
+              }
+              final paymentMethodId = int.parse(selectedPaymentMethod!);
+              controller.payAllInvoices(
+                widget.partnerId,
+                token,
+                paymentMethodId,
+              );
+              // Lazily inject the PartnerController if not already injected
+             
+             Get.lazyPut<CustomerController>(() => CustomerController(), fenix: true);
+              Get.lazyPut<PartnerController>(() => PartnerController());
+              // Retrieve the instance and call a method if needed
+              final partnerController = Get.find<PartnerController>();
+              // e.g. partnerController.fetchPartnerDetails(widget.partnerId);
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          ],
+            child: Text(
+              "    Pay All    ",
+              style: TextStyle(
+                color: Colors.green[600],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       }),
     );
@@ -553,16 +559,20 @@ Future<void> payAllInvoices(int partnerId, String token, int paymentMethodId) as
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      Get.snackbar(
-        overlayColor:Colors.green ,
-        'Success',
-        'Payment posted successfully',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Get.snackbar(
+      //   overlayColor:Colors.green ,
+      //   'Success',
+      //   'Payment posted successfully',
+      //   snackPosition: SnackPosition.BOTTOM,
+      // );
       for (var controller in textControllers.values) {
         controller.clear();
       }
       fetchInvoices(partnerId, token);
+      await Future.delayed(const Duration(seconds: 2));
+     Get.back(result: true);
+
+      // Get.offAll(CustomerDetailScreen(partnerId: partnerId));
     } else {
       Get.snackbar(
         'Error',

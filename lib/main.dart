@@ -41,7 +41,8 @@ void main() async {
   // Controllers that should persist throughout the app
   Get.put(ThemeController(), permanent: true);
   Get.put(CustomWebViewController(), permanent: true);
-  Get.put(SalesController());
+  Get.put(SalesController()); 
+  
    
   runApp(InvoiceApp());
 }
@@ -72,13 +73,13 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/login', page: () =>  AuthScreen()),
         GetPage(name: '/aaa', page: () => DashboardChartScreen()),
         // GetPage(name: '/PaymentPost', page: () => InvoicePaymentPage()),
-        GetPage(name: '/a', page: () => CustomerDetailScreen()),
+        GetPage(name: '/a', page: () => CustomerDetailScreen(partnerId: 0,)),
         GetPage(name: '/addcustomer', page: () => CustomerAddPage()),
         GetPage(name: '/customers', page: () => CustomersListScreen()),
         GetPage(name: '/invoiceDetail', page: () => InvoiceDetailScreen()),
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
-        // GetPage(name: '/Stock', page: () => InventoryScreen()),
-        GetPage(name: '/Stock', page: () => MapScreen()),
+        GetPage(name: '/Stock', page: () => InventoryScreen()),
+        GetPage(name: '/NearByCustomer', page: () => MapScreen()),
         // GetPage(name: '/Stock', page: () => LiveTrackingPage()),
         GetPage(
           name: '/dashboard',
