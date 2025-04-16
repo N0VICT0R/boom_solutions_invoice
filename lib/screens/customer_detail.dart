@@ -9,9 +9,79 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 
 //=======================
-// Data Models
+// Utility Function for Google Maps
+//=======================
+Future<void> launchGoogleMapsByPartnerId({
+  required int partnerId,
+  required BuildContext context,
+}) async {
+  final String baseUrl = 'http://137.184.205.67:2710/';
+  final String token = GetStorage().read('token') ?? '';
+
+  try {
+    // Fetch partner data
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/v1/partners/map?api_token=$token'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] && data['partners'] != null && data['partners'].isNotEmpty) {
+        // Find the partner with the matching ID
+        final partnerJson = (data['partners'] as List).firstWhere(
+          (p) => p['id'] == partnerId,
+          orElse: () => throw Exception('Partner with ID $partnerId not found'),
+        );
+        final partner = _Partner.fromJson(partnerJson);
+        if (partner.latitude == 0.0 || partner.longitude == 0.0) {
+          throw Exception('No valid coordinates for partner ID $partnerId');
+        }
+        await MapsLauncher.launchCoordinates(partner.latitude, partner.longitude);
+      } else {
+        throw Exception('No partners found');
+      }
+    } else {
+      throw Exception('Failed to fetch partner data: ${response.statusCode}');
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
+
+// Temporary Partner class for map data
+class _Partner {
+  final int id;
+  final String name;
+  final double latitude;
+  final double longitude;
+  final String address;
+
+  _Partner({
+    required this.id,
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+  });
+
+  factory _Partner.fromJson(Map<String, dynamic> json) {
+    return _Partner(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'Customer',
+      latitude: json['latitude']?.toDouble() ?? 0.0,
+      longitude: json['longitude']?.toDouble() ?? 0.0,
+      address: json['address'] ?? '',
+    );
+  }
+}
+
+//=======================
+// Rest of Your Existing Data Models
 //=======================
 class PartnerDetails {
   final int id;
@@ -121,13 +191,19 @@ class SalesData {
 class Partner {
   final int id;
   final String name;
+  final String? internalNotes;
 
-  Partner({required this.id, required this.name});
+  Partner({
+    required this.id,
+    required this.name,
+    this.internalNotes,
+  });
 
   factory Partner.fromJson(Map<String, dynamic> json) {
     return Partner(
       id: json['id'] ?? 0,
       name: json['name'] ?? 'Customer',
+      internalNotes: json['internal_notes'],
     );
   }
 }
@@ -216,6 +292,7 @@ class CustomerListController extends GetxController {
     filteredPartners.sort((a, b) => a.name.compareTo(b.name));
   }
 }
+
 class CustomerController extends GetxController {
   final isDarkMode = true.obs;
   final isLoading = true.obs;
@@ -231,40 +308,25 @@ class CustomerController extends GetxController {
 
       final token = GetStorage().read('token') ?? "";
       if (token.isEmpty) {
-        // print('Error: No token found in GetStorage');
         hasError(true);
         return;
       }
 
       final url =
           "http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token";
-      // print('Fetching data from: $url');
-
       final response = await http.get(Uri.parse(url));
-
-      // print('Response status: ${response.statusCode}');
-      // print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['success'] == true) {
           salesData.value = SalesData.fromJson(jsonData);
         } else {
-          // print('API returned success: false');
           hasError(true);
         }
-      } else if (response.statusCode == 401) {
-        // print('Unauthorized: Invalid or expired token');
-        hasError(true);
-      } else if (response.statusCode == 404) {
-        // print('Partner not found for ID: $partnerId');
-        hasError(true);
       } else {
-        // print('HTTP Error: ${response.statusCode}');
         hasError(true);
       }
     } catch (e) {
-      // print('Exception caught: $e');
       hasError(true);
     } finally {
       isLoading(false);
@@ -275,6 +337,7 @@ class CustomerController extends GetxController {
     isDarkMode.value = !isDarkMode.value;
   }
 }
+
 class PartnerController extends GetxController {
   var partnerDetails = Rxn<PartnerDetails>();
   var isLoading = true.obs;
@@ -287,34 +350,25 @@ class PartnerController extends GetxController {
       hasError(false);
 
       if (token.isEmpty) {
-        // print('Error: No token found in GetStorage');
         hasError(true);
         return;
       }
 
       final url =
           'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token';
-      // print('Fetching partner details from: $url');
-
       final response = await http.get(Uri.parse(url));
-
-      // print('Response status: ${response.statusCode}');
-      // print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success'] == true && jsonData['partner'] != null) {
           partnerDetails.value = PartnerDetails.fromJson(jsonData['partner']);
         } else {
-          // print('API returned success: false or no partner data');
           hasError(true);
         }
       } else {
-        // print('HTTP Error: ${response.statusCode}');
         hasError(true);
       }
     } catch (e) {
-      // print('Exception caught: $e');
       hasError(true);
     } finally {
       isLoading(false);
@@ -360,13 +414,6 @@ class _CustomersListScreenState extends State<CustomersListScreen>
         appBar: AppBar(
           title: Text('Customers'),
           elevation: 0,
-        //    leading: 
-        // IconButton(
-        //   icon: Icon(Icons.arrow_back),
-        //   onPressed: () {
-        // Get.off(() => SalesDashboard());
-        //   },
-        // ),
           actions: [
             IconButton(
               icon: Icon(
@@ -538,27 +585,36 @@ class CustomerDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() => Scaffold(
-          appBar: _buildAppBar(),
+          appBar: _buildAppBar(context),
           body: _buildBody(context),
         ));
   }
 
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       title: Obx(() => Text(
             controller.salesData.value?.partner.name ?? 'Dashboard',
             style: TextStyle(),
           )),
       elevation: 0,
-      // leading: 
-      //   IconButton(
-      //     icon: Icon(Icons.arrow_back),
-      //     onPressed: () {
-      //   Get.off(() => CustomersListScreen());
-      //     },
-      //   ),
-        
-      
+      actions: [
+        IconButton(
+          icon: Icon(Icons.location_on),
+          onPressed: () {
+            final partnerId = Get.arguments['partnerId'] ?? 0;
+            if (partnerId != 0) {
+              launchGoogleMapsByPartnerId(
+                partnerId: partnerId,
+                context: context,
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: Invalid partner ID')),
+              );
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -636,20 +692,15 @@ class Payment extends GetView<CustomerController> {
       if (salesData == null) return Container();
 
       return InkWell(
-        onTap: () async { // غيرناها لـ async
+        onTap: () async {
           final partnerId = Get.arguments['partnerId'];
-          
-          // استخدمنا await مع Get.to علشان نستنى النتيجة
           final result = await Get.to<bool>(
             () => InvoicePaymentPage(partnerId: partnerId),
             arguments: {'partnerId': partnerId},
           );
-          
-          // لو الدفع تم بنجاح (رجع true)
+
           if (result == true) {
-            // روح جيب بيانات العميل من السيرڤر تاني
             await Get.find<CustomerController>().fetchSalesData(partnerId);
-            // جيب تفاصيل البارتشر المحدثة
             await Get.find<PartnerController>().fetchPartnerDetails(partnerId);
           }
         },
@@ -674,23 +725,23 @@ class Payment extends GetView<CustomerController> {
     });
   }
 }
-  Widget _buildCard({required double height, required Widget child}) {
-    return Card(
-      child: Container(
-        width: double.infinity,
-        height: height,
-        margin: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: child,
-        ),
-      ),
-    );
-  }
 
+Widget _buildCard({required double height, required Widget child}) {
+  return Card(
+    child: Container(
+      width: double.infinity,
+      height: height,
+      margin: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: child,
+      ),
+    ),
+  );
+}
 
 class SalesChart extends GetView<CustomerController> {
   final List<Color> chartColors;
@@ -703,104 +754,111 @@ class SalesChart extends GetView<CustomerController> {
       final salesData = controller.salesData.value;
       if (salesData == null) return Container();
 
-      return Card(
-        child: buildCard(
-          height: MediaQuery.of(context).size.height * 0.60,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      return Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: _buildNotesCard(salesData.partner.internalNotes),
+          ),
+          Card(
+            child: buildCard(
+              height: MediaQuery.of(context).size.height * 0.60,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  Text(
-                    'Product Distribution',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  _buildMetricCard(
-                    'Top Product',
-                    salesData.products.isNotEmpty
-                        ? salesData.products.first.name
-                        : 'N/A',
-                    Icons.star,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Stack(
-                  children: [
-                    PieChart(
-                      PieChartData(
-                        startDegreeOffset: 25,
-                        sectionsSpace: 0,
-                        centerSpaceRadius: 55,
-                        sections: buildPieSections(salesData.products),
-                        pieTouchData: PieTouchData(
-                          touchCallback:
-                              (FlTouchEvent event, pieTouchResponse) {
-                            if (event is FlTapUpEvent &&
-                                pieTouchResponse != null &&
-                                pieTouchResponse.touchedSection != null) {
-                              final touchedIndex = pieTouchResponse
-                                  .touchedSection!.touchedSectionIndex;
-                              if (touchedIndex >= 0 &&
-                                  touchedIndex < salesData.products.length) {
-                                if (controller.selectedIndex.value ==
-                                    touchedIndex) {
-                                  controller.selectedIndex.value = null;
-                                  controller.selectedProduct.value = null;
-                                } else {
-                                  controller.selectedIndex.value = touchedIndex;
-                                  controller.selectedProduct.value =
-                                      salesData.products[touchedIndex];
-                                }
-                              }
-                            }
-                          },
-                          enabled: true,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Product Distribution',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Total',
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      _buildMetricCard(
+                        'Top Product',
+                        salesData.products.isNotEmpty
+                            ? salesData.products.first.name
+                            : 'N/A',
+                        Icons.star,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        PieChart(
+                          PieChartData(
+                            startDegreeOffset: 25,
+                            sectionsSpace: 0,
+                            centerSpaceRadius: 55,
+                            sections: buildPieSections(salesData.products),
+                            pieTouchData: PieTouchData(
+                              touchCallback:
+                                  (FlTouchEvent event, pieTouchResponse) {
+                                if (event is FlTapUpEvent &&
+                                    pieTouchResponse != null &&
+                                    pieTouchResponse.touchedSection != null) {
+                                  final touchedIndex = pieTouchResponse
+                                      .touchedSection!.touchedSectionIndex;
+                                  if (touchedIndex >= 0 &&
+                                      touchedIndex < salesData.products.length) {
+                                    if (controller.selectedIndex.value ==
+                                        touchedIndex) {
+                                      controller.selectedIndex.value = null;
+                                      controller.selectedProduct.value = null;
+                                    } else {
+                                      controller.selectedIndex.value = touchedIndex;
+                                      controller.selectedProduct.value =
+                                          salesData.products[touchedIndex];
+                                    }
+                                  }
+                                }
+                              },
+                              enabled: true,
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Total',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Obx(() => controller.selectedProduct.value != null
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: _buildProductDetails(
+                            controller.selectedProduct.value!,
+                            chartColors[controller.selectedIndex.value! %
+                                chartColors.length],
+                          ),
+                        )
+                      : const SizedBox.shrink()),
+                ],
               ),
-              Obx(() => controller.selectedProduct.value != null
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: _buildProductDetails(
-                        controller.selectedProduct.value!,
-                        chartColors[controller.selectedIndex.value! %
-                            chartColors.length],
-                      ),
-                    )
-                  : const SizedBox.shrink()),
-            ],
+            ),
           ),
-        ),
+        ],
       );
     });
   }
@@ -923,21 +981,58 @@ class SalesChart extends GetView<CustomerController> {
         SizedBox(width: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: 
-          [
+          children: [
             Text(
               title,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
-            SizedBox(width: 4,),
-            Text(value,
-              
+            SizedBox(
+              width: 4,
+            ),
+            Text(
+              value,
               style: TextStyle(fontSize: 12),
             ),
-            
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildNotesCard(String? notes) {
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.note, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Notes',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              notes?.isNotEmpty ?? false ? notes! : 'No notes available',
+              style: TextStyle(
+                fontSize: 14,
+                color: notes?.isNotEmpty ?? false ? Colors.black : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -992,39 +1087,37 @@ class MetricsGrid extends StatelessWidget {
                   title: 'Statement of Account',
                   subtitle: 'View your complete transaction history',
                   onTap: () async {
-                  final pickedFromDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                    helpText: 'Select Start Date', // Hint for "From" date
-                    confirmText: 'Next',
-                  );
-
-                  if (pickedFromDate != null) {
-                    final pickedToDate = await showDatePicker(
-                    context: context,
-                    initialDate: pickedFromDate,
-                    firstDate: pickedFromDate,
-                    lastDate: DateTime.now(),
-                    helpText: 'Select End Date', // Hint for "To" date
-                    confirmText: 'Confirm',
+                    final pickedFromDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                      helpText: 'Select Start Date',
+                      confirmText: 'Next',
                     );
 
-                    if (pickedToDate != null) {
-                    final pdfController = Get.put(PdfController());
-                    final partnerId = Get.arguments['partnerId'];
-                    pdfController.downloadAndOpenPdf(
-                      partnerId,
-                      pickedFromDate.toIso8601String(),
-                      pickedToDate.toIso8601String(),
-                    );
+                    if (pickedFromDate != null) {
+                      final pickedToDate = await showDatePicker(
+                        context: context,
+                        initialDate: pickedFromDate,
+                        firstDate: pickedFromDate,
+                        lastDate: DateTime.now(),
+                        helpText: 'Select End Date',
+                        confirmText: 'Confirm',
+                      );
+
+                      if (pickedToDate != null) {
+                        final pdfController = Get.put(PdfController());
+                        final partnerId = Get.arguments['partnerId'];
+                        pdfController.downloadAndOpenPdf(
+                          partnerId,
+                          pickedFromDate.toIso8601String(),
+                          pickedToDate.toIso8601String(),
+                        );
+                      }
                     }
-                  }
                   },
                 ),
-                  
-                
                 const SizedBox(height: 16),
                 _buildDetailsCard(
                   context: context,
@@ -1033,7 +1126,7 @@ class MetricsGrid extends StatelessWidget {
                   subtitle: 'Customer utilization patterns and frequency',
                   onTap: () {
                     // TODO: Implement navigation
-                  },    
+                  },
                 ),
               ],
             ),

@@ -10,7 +10,7 @@ import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 import 'package:boom_solutions_invoice/screens/liveTracking.dart';
 
 import 'package:boom_solutions_invoice/screens/splashScreen.dart';
-import 'package:boom_solutions_invoice/screens/testlocationnav/navbotton.dart';
+import 'package:boom_solutions_invoice/screens/maps/NearbyCustomer.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
