@@ -1,5 +1,6 @@
 // import 'package:boom_solutions_invoice/final/view/add_Customers.dart';
 
+import 'package:boom_solutions_invoice/CustomerDetail/Screen/CustomerListScreen.dart';
 import 'package:boom_solutions_invoice/final/view/add_Customers.dart';
 import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/screens/CustomerStatementPage.dart';
@@ -11,6 +12,7 @@ import 'package:boom_solutions_invoice/screens/liveTracking.dart';
 
 import 'package:boom_solutions_invoice/screens/splashScreen.dart';
 import 'package:boom_solutions_invoice/screens/maps/NearbyCustomer.dart';
+import 'package:boom_solutions_invoice/screens/visits_hestory_customer_Screen.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,6 +82,7 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/invoices', page: () => InvoiceListScreen()),
         GetPage(name: '/Stock', page: () => InventoryScreen()),
         GetPage(name: '/NearByCustomer', page: () => MapScreen()),
+        GetPage(name: '/VisitsScreen', page: () => VisitsScreen()),
         // GetPage(name: '/Stock', page: () => LiveTrackingPage()),
         GetPage(
           name: '/dashboard',

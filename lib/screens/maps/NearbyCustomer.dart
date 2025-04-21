@@ -183,7 +183,7 @@ class MapScreen extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.red.withOpacity(0.8),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -233,7 +233,7 @@ class MapScreen extends StatelessWidget {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        // backgroundColor: Colors.transparent,
         builder: (context) {
           return DraggableScrollableSheet(
             initialChildSize: 0.6,
@@ -243,7 +243,7 @@ class MapScreen extends StatelessWidget {
             builder: (context, scrollController) {
               return Container(
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  // color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
@@ -386,7 +386,7 @@ class MapScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          // color: Colors.grey[600],
                         ),
                       ),
                     ),
@@ -397,7 +397,7 @@ class MapScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -409,7 +409,7 @@ class MapScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -421,7 +421,7 @@ class MapScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -453,7 +453,7 @@ class MapScreen extends StatelessWidget {
                                   transaction['description'],
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    // color: Colors.grey[600],
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 2,
@@ -463,7 +463,7 @@ class MapScreen extends StatelessWidget {
                                   "Ref: ${transaction['reference']}",
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.grey[500],
+                                    // color: Colors.grey[500],
                                   ),
                                 ),
                               ],
@@ -515,7 +515,7 @@ class MapScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        // color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -533,7 +533,7 @@ class MapScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              // color: color.withOpacity(0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(

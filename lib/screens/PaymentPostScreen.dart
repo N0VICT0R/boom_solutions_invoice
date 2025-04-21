@@ -142,6 +142,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
               // e.g. partnerController.fetchPartnerDetails(widget.partnerId);
             },
             style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -150,7 +151,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
             child: Text(
               "    Pay All    ",
               style: TextStyle(
-                color: Colors.green[600],
+                // color: Colors.green[600],
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -16,7 +16,7 @@ class AuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Make sure both ThemeController and AuthController are available via GetX.
-    final themeController = Get.find<ThemeController>();
+    Get.find<ThemeController>();
     Get.put(AuthController()); // Ensures the AuthController is created
 
     return Scaffold(

@@ -5,7 +5,6 @@ import 'package:get_storage/get_storage.dart';
 class ThemeController extends GetxController {
   final _box = GetStorage();
   final _isDarkMode = false.obs;
-  
 
   bool get isDarkMode => _isDarkMode.value;
 
@@ -24,76 +23,152 @@ class ThemeController extends GetxController {
   }
 
   void createNewDeal() {
-    // Handle new deal creation
     Get.toNamed('/new-deal');
   }
 
   void collectPayment() {
-    // Handle payment collection
     Get.toNamed('/collect-payment');
   }
 
   void logVisit() {
-    // Handle visit logging
     Get.toNamed('/log-visit');
   }
 }
 
 class AppColors {
-  static const Color primaryLight = Color.fromARGB(255, 21, 21, 21);
-  static const Color primaryDark = Colors.white;
-  static const Color backgroundLight = Color.fromARGB(239, 249, 249, 255);
-  static const Color backgroundDark = Color(0xff181818);
-  static const Color textLight = Colors.black;
-  static const Color textDark = Colors.white;
-  static const Color cardLight = Colors.white;  
-  static Color cardDark =  Color.fromARGB(255, 26, 25, 25);
-  static const Color buttonLight = Colors.white;
-  static Color buttonDark = Color.fromARGB(255, 43, 41, 41);
+  // Core neutral colors for professionalism
+  static const Color primary = Color(0xFF1976D2); // Professional blue for accents
+  static const Color secondary = Color(0xFF757575); // Neutral gray for secondary elements
 
-  static const Color containerLight = Colors.white70;
-  static const Color containerDark = Colors.black54;
+  // Light theme colors
+  static const Color backgroundLight = Color(0xFFF5F5F5); // Soft off-white
+  static const Color surfaceLight = Color(0xFFFFFFFF); // Pure white for cards
+  static const Color textPrimaryLight = Color(0xFF212121); // Near-black for text
+  static const Color textSecondaryLight = Color(0xFF757575); // Gray for secondary text
+  static const Color buttonLight = Color(0xFF1976D2); // Blue for buttons
+  static const Color buttonTextLight = Color(0xFFFFFFFF); // White text on buttons
+
+  // Dark theme colors
+  static const Color backgroundDark = Color(0xFF121212); // Deep dark for background
+  static const Color surfaceDark = Color(0xFF1E1E1E); // Slightly lighter for cards
+  static const Color textPrimaryDark = Color(0xFFFFFFFF); // White for text
+  static const Color textSecondaryDark = Color(0xFFB0B0B0); // Light gray for secondary text
+  static const Color buttonDark = Color(0xFF1976D2); // Same blue for buttons
+  static const Color buttonTextDark = Color(0xFFFFFFFF); // White text on buttons
 }
 
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
-  primaryColor: AppColors.primaryLight,
+  primaryColor: AppColors.primary,
   scaffoldBackgroundColor: AppColors.backgroundLight,
-  textTheme: TextTheme(
-    bodyLarge: TextStyle(color: AppColors.textLight),
+  cardColor: AppColors.surfaceLight,
+  colorScheme: ColorScheme.light(
+    primary: AppColors.primary,
+    secondary: AppColors.secondary,
+    surface: AppColors.surfaceLight,
+    background: AppColors.backgroundLight,
+    onPrimary: AppColors.buttonTextLight,
+    onSurface: AppColors.textPrimaryLight,
+    onBackground: AppColors.textPrimaryLight,
   ),
-  cardColor: AppColors.cardLight,
+  textTheme: TextTheme(
+    displayLarge: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.bold,
+      color: AppColors.textPrimaryLight,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 16,
+      color: AppColors.textPrimaryLight,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 14,
+      color: AppColors.textSecondaryLight,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: AppColors.buttonTextLight,
+    ),
+  ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: AppColors.buttonLight,
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      foregroundColor: AppColors.buttonTextLight,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      elevation: 2,
     ),
   ),
   iconTheme: IconThemeData(
-    color: Colors.black,
-    
+    color: AppColors.textPrimaryLight,
+    size: 24,
   ),
+  appBarTheme: AppBarTheme(
+    backgroundColor: AppColors.surfaceLight,
+    foregroundColor: AppColors.textPrimaryLight,
+    elevation: 0,
+    centerTitle: true,
+  ),
+  dividerColor: AppColors.textSecondaryLight.withOpacity(0.2),
 );
 
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  primaryColor: AppColors.primaryDark,
+  primaryColor: AppColors.primary,
   scaffoldBackgroundColor: AppColors.backgroundDark,
-  textTheme: TextTheme(
-    bodyLarge: TextStyle(color: AppColors.textDark),
+  cardColor: AppColors.surfaceDark,
+  colorScheme: ColorScheme.dark(
+    primary: AppColors.primary,
+    secondary: AppColors.secondary,
+    surface: AppColors.surfaceDark,
+    background: AppColors.backgroundDark,
+    onPrimary: AppColors.buttonTextDark,
+    onSurface: AppColors.textPrimaryDark,
+    onBackground: AppColors.textPrimaryDark,
   ),
-  cardColor: AppColors.cardDark,
+  textTheme: TextTheme(
+    displayLarge: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.bold,
+      color: AppColors.textPrimaryDark,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 16,
+      color: AppColors.textPrimaryDark,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 14,
+      color: AppColors.textSecondaryDark,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: AppColors.buttonTextDark,
+    ),
+  ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: AppColors.buttonDark,
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      foregroundColor: AppColors.buttonTextDark,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      elevation: 2,
     ),
   ),
   iconTheme: IconThemeData(
-    color: AppColors.textDark,
+    color: AppColors.textPrimaryDark,
+    size: 24,
   ),
+  appBarTheme: AppBarTheme(
+    backgroundColor: AppColors.surfaceDark,
+    foregroundColor: AppColors.textPrimaryDark,
+    elevation: 0,
+    centerTitle: true,
+  ),
+  dividerColor: AppColors.textSecondaryDark.withOpacity(0.2),
 );
 
 class AppTheme {

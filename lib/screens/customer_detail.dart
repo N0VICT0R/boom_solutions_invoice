@@ -12,7 +12,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 
 //=======================
-// Utility Function for Google Maps
+// Utility Function for Google Maps (Unchanged)
 //=======================
 Future<void> launchGoogleMapsByPartnerId({
   required int partnerId,
@@ -22,7 +22,6 @@ Future<void> launchGoogleMapsByPartnerId({
   final String token = GetStorage().read('token') ?? '';
 
   try {
-    // Fetch partner data
     final response = await http.get(
       Uri.parse('$baseUrl/api/v1/partners/map?api_token=$token'),
     );
@@ -30,7 +29,6 @@ Future<void> launchGoogleMapsByPartnerId({
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] && data['partners'] != null && data['partners'].isNotEmpty) {
-        // Find the partner with the matching ID
         final partnerJson = (data['partners'] as List).firstWhere(
           (p) => p['id'] == partnerId,
           orElse: () => throw Exception('Partner with ID $partnerId not found'),
@@ -53,7 +51,6 @@ Future<void> launchGoogleMapsByPartnerId({
   }
 }
 
-// Temporary Partner class for map data
 class _Partner {
   final int id;
   final String name;
@@ -81,16 +78,18 @@ class _Partner {
 }
 
 //=======================
-// Rest of Your Existing Data Models
+// Data Models
 //=======================
 class PartnerDetails {
   final int id;
   final String name;
   final double balance;
   final double amountDueToday;
+  final int daysOldestDue;
   final double aov;
   final double oct;
   final int orderCount;
+  final int daysSincePurchase;
   final String currency;
 
   PartnerDetails({
@@ -98,9 +97,11 @@ class PartnerDetails {
     required this.name,
     required this.balance,
     required this.amountDueToday,
+    required this.daysOldestDue,
     required this.aov,
     required this.oct,
     required this.orderCount,
+    required this.daysSincePurchase,
     required this.currency,
   });
 
@@ -110,52 +111,13 @@ class PartnerDetails {
       name: json['name'] ?? 'Customer',
       balance: (json['balance'] ?? 0.0).toDouble(),
       amountDueToday: (json['amount_due_today'] ?? 0.0).toDouble(),
+      daysOldestDue: json['days_oldest_due'] ?? 0,
       aov: (json['aov'] ?? 0.0).toDouble(),
       oct: (json['oct'] ?? 0.0).toDouble(),
       orderCount: json['order_count'] ?? 0,
+      daysSincePurchase: json['days_since_purchase'] ?? 0,
       currency: json['currency'] ?? 'EGP',
     );
-  }
-}
-
-class PartnerList {
-  final int id;
-  final String name;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? country;
-  final dynamic phone;
-  final dynamic mobile;
-
-  PartnerList({
-    required this.id,
-    required this.name,
-    this.address,
-    this.city,
-    this.state,
-    this.country,
-    this.phone,
-    this.mobile,
-  });
-
-  factory PartnerList.fromJson(Map<String, dynamic> json) {
-    return PartnerList(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? 'No Name',
-      address: _parseString(json['address']),
-      city: _parseString(json['city']),
-      state: _parseString(json['state']),
-      country: _parseString(json['country']),
-      phone: json['phone'],
-      mobile: json['mobile'],
-    );
-  }
-
-  static String? _parseString(dynamic value) {
-    if (value is String) return value;
-    if (value == false) return null;
-    return value?.toString();
   }
 }
 
@@ -231,68 +193,6 @@ class Product {
 //=======================
 // Controllers
 //=======================
-class CustomerListController extends GetxController {
-  final isLoading = true.obs;
-  final hasError = false.obs;
-  final partners = <PartnerList>[].obs;
-  final filteredPartners = <PartnerList>[].obs;
-  final isDarkMode = true.obs;
-
-  void toggleTheme() => isDarkMode.value = !isDarkMode.value;
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchCustomers();
-  }
-
-  Future<void> fetchCustomers() async {
-    try {
-      isLoading(true);
-      hasError(false);
-      final token = GetStorage().read('token') ?? '';
-      final url =
-          'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['partners'] is List) {
-          partners.assignAll(
-            (data['partners'] as List)
-                .map((e) => PartnerList.fromJson(e))
-                .toList(),
-          );
-          filteredPartners.assignAll(partners);
-        }
-      } else {
-        hasError(true);
-      }
-    } catch (e) {
-      hasError(true);
-    } finally {
-      isLoading(false);
-    }
-  }
-
-  void searchCustomers(String query) {
-    if (query.isEmpty) {
-      filteredPartners.assignAll(partners);
-    } else {
-      filteredPartners.assignAll(
-        partners
-            .where((partner) =>
-                partner.name.toLowerCase().contains(query.toLowerCase()))
-            .toList(),
-      );
-    }
-  }
-
-  void sortCustomers() {
-    filteredPartners.sort((a, b) => a.name.compareTo(b.name));
-  }
-}
-
 class CustomerController extends GetxController {
   final isDarkMode = true.obs;
   final isLoading = true.obs;
@@ -377,189 +277,8 @@ class PartnerController extends GetxController {
 }
 
 //=======================
-// Screens
+// Customer Detail Screen
 //=======================
-class CustomersListScreen extends StatefulWidget {
-  @override
-  _CustomersListScreenState createState() => _CustomersListScreenState();
-}
-
-class _CustomersListScreenState extends State<CustomersListScreen>
-    with WidgetsBindingObserver {
-  final CustomerListController controller = Get.put(CustomerListController());
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      controller.fetchCustomers();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(
-      () => Scaffold(
-        appBar: AppBar(
-          title: Text('Customers'),
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: Icon(
-                  controller.isDarkMode.value ? Icons.add_outlined : Icons.add),
-              onPressed: () {
-                Get.toNamed("addcustomer");
-              },
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            _buildSearchAndSort(),
-            Expanded(child: _buildBody()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchAndSort() {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              onChanged: controller.searchCustomers,
-              decoration: InputDecoration(
-                hintText: 'Search customers...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.sort_by_alpha),
-            onPressed: controller.sortCustomers,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    return Obx(() {
-      if (controller.isLoading.value) return _buildLoading();
-      if (controller.hasError.value) return _buildError();
-      if (controller.filteredPartners.isEmpty) return _buildEmptyState();
-      return RefreshIndicator(
-        onRefresh: controller.fetchCustomers,
-        child: ListView.builder(
-          padding: EdgeInsets.all(16),
-          itemCount: controller.filteredPartners.length,
-          itemBuilder: (context, index) {
-            final partner = controller.filteredPartners[index];
-            return _buildCustomerCard(partner);
-          },
-        ),
-      );
-    });
-  }
-
-  Widget _buildLoading() => Center(child: CircularProgressIndicator());
-
-  Widget _buildError() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('Failed to load customers'),
-          ElevatedButton(
-            onPressed: controller.fetchCustomers,
-            child: Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people_alt_outlined, size: 64),
-          SizedBox(height: 16),
-          Text('No customers found', style: TextStyle(fontSize: 18)),
-          ElevatedButton(
-            onPressed: controller.fetchCustomers,
-            child: Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomerCard(PartnerList partner) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        title: Text(
-          partner.name,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (partner.address?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.location_on, partner.address!),
-            if (partner.city?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.location_city, partner.city!),
-            if (partner.state?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.map, partner.state!),
-            if (partner.country?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.public, partner.country!),
-            if (partner.phone != null)
-              _buildInfoRow(Icons.phone, partner.phone.toString()),
-            if (partner.mobile != null)
-              _buildInfoRow(Icons.phone_iphone, partner.mobile.toString()),
-          ],
-        ),
-        trailing: Icon(Icons.chevron_right),
-        onTap: () => Get.to(() => CustomerDetailScreen(partnerId: partner.id),
-            arguments: {'partnerId': partner.id}),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Visibility(
-      visible: text.isNotEmpty,
-      child: Row(
-        children: [
-          Icon(icon, size: 16),
-          SizedBox(width: 8),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-}
-
 class CustomerDetailScreen extends StatelessWidget {
   final CustomerController controller = Get.put(CustomerController());
   final PartnerController partnerController = Get.put(PartnerController());
@@ -593,13 +312,13 @@ class CustomerDetailScreen extends StatelessWidget {
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       title: Obx(() => Text(
-            controller.salesData.value?.partner.name ?? 'Dashboard',
-            style: TextStyle(),
+            controller.salesData.value?.partner.name ?? 'Customer',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           )),
       elevation: 0,
       actions: [
         IconButton(
-          icon: Icon(Icons.location_on),
+          icon: const Icon(Icons.location_on, size: 20),
           onPressed: () {
             final partnerId = Get.arguments['partnerId'] ?? 0;
             if (partnerId != 0) {
@@ -609,7 +328,7 @@ class CustomerDetailScreen extends StatelessWidget {
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Invalid partner ID')),
+                const SnackBar(content: Text('Error: Invalid partner ID')),
               );
             }
           },
@@ -620,13 +339,14 @@ class CustomerDetailScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context) {
     if (controller.isLoading.value) return _buildLoading();
-    if (controller.hasError.value || controller.salesData.value == null)
+    if (controller.hasError.value || controller.salesData.value == null) {
       return _buildError();
+    }
     return _buildMainContent(context);
   }
 
   Widget _buildLoading() {
-    return Center(child: CircularProgressIndicator());
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildError() {
@@ -634,14 +354,15 @@ class CustomerDetailScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Customer has no data',
-            style: TextStyle(fontSize: 25),
+          const Text(
+            'No data available',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
+          const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () =>
                 controller.fetchSalesData(Get.arguments['partnerId'] ?? 0),
-            child: Text('Retry'),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -649,32 +370,79 @@ class CustomerDetailScreen extends StatelessWidget {
   }
 
   Widget _buildMainContent(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final padding = size.width * 0.02;
-    final cardSpacing = size.height * 0.02;
-
     return RefreshIndicator(
       onRefresh: () async {
         await controller.fetchSalesData(Get.arguments['partnerId'] ?? 11);
         await partnerController
             .fetchPartnerDetails(Get.arguments['partnerId'] ?? 11);
       },
-      child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: cardSpacing),
-              Payment(),
-              SizedBox(height: cardSpacing),
-              SalesChart(chartColors: chartColors),
-              SizedBox(height: cardSpacing),
-              MetricsGrid(),
-              SizedBox(height: cardSpacing * 2),
-            ],
-          ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final padding = constraints.maxWidth * 0.04;
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Notes (Moved to top)
+                  Obx(() {
+                    final notes = controller.salesData.value?.partner.internalNotes;
+                    if (notes?.isNotEmpty ?? false) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildNotesCard(notes!),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                  // Payment
+                   Payment(),
+                  const SizedBox(height: 12),
+                  // Metrics Grid
+                  const MetricsGrid(),
+                  const SizedBox(height: 12),
+                  // Sales Chart
+                  SalesChart(chartColors: chartColors),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNotesCard(String notes) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.note, size: 16, color: Colors.yellow),
+                SizedBox(width: 8),
+                Text(
+                  'Notes',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              notes,
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+          ],
         ),
       ),
     );
@@ -689,7 +457,7 @@ class Payment extends GetView<CustomerController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final salesData = controller.salesData.value;
-      if (salesData == null) return Container();
+      if (salesData == null) return const SizedBox.shrink();
 
       return InkWell(
         onTap: () async {
@@ -704,43 +472,29 @@ class Payment extends GetView<CustomerController> {
             await Get.find<PartnerController>().fetchPartnerDetails(partnerId);
           }
         },
-        child: _buildCard(
-          height: MediaQuery.of(context).size.height * 0.10,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              'Make Payment',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
+        child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text(
+                  'Make Payment',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              ],
             ),
           ),
         ),
       );
     });
   }
-}
-
-Widget _buildCard({required double height, required Widget child}) {
-  return Card(
-    child: Container(
-      width: double.infinity,
-      height: height,
-      margin: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: child,
-      ),
-    ),
-  );
 }
 
 class SalesChart extends GetView<CustomerController> {
@@ -752,113 +506,105 @@ class SalesChart extends GetView<CustomerController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final salesData = controller.salesData.value;
-      if (salesData == null) return Container();
+      if (salesData == null) return const SizedBox.shrink();
 
-      return Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: _buildNotesCard(salesData.partner.internalNotes),
-          ),
-          Card(
-            child: buildCard(
-              height: MediaQuery.of(context).size.height * 0.60,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Product Distribution',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      _buildMetricCard(
-                        'Top Product',
-                        salesData.products.isNotEmpty
-                            ? salesData.products.first.name
-                            : 'N/A',
-                        Icons.star,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        PieChart(
-                          PieChartData(
-                            startDegreeOffset: 25,
-                            sectionsSpace: 0,
-                            centerSpaceRadius: 55,
-                            sections: buildPieSections(salesData.products),
-                            pieTouchData: PieTouchData(
-                              touchCallback:
-                                  (FlTouchEvent event, pieTouchResponse) {
-                                if (event is FlTapUpEvent &&
-                                    pieTouchResponse != null &&
-                                    pieTouchResponse.touchedSection != null) {
-                                  final touchedIndex = pieTouchResponse
-                                      .touchedSection!.touchedSectionIndex;
-                                  if (touchedIndex >= 0 &&
-                                      touchedIndex < salesData.products.length) {
-                                    if (controller.selectedIndex.value ==
-                                        touchedIndex) {
-                                      controller.selectedIndex.value = null;
-                                      controller.selectedProduct.value = null;
-                                    } else {
-                                      controller.selectedIndex.value = touchedIndex;
-                                      controller.selectedProduct.value =
-                                          salesData.products[touchedIndex];
-                                    }
-                                  }
-                                }
-                              },
-                              enabled: true,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Total',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    'Product Distribution',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Obx(() => controller.selectedProduct.value != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: _buildProductDetails(
-                            controller.selectedProduct.value!,
-                            chartColors[controller.selectedIndex.value! %
-                                chartColors.length],
-                          ),
-                        )
-                      : const SizedBox.shrink()),
+                  _buildMetricCard(
+                    'Top Product',
+                    salesData.products.isNotEmpty
+                        ? salesData.products.first.name
+                        : 'N/A',
+                    Icons.star,
+                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.3,
+                child: Stack(
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        startDegreeOffset: 25,
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 40,
+                        sections: buildPieSections(salesData.products),
+                        pieTouchData: PieTouchData(
+                          touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                            if (event is FlTapUpEvent &&
+                                pieTouchResponse != null &&
+                                pieTouchResponse.touchedSection != null) {
+                              final touchedIndex = pieTouchResponse
+                                  .touchedSection!.touchedSectionIndex;
+                              if (touchedIndex >= 0 &&
+                                  touchedIndex < salesData.products.length) {
+                                if (controller.selectedIndex.value ==
+                                    touchedIndex) {
+                                  controller.selectedIndex.value = null;
+                                  controller.selectedProduct.value = null;
+                                } else {
+                                  controller.selectedIndex.value = touchedIndex;
+                                  controller.selectedProduct.value =
+                                      salesData.products[touchedIndex];
+                                }
+                              }
+                            }
+                          },
+                          enabled: true,
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Total',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Obx(() => controller.selectedProduct.value != null
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _buildProductDetails(
+                        controller.selectedProduct.value!,
+                        chartColors[controller.selectedIndex.value! %
+                            chartColors.length],
+                      ),
+                    )
+                  : const SizedBox.shrink()),
+            ],
           ),
-        ],
+        ),
       );
     });
   }
@@ -875,10 +621,10 @@ class SalesChart extends GetView<CustomerController> {
         title: product.percentage > 5.0
             ? '${product.percentage.toStringAsFixed(1)}%'
             : '',
-        radius: isSelected ? 70 : 60,
-        titleStyle: TextStyle(
-          fontSize: isSelected ? 18 : 16,
-          fontWeight: FontWeight.bold,
+        radius: isSelected ? 60 : 50,
+        titleStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
         showTitle: product.percentage > 5.0,
@@ -889,19 +635,18 @@ class SalesChart extends GetView<CustomerController> {
 
   Widget _buildProductDetails(Product product, Color color) {
     return Card(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-        ),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 12,
-                  height: 12,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: color,
                     shape: BoxShape.circle,
@@ -911,9 +656,9 @@ class SalesChart extends GetView<CustomerController> {
                 Expanded(
                   child: Text(
                     product.name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -940,14 +685,12 @@ class SalesChart extends GetView<CustomerController> {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 14,
+            style: const TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -956,83 +699,28 @@ class SalesChart extends GetView<CustomerController> {
     );
   }
 
-  Widget buildCard({required double height, required Widget child}) {
-    return Card(
-      child: Container(
-        width: double.infinity,
-        height: height,
-        margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: child,
-        ),
-      ),
-    );
-  }
-
   Widget _buildMetricCard(String title, String value, IconData icon) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Icon(icon, size: 16),
-        SizedBox(width: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Icon(icon, size: 14, color: Colors.grey),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(
-              width: 4,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             Text(
               value,
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotesCard(String? notes) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.note, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  'Notes',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              notes?.isNotEmpty ?? false ? notes! : 'No notes available',
-              style: TextStyle(
-                fontSize: 14,
-                color: notes?.isNotEmpty ?? false ? Colors.black : Colors.grey,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
@@ -1044,26 +732,30 @@ class MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetX<PartnerController>(
       builder: (controller) {
-        if (controller.isLoading.value) return CircularProgressIndicator();
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final partner = controller.partnerDetails.value;
-        if (partner == null) return Text("No Data");
+        if (partner == null) {
+          return const Center(child: Text("No Data"));
+        }
 
-        return SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
                     childAspectRatio: 1.3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
                   ),
-                  itemCount: 4,
+                  itemCount: 6,
                   itemBuilder: (context, index) {
                     return _buildMetricCard(
                       context: context,
@@ -1076,16 +768,17 @@ class MetricsGrid extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'Details',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.receipt_long,
                   title: 'Statement of Account',
-                  subtitle: 'View your complete transaction history',
+                  subtitle: 'View transaction history',
                   onTap: () async {
                     final pickedFromDate = await showDatePicker(
                       context: context,
@@ -1093,7 +786,6 @@ class MetricsGrid extends StatelessWidget {
                       firstDate: DateTime(2000),
                       lastDate: DateTime.now(),
                       helpText: 'Select Start Date',
-                      confirmText: 'Next',
                     );
 
                     if (pickedFromDate != null) {
@@ -1103,7 +795,6 @@ class MetricsGrid extends StatelessWidget {
                         firstDate: pickedFromDate,
                         lastDate: DateTime.now(),
                         helpText: 'Select End Date',
-                        confirmText: 'Confirm',
                       );
 
                       if (pickedToDate != null) {
@@ -1118,25 +809,25 @@ class MetricsGrid extends StatelessWidget {
                     }
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.map_outlined,
                   title: 'Visit Information',
-                  subtitle: 'Customer utilization patterns and frequency',
+                  subtitle: 'View customer visit patterns',
                   onTap: () {
-                    // TODO: Implement navigation
+                    Get.toNamed("VisitsScreen");
                   },
                 ),
               ],
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  String _getMetricTitle(int index, dynamic partner) {
+  String _getMetricTitle(int index, PartnerDetails partner) {
     switch (index) {
       case 0:
         return 'Balance';
@@ -1146,21 +837,29 @@ class MetricsGrid extends StatelessWidget {
         return 'AOV';
       case 3:
         return 'OCT';
+      case 4:
+        return 'Oldest Due';
+      case 5:
+        return 'Last Purchase';
       default:
         return '';
     }
   }
 
-  String _getMetricValue(int index, dynamic partner) {
+  String _getMetricValue(int index, PartnerDetails partner) {
     switch (index) {
       case 0:
-        return '\$${partner.balance.abs().toStringAsFixed(1)}';
+        return '${partner.currency} ${partner.balance.abs().toStringAsFixed(1)}';
       case 1:
-        return '\$${partner.amountDueToday.abs().toStringAsFixed(0)}';
+        return '${partner.currency} ${partner.amountDueToday.abs().toStringAsFixed(0)}';
       case 2:
-        return '\$${partner.aov.toStringAsFixed(1)}';
+        return '${partner.currency} ${partner.aov.toStringAsFixed(1)}';
       case 3:
         return '${partner.oct.toStringAsFixed(2)} days';
+      case 4:
+        return '${partner.daysOldestDue} days';
+      case 5:
+        return '${partner.daysSincePurchase} days';
       default:
         return '';
     }
@@ -1176,6 +875,10 @@ class MetricsGrid extends StatelessWidget {
         return Icons.shopping_cart;
       case 3:
         return Icons.calendar_today;
+      case 4:
+        return Icons.hourglass_top;
+      case 5:
+        return Icons.history;
       default:
         return Icons.error;
     }
@@ -1188,28 +891,29 @@ class MetricsGrid extends StatelessWidget {
     required IconData icon,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Theme.of(context).primaryColor),
+            Icon(icon, size: 20, color: Theme.of(context).primaryColor),
             const SizedBox(height: 8),
-            FittedBox(
-              child: Text(
-                value,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: MediaQuery.of(context).size.width*.05,
+                  ),
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
+                    fontSize: MediaQuery.of(context).size.width*.03,
                   ),
             ),
           ],
@@ -1226,20 +930,25 @@ class MetricsGrid extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).primaryColor),
+        leading: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
         title: Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
         ),
         subtitle: Text(
           subtitle,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
         onTap: onTap,
       ),
     );

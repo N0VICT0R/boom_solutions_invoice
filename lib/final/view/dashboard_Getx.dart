@@ -1,6 +1,6 @@
 import 'dart:math';
-
 import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
+import 'package:boom_solutions_invoice/widgets/notes/notes.dart';
 import 'package:boom_solutions_invoice/widgets/salesChart.dart' show SalesChart, SalesChart22, SalesChartCard;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,27 +12,8 @@ import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 // Utility for responsive font sizes
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
-  final scaleFactor = screenWidth / 500;
+  final scaleFactor = screenWidth / 400;
   return (baseFontSize * scaleFactor).clamp(baseFontSize * 0.8, baseFontSize * 1.2);
-}
-
-// Random quotes list
-final List<String> inspirationalQuotes = [
-  "Success is not the absence of obstacles, but the courage to push through them.",
-  "The only limit to our realization of tomorrow is our doubts of today.",
-  "Your time is limited, so don’t waste it living someone else’s life.",
-  "The future belongs to those who believe in the beauty of their dreams.",
-  "Do what you can, with what you have, where you are.",
-  "Every moment is a fresh beginning.",
-  "The best way to predict the future is to create it.",
-  "Stay hungry, stay foolish.",
-  "You miss 100% of the shots you don’t take.",
-  "Dream big, work hard, stay focused.",
-];
-
-String getRandomQuote() {
-  final random = Random();
-  return inspirationalQuotes[random.nextInt(inspirationalQuotes.length)];
 }
 
 class SalesDashboard extends StatefulWidget {
@@ -153,27 +134,6 @@ class _SalesDashboardState extends State<SalesDashboard> {
     final authController = Get.put<AuthController>(AuthController());
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          'Sales Dashboard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: getResponsiveFontSize(context, 20),
-          ),
-        ),
-        actions: [
-          // IconButton(
-          //   icon: Obx(() => Icon(
-          //         Get.find<ThemeController>().isDarkMode
-          //             ? Icons.dark_mode
-          //             : Icons.light_mode,
-          //         color: isDark ? Colors.white70 : Colors.black87,
-          //       )),
-          //   onPressed: () => Get.find<ThemeController>().toggleTheme(),
-          // ),
-        ],
-      ),
       body: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 24.0 : 10.0,
@@ -186,6 +146,49 @@ class _SalesDashboardState extends State<SalesDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 20, 0, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 10, 0, 0),
+                            child: Text(
+                              'Welcome back !',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: getResponsiveFontSize(context, 16),
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 0, 25),
+                            child: Text(
+                              '${Get.find<AuthController>().currentUser.value?.name ?? 'Guest'}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: getResponsiveFontSize(context, 24),
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.notifications_none_rounded,
+                          size: 32,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
                 Container(
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[900] : Colors.white,
@@ -197,15 +200,17 @@ class _SalesDashboardState extends State<SalesDashboard> {
                   ),
                   child: SalesChartCard(),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(
+                  height: 10,
+                ),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: isTablet ? 4 : 2,
                     childAspectRatio: isTablet ? 1.5 : 1.8,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
                   ),
                   itemCount: 4,
                   itemBuilder: (context, index) {
@@ -223,9 +228,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
-                const _SectionTitle('Quick_Position'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -238,30 +241,30 @@ class _SalesDashboardState extends State<SalesDashboard> {
                   itemCount: 4,
                   itemBuilder: (context, index) {
                     final actions = [
-                        {
-                          'icon': Icons.store,
-                          'label': 'Stock',
-                          'action': () {
-                            Get.find<DashboardController>().createNewDeal();
-                            Get.toNamed('/Stock');
-                          }
-                        },
-                        {
-                          'icon': Icons.payment,
-                          'label': 'Receive Payment',
-                          'action': () =>
-                              Get.find<DashboardController>().collectPayment()
-                        },
-                        {
-                          'icon': Icons.pin_drop,
-                          'label': 'Nearby Customers',
-                          'action': () => Get.toNamed('/NearByCustomer')
-                        },
-                        {
-                          'icon': Icons.people_alt_outlined,
-                          'label': 'Customers',
-                          'action': () => Get.toNamed('/customers')
-                        },
+                      {
+                        'icon': Icons.store,
+                        'label': 'Stock',
+                        'action': () {
+                          Get.find<DashboardController>().createNewDeal();
+                          Get.toNamed('/Stock');
+                        }
+                      },
+                      {
+                        'icon': Icons.payment,
+                        'label': 'Receive Payment',
+                        'action': () =>
+                            Get.find<DashboardController>().collectPayment()
+                      },
+                      {
+                        'icon': Icons.pin_drop,
+                        'label': 'Nearby Customers',
+                        'action': () => Get.toNamed('/NearByCustomer')
+                      },
+                      {
+                        'icon': Icons.people_alt_outlined,
+                        'label': 'Customers',
+                        'action': () => Get.toNamed('/customers')
+                      },
                     ];
 
                     return _ActionButton(
@@ -273,138 +276,11 @@ class _SalesDashboardState extends State<SalesDashboard> {
                   },
                 ),
                 const SizedBox(height: 20),
-                _DashboardCard(
-                  height: screenSize.height * (isTablet ? 0.3 : 0.35),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _SectionTitle('Notes'),
-                      const SizedBox(height: 8),
-                      GetBuilder<DashboardController>(
-                        builder: (controller) => TextField(
-                          controller: controller.noteController,
-                          decoration: InputDecoration(
-                            hintText: 'Add note...',
-                            hintStyle: TextStyle(
-                              fontSize: getResponsiveFontSize(context, 14),
-                            ),
-                            filled: true,
-                            fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                Icons.add_circle,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                              ),
-                              onPressed: () {
-                                controller.addNote();
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  if (_scrollController.hasClients) {
-                                    _scrollController.animateTo(
-                                      _scrollController.position.maxScrollExtent,
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeOut,
-                                    );
-                                  }
-                                });
-                              },
-                            ),
-                          ),
-                          style: TextStyle(
-                            fontSize: getResponsiveFontSize(context, 14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Obx(() {
-                          final notes = Get.find<DashboardController>().notes;
-                          if (notes.isEmpty) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'No notes yet',
-                                    style: TextStyle(
-                                      color: isDark ? Colors.grey[500] : Colors.grey[400],
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: getResponsiveFontSize(context, 14),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '"${getRandomQuote()}"',
-                                    style: TextStyle(
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: getResponsiveFontSize(context, 12),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return ListView.separated(
-                            physics: const BouncingScrollPhysics(),
-                            separatorBuilder: (_, __) => Divider(
-                              height: 1,
-                              color: isDark ? Colors.grey[800] : Colors.grey[200],
-                            ),
-                            itemCount: notes.length + 1,
-                            itemBuilder: (_, index) {
-                              if (index == notes.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Text(
-                                    '"${getRandomQuote()}"',
-                                    style: TextStyle(
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: getResponsiveFontSize(context, 12),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
-                              }
-                              final note = notes.reversed.toList()[index];
-                              return ListTile(
-                                dense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                  horizontal: 8,
-                                ),
-                                leading: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                                title: Text(
-                                  note,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontSize: getResponsiveFontSize(context, 14),
-                                      ),
-                                ),
-                              );
-                            },
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
+                NotesWidget(
+                  height: screenSize.height * (isTablet ? 0.39 : 0.35),
+                  scrollController: _scrollController,
                 ),
-                const SizedBox(height: 20),
+                // const SizedBox(height: 20),
               ],
             ),
           );
@@ -478,244 +354,6 @@ class _SalesDashboardState extends State<SalesDashboard> {
   }
 }
 
-class MinimalLineChart extends StatelessWidget {
-  final List<Map<String, dynamic>> data;
-  final String timeRange;
-
-  const MinimalLineChart({
-    Key? key,
-    required this.data,
-    required this.timeRange,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 18,
-              interval: _calculateInterval(),
-              getTitlesWidget: (value, meta) {
-                if (value < 0 || value >= data.length) {
-                  return const SizedBox();
-                }
-
-                final date = data[value.toInt()]['date'] as DateTime;
-                String dateLabel;
-                if (timeRange == '1y' || _isLongTimeRange()) {
-                  dateLabel = DateFormat('yyyy').format(date);
-                } else if (timeRange == '3m' || timeRange == 'q') {
-                  dateLabel = DateFormat('MMM').format(date);
-                } else {
-                  dateLabel = DateFormat('MMM d').format(date);
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 5.0),
-                  child: Text(
-                    dateLabel,
-                    style: TextStyle(
-                      fontSize: getResponsiveFontSize(context, 10),
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              interval: 50,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(),
-                  style: TextStyle(
-                    fontSize: getResponsiveFontSize(context, 10),
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w400,
-                  ),
-                  textAlign: TextAlign.right,
-                );
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        minX: 0,
-        maxX: data.length.toDouble() - 1,
-        minY: 0,
-        maxY: _getMaxY() * 1.1,
-        lineBarsData: [
-          LineChartBarData(
-            spots: _createSpots(),
-            isCurved: true,
-            curveSmoothness: 0.4,
-            color: Colors.blue[500],
-            barWidth: 2.5,
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: Colors.blue[100]?.withOpacity(0.15),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue[300]!.withOpacity(0.15),
-                  Colors.blue[100]!.withOpacity(0.05),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ],
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            tooltipRoundedRadius: 8,
-            tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            getTooltipItems: (List<LineBarSpot> touchedSpots) {
-              return touchedSpots.map((spot) {
-                final date = data[spot.x.toInt()]['date'] as DateTime;
-                final value = spot.y;
-                return LineTooltipItem(
-                  '${DateFormat('MMM d, yyyy').format(date)}\n',
-                  TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: getResponsiveFontSize(context, 12),
-                  ),
-                  children: [
-                    TextSpan(
-                      text: value.toStringAsFixed(1),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: getResponsiveFontSize(context, 12),
-                      ),
-                    ),
-                  ],
-                );
-              }).toList();
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<FlSpot> _createSpots() {
-    return List.generate(data.length, (index) {
-      return FlSpot(index.toDouble(), (data[index]['value'] as double));
-    });
-  }
-
-  double _getMaxY() {
-    double max = 0;
-    for (var item in data) {
-      final value = item['value'] as double;
-      if (value > max) {
-        max = value;
-      }
-    }
-    return max;
-  }
-
-  double _calculateInterval() {
-    if (timeRange == '7d') return 1;
-    if (timeRange == '1m') return max(1, (data.length / 4).floor().toDouble());
-    if (timeRange == '3m' || timeRange == 'q') return max(1, (data.length / 3).floor().toDouble());
-    if (timeRange == '1y') return max(1, (data.length / 6).floor().toDouble());
-    if (data.length <= 7) return 1;
-    if (data.length <= 30) return 5;
-    if (data.length <= 90) return 15;
-    return 30;
-  }
-
-  bool _isLongTimeRange() {
-    if (timeRange != 'custom' || data.isEmpty) return false;
-    final firstDate = data.first['date'] as DateTime;
-    final lastDate = data.last['date'] as DateTime;
-    int monthsDiff = (lastDate.year - firstDate.year) * 12 + lastDate.month - firstDate.month;
-    return monthsDiff >= 6;
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  final Widget child;
-  final double height;
-
-  const _DashboardCard({
-    required this.child,
-    required this.height,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return SingleChildScrollView(
-      child: Expanded(
-        child: Column(
-          children: [
-            Container(
-              height: height,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-                    blurRadius: isDark ? 20 : 10,
-                    offset: const Offset(0, 5),
-                  )
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: child,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.3,
-            fontSize: getResponsiveFontSize(context, 18),
-          ),
-    );
-  }
-}
-
 class _MetricCard extends StatelessWidget {
   final String title;
   final String value;
@@ -744,7 +382,7 @@ class _MetricCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -753,17 +391,23 @@ class _MetricCard extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    fontSize: getResponsiveFontSize(context, 12),
+                    fontSize: getResponsiveFontSize(context, 10),
                   ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
-                    fontSize: getResponsiveFontSize(context, 20),
-                  ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: getResponsiveFontSize(context, 16),
+                    ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
             ),
           ],
         ),
@@ -805,13 +449,13 @@ class _ActionButton extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
+          Icon(icon, size: 18),
           const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w500,
-              fontSize: getResponsiveFontSize(context, 13),
+              fontSize: getResponsiveFontSize(context, 10),
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -819,9 +463,4 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class AppColors {
-  static const Color backgroundLight = Colors.blue;
-  static const Color backgroundDark = Colors.blue;
 }

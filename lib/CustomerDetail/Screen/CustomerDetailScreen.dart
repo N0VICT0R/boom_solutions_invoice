@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
+  
   final CustomerController controller = Get.put(CustomerController());
   final List<Color> chartColors = [
     Colors.black,
