@@ -1,5 +1,5 @@
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
-import 'package:boom_solutions_invoice/final/view/dashboard_Getx.dart';
+import 'package:boom_solutions_invoice/final/view/homeScreen/dashboard_Getx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:math';

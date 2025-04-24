@@ -599,20 +599,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
-        child: const Icon(Icons.add),
-        onPressed: () {
-          // Add new inventory item
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text("Add new inventory item"),
-              backgroundColor: primaryColor,
-            ),
-          );
-        },
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: primaryColor,
+      //   foregroundColor: theme.colorScheme.onPrimary,
+      //   child: const Icon(Icons.add),
+      //   onPressed: () {
+      //     // Add new inventory item
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: const Text("Add new inventory item"),
+      //         backgroundColor: primaryColor,
+      //       ),
+      //     );
+      //   },
+      // ),
     );
   }
 }

@@ -1,6 +1,5 @@
-import 'package:boom_solutions_invoice/final/controller/themeController.dart';
-import 'package:boom_solutions_invoice/final/view/dashboard_Getx.dart';
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
+import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
 import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
@@ -440,7 +439,7 @@ class CustomerDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               notes,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              style: const TextStyle(fontSize: 13,),
             ),
           ],
         ),
@@ -815,8 +814,10 @@ class MetricsGrid extends StatelessWidget {
                   icon: Icons.map_outlined,
                   title: 'Visit Information',
                   subtitle: 'View customer visit patterns',
-                  onTap: () {
-                    Get.toNamed("VisitsScreen");
+                    onTap: () {
+                      
+                   Get.to(() =>  VisitsScreen(), arguments: {'partnerId': Get.arguments['partnerId']});
+               
                   },
                 ),
               ],

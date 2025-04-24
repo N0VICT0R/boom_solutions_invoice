@@ -1,3 +1,4 @@
+import 'package:boom_solutions_invoice/services/ConnectivityService.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -20,11 +21,24 @@ class DashboardController extends GetxController {
   final noteController = TextEditingController();
   final isLoading = false.obs;
   final errorMessage = ''.obs;
-
+ final ConnectivityService connectivityService = Get.find<ConnectivityService>();
   @override
   void onInit() {
     super.onInit();
+       checkInternetAccess();
+    // Optional: Listen for connectivity changes
+    connectivityService.isConnected.listen((isConnected) {
+      if (!isConnected && Get.currentRoute != '/offline') {
+        Get.offAllNamed('/offline');
+      }
+    });
     fetchNotes();
+  }
+   Future<void> checkInternetAccess() async {
+    bool hasAccess = await connectivityService.checkGoogleAccess();
+    if (!hasAccess && Get.currentRoute != '/offline') {
+      Get.offAllNamed('/offline');
+    }
   }
 
   Future<void> fetchNotes() async {
@@ -58,7 +72,7 @@ class DashboardController extends GetxController {
   Future<void> addNote() async {
     if (noteController.text.trim().isEmpty) return;
 
-    final baseUrl ="https://onix.boom-solutions.co/" ;
+    final baseUrl = "https://onix.boom-solutions.co/";
     final token = "gln5EU3jkGwBy7GZWnSpm9N7EffslYS5";
     final url = Uri.parse('$baseUrl/api/v1/users/notes?api_token=$token');
 

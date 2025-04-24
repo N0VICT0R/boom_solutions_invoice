@@ -1,4 +1,6 @@
+import 'package:boom_solutions_invoice/screens/visitsScreens/CheckInScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -53,10 +55,12 @@ class _VisitsScreenState extends State<VisitsScreen> {
     setState(() {
       isLoading = true;
     });
-
+          
     const String baseUrl = 'https://onix.boom-solutions.co/';
     const String apiToken = 'gln5EU3jkGwBy7GZWnSpm9N7EffslYS5';
-    const String endpoint = '/api/v1/partners/8/visits';
+    final int partnerId = Get.arguments['partnerId']; // Retrieve partner ID from arguments
+    print("partnerId");
+    final String endpoint = '/api/v1/partners/$partnerId/visits';
 
     try {
       final response = await http.get(
@@ -167,6 +171,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
                           child: InkWell(
                             onTap: () {
                               // Handle schedule visit
+                               Get.to(() =>  CheckInScreen(), arguments: {'partnerId': Get.arguments['partnerId']});
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -193,7 +198,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(10.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -237,7 +242,8 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                         const SizedBox(width: 8),
                                         // Date Search Button
                                         IconButton(
-                                          icon: const Icon(Icons.calendar_today),
+                                          icon:
+                                              const Icon(Icons.calendar_today),
                                           onPressed: () => _selectDate(context),
                                           tooltip: 'Filter by Date',
                                         ),
@@ -271,115 +277,107 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                 const SizedBox(height: 12),
                                 filteredVisits.isNotEmpty
                                     ? Stack(
-                                        children: [
-                                          // Continuous vertical line
-                                          Positioned(
-                                            left: 25,
-                                            top: 0,
-                                            bottom: 0,
-                                            child: CustomPaint(
-                                              size: Size(2,
-                                                  double.infinity), // Width of line
-                                              painter: ContinuousLinePainter(
-                                                itemCount: filteredVisits.length,
-                                                itemHeight: 100,
-                                              ),
-                                            ),
+                                      children: [
+                                        // Continuous vertical line
+                                        Positioned(
+                                        left: MediaQuery.of(context).size.width * 0.06,
+                                        top: 0,
+                                        bottom: 0,
+                                        child: CustomPaint(
+                                          size: Size(
+                                            MediaQuery.of(context).size.width * 0.01,
+                                            double.infinity), // Width of line
+                                          painter: ContinuousLinePainter(
+                                          itemCount: filteredVisits.length,
+                                          itemHeight: MediaQuery.of(context).size.height * 0.12,
                                           ),
-                                          // Visit entries
-                                          Column(
-                                            children: List.generate(
-                                              filteredVisits.length,
-                                              (index) {
-                                                final visit =
-                                                    filteredVisits[index];
-                                                return SizedBox(
-                                                  height: 100,
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
+                                        ),
+                                        ),
+                                        // Visit entries
+                                        Column(
+                                        children: List.generate(
+                                          filteredVisits.length,
+                                          (index) {
+                                          final visit = filteredVisits[index];
+                                          return SizedBox(
+                                            height: MediaQuery.of(context).size.height * 0.12,
+                                            child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              // Dot for each visit
+                                              Padding(
+                                              padding: EdgeInsets.only(
+                                                left: MediaQuery.of(context).size.width * 0.05,
+                                              ),
+                                              child: Center(
+                                                child: Container(
+                                                width: MediaQuery.of(context).size.width * 0.04,
+                                                height: MediaQuery.of(context).size.width * 0.04,
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.blue,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                ),
+                                              ),
+                                              ),
+                                              // Visit details
+                                              Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                horizontal: MediaQuery.of(context).size.width * 0.04,
+                                                ),
+                                                child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Row(
                                                     children: [
-                                                      // Dot for each visit
-                                                      SizedBox(
-                                                        width: 50,
-                                                        child: Center(
-                                                          child: Container(
-                                                            width: 16,
-                                                            height: 16,
-                                                            decoration:
-                                                                const BoxDecoration(
-                                                              color: Colors.blue,
-                                                              shape:
-                                                                  BoxShape.circle,
-                                                            ),
-                                                          ),
-                                                        ),
+                                                      Icon(
+                                                      Icons.calendar_today,
+                                                      size: MediaQuery.of(context).size.width * 0.05,
                                                       ),
-                                                      // Visit details
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .spaceBetween,
-                                                              children: [
-                                                                Row(
-                                                                  children: [
-                                                                    const Icon(
-                                                                        Icons
-                                                                            .calendar_today,
-                                                                        size:
-                                                                            16),
-                                                                    const SizedBox(
-                                                                        width:
-                                                                            6),
-                                                                    Text(
-                                                                      formatDate(
-                                                                          visit[
-                                                                              'visit_date']),
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              14),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Text(
-                                                                  visit[
-                                                                      'user_name'],
-                                                                  style:
-                                                                      const TextStyle(
-                                                                          fontSize:
-                                                                              14),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            const SizedBox(
-                                                                height: 6),
-                                                            Text(
-                                                              visit['notes'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                      fontSize:
-                                                                          14),
-                                                            ),
-                                                          ],
-                                                        ),
+                                                      SizedBox(
+                                                      width: MediaQuery.of(context).size.width * 0.02,
+                                                      ),
+                                                      Text(
+                                                      formatDate(visit['visit_date']),
+                                                      style: TextStyle(
+                                                        fontSize: MediaQuery.of(context).size.width * 0.04,
+                                                      ),
                                                       ),
                                                     ],
+                                                    ),
+                                                    Text(
+                                                    visit['user_name'],
+                                                    style: TextStyle(
+                                                      fontSize: MediaQuery.of(context).size.width * 0.035,
+                                                    ),
+                                                    ),
+                                                  ],
                                                   ),
-                                                );
-                                              },
+                                                  SizedBox(
+                                                  height: MediaQuery.of(context).size.height * 0.01,
+                                                  ),
+                                                  Text(
+                                                  visit['notes'],
+                                                  style: TextStyle(
+                                                    fontSize: MediaQuery.of(context).size.width * 0.035,
+                                                  ),
+                                                  ),
+                                                ],
+                                                ),
+                                              ),
+                                              ),
+                                            ],
                                             ),
-                                          ),
-                                        ],
+                                          );
+                                          },
+                                        ),
+                                        ),
+                                      ],
                                       )
                                     : const Text('No visits available'),
                               ],

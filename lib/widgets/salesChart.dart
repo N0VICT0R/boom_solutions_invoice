@@ -6,411 +6,541 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+// Extension for firstWhereOrNull for older Dart versions
+extension IterableExtension<T> on Iterable<T> {
+  T? firstWhereOrNull(bool Function(T) test) {
+    for (var element in this) {
+      if (test(element)) return element;
+    }
+    return null;
+  }
+}
+
+void main() {
+  runApp(
+    GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system,
+      theme: ThemeModes.lightTheme,
+      darkTheme: ThemeModes.darkTheme,
+      home: const SalesChartPage(),
+    ),
+  );
+}
+
+class ThemeModes {
+  static final lightTheme = ThemeData.light().copyWith(
+    scaffoldBackgroundColor: Colors.grey[100],
+    cardTheme: CardTheme(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+    ),
+    colorScheme: const ColorScheme.light().copyWith(
+      primary: Colors.blueAccent,
+      secondary: Colors.lightBlueAccent,
+    ),
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      bodyMedium: TextStyle(fontSize: 14),
+      bodySmall: TextStyle(fontSize: 11),
+    ),
+  );
+
+  static final darkTheme = ThemeData.dark().copyWith(
+    scaffoldBackgroundColor: Colors.black,
+    cardTheme: CardTheme(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFF1E1E1E),
+    ),
+    colorScheme: const ColorScheme.dark().copyWith(
+      primary: Colors.blueAccent,
+      secondary: Colors.lightBlueAccent,
+    ),
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      bodyMedium: TextStyle(fontSize: 14),
+      bodySmall: TextStyle(fontSize: 11),
+    ),
+  );
+}
+
+class SalesChartPage extends StatelessWidget {
+  const SalesChartPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SalesChartView(),
+      ),
+    );
+  }
+}
+
+class SalesData {
+  final String period;
+  final double value;
+
+  SalesData(this.period, this.value);
+}
+
 class SalesChartController extends GetxController {
   final String baseUrl = "http://137.184.205.67:2710/";
   final String token = "gln5EU3jkGwBy7GZWnSpm9N7EffslYS5";
-  var salesData = <FlSpot>[].obs;
-  var rawSalesData = <double>[].obs; // Daily data
-  var aggregatedData = <String, List<FlSpot>>{}.obs; // Aggregated data by category
+
   var isLoading = true.obs;
-  var selectedTimeRange = 'Day'.obs;
-  var dateFrom = DateTime.now().subtract(const Duration(days: 30));
+  var selectedRange = 'Quarter'.obs;
+  var errorMessage = ''.obs;
+  var selectedBarIndex = RxInt(-1); // -1 means no selection
+
+  var salesData = <SalesData>[].obs;
+  var dateFrom = DateTime.now();
   var dateTo = DateTime.now();
-  var xLabels = <String>[].obs;
-  var displayPoints = <int>[].obs;
-  var currentScrollPosition = 0.obs;
-  var totalDataPoints = 0.obs;
-  bool isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
-  final NumberFormat largeValueFormatter = NumberFormat.compact();
-  double? _previousScrollPosition;
+
+  final formatter = NumberFormat.compact();
+  final dateFormatter = DateFormat('yyyy-MM-dd');
+
+  SalesChartController() {
+    print('New SalesChartController instance created');
+  }
+
   String _formatDate(DateTime date) =>
       "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
 
-  String _monthAbbr(int month) =>
+  String _monthName(int month) =>
       ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1];
 
-  String formatLargeNumber(double value) {
-    if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
+  String formatValue(double value) => formatter.format(value);
+
+  void selectBar(int index) {
+    if (selectedBarIndex.value == index) {
+      selectedBarIndex.value = -1;
+    } else {
+      selectedBarIndex.value = index;
     }
-    return value.toStringAsFixed(0);
   }
 
-  Future<void> fetchSalesData() async {
+  SalesData? get selectedBarData {
+    if (selectedBarIndex.value >= 0 && selectedBarIndex.value < salesData.length) {
+      return salesData[selectedBarIndex.value];
+    }
+    return null;
+  }
+
+  double get averageSales =>
+      salesData.isEmpty ? 0 : salesData.map((data) => data.value).reduce((a, b) => a + b) / salesData.length;
+
+  double get maxYValue {
+    if (salesData.isEmpty) return 100;
+    double maxValue = salesData.map((data) => data.value).reduce(max);
+    return maxValue > 0 ? maxValue * 1.2 : 100.0;
+  }
+
+  double get totalSales =>
+      salesData.isEmpty ? 0 : salesData.map((data) => data.value).reduce((a, b) => a + b);
+
+  double get selectedDiffFromAvg {
+    if (selectedBarData == null || averageSales == 0) return 0;
+    return ((selectedBarData!.value / averageSales) - 1) * 100;
+  }
+
+  Future<void> fetchData() async {
     isLoading(true);
+    errorMessage.value = '';
+    selectedBarIndex.value = -1;
+
     try {
-      final response = await http.get(Uri.parse(
+      String groupBy = selectedRange.value.toLowerCase();
+      final uri = Uri.parse(
         "$baseUrl/api/v1/users/2/sales?api_token=$token&"
-        "date_from=${_formatDate(dateFrom)}&date_to=${_formatDate(dateTo)}&group_by=day",
-      ));
-      Map<String, double> dataMap = {};
+        "date_from=${_formatDate(dateFrom)}&date_to=${_formatDate(dateTo)}&group_by=$groupBy",
+      );
+
+      final response = await http.get(uri).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception("Request timed out. Please check your connection.");
+        },
+      );
+
+      List<Map<String, dynamic>> dataList = [];
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        if (responseData['data'] != null) {
-          responseData['data'].forEach((item) {
-            dataMap[item['date']] = item['value'].toDouble();
-          });
+        final data = json.decode(response.body);
+        if (data['data'] != null && data['data'] is List) {
+          dataList = List<Map<String, dynamic>>.from(data['data']);
+          dataList.sort((a, b) => a['date'].compareTo(b['date']));
+        } else {
+          errorMessage.value = "No data returned from API";
+        }
+      } else {
+        errorMessage.value = "Failed to fetch data: HTTP ${response.statusCode}";
+      }
+
+      int maxItems;
+      if (groupBy == 'day') {
+        maxItems = 7;
+      } else if (groupBy == 'month') {
+        maxItems = 12;
+      } else if (groupBy == 'quarter') {
+        maxItems = 9;
+      } else {
+        maxItems = 6;
+      }
+
+      List<Map<String, dynamic>> paddedData = [];
+      DateTime current = dateFrom;
+      for (int i = 0; i < maxItems; i++) {
+        String expectedDate;
+        if (groupBy == 'day') {
+          expectedDate = _formatDate(current);
+          current = current.add(const Duration(days: 1));
+        } else if (groupBy == 'month') {
+          expectedDate = "${current.year}-${current.month.toString().padLeft(2, '0')}";
+          current = DateTime(current.year, current.month + 1, 1);
+        } else if (groupBy == 'quarter') {
+          int quarter = ((current.month - 1) ~/ 3) + 1;
+          expectedDate = '${current.year}-Q$quarter';
+          current = DateTime(current.year, current.month + 3, 1);
+        } else {
+          expectedDate = '${current.year}';
+          current = DateTime(current.year + 1, 1, 1);
+        }
+
+        var matchingItem = dataList.firstWhereOrNull((item) => item['date'] == expectedDate);
+        if (matchingItem != null) {
+          paddedData.add(matchingItem);
+        } else {
+          paddedData.add({"date": expectedDate, "value": 0.0});
         }
       }
 
-      List<double> rawData = [];
-      DateTime current = dateFrom;
-      int index = 0;
-
-      // Fetch daily data
-      while (current.isBefore(dateTo) || current.isAtSameMomentAs(dateTo)) {
-        final dateKey = _formatDate(current);
-        final value = dataMap[dateKey] ?? 0.0;
-        rawData.add(value);
-        index++;
-        current = current.add(const Duration(days: 1));
-      }
-
-      rawSalesData.assignAll(rawData);
-      totalDataPoints.value = rawData.length;
-
-      // Aggregate data for the selected time range
-      _aggregateData(rawData);
-
-      // Update chart data
-      _updateChartData();
+      processData(paddedData);
     } catch (e) {
-      print("Error fetching data: $e");
+      errorMessage.value = "Error: $e";
+      print('Fetch error: $e');
     } finally {
       isLoading(false);
     }
   }
 
-  void _aggregateData(List<double> rawData) {
-    aggregatedData.clear();
-    DateTime current = dateFrom;
+  void processData(List<Map<String, dynamic>> rawData) {
+    List<SalesData> newData = [];
+    String groupBy = selectedRange.value.toLowerCase();
 
-    if (selectedTimeRange.value == 'Year') {
-      // Aggregate by year
-      Map<String, double> yearlySums = {};
-      for (int i = 0; i < rawData.length; i++) {
-        String yearKey = '${current.year}';
-        yearlySums[yearKey] = (yearlySums[yearKey] ?? 0) + rawData[i];
-        current = current.add(const Duration(days: 1));
-      }
+    for (var item in rawData) {
+      String? period = item['date']?.toString();
+      if (period == null) continue;
 
-      List<FlSpot> yearlyData = [];
-      List<String> yearlyLabels = [];
-      current = dateFrom;
-      int yearIndex = 0;
-      int startYear = dateFrom.year;
-      int endYear = dateTo.year;
-      for (int year = startYear; year <= endYear; year++) {
-        String yearKey = '$year';
-        double sum = yearlySums[yearKey] ?? 0;
-        yearlyData.add(FlSpot(yearIndex.toDouble(), sum));
-        yearlyLabels.add('$year');
-        yearIndex++;
-      }
-      aggregatedData['yearly'] = yearlyData;
-      xLabels.assignAll(yearlyLabels);
-      print("Yearly data length: ${yearlyData.length}, Labels: ${yearlyLabels.length}");
-    } else if (selectedTimeRange.value == 'Quarter') {
-      // Aggregate by quarter
-      Map<String, double> quarterlySums = {};
-      for (int i = 0; i < rawData.length; i++) {
-        int quarter = ((current.month - 1) ~/ 3) + 1;
-        String quarterKey = '${current.year}-Q$quarter';
-        quarterlySums[quarterKey] = (quarterlySums[quarterKey] ?? 0) + rawData[i];
-        current = current.add(const Duration(days: 1));
+      if (groupBy == 'day') {
+        DateTime date = dateFormatter.parse(period);
+        period = '${date.day} ${_monthName(date.month)}';
+      } else if (groupBy == 'month') {
+        List<String> parts = period.split('-');
+        int year = int.parse(parts[0]);
+        int month = int.parse(parts[1]);
+        period = '${_monthName(month)} $year';
+      } else if (groupBy == 'quarter') {
+        List<String> parts = period.split('-Q');
+        int year = int.parse(parts[0]);
+        int quarter = int.parse(parts[1]);
+        period = 'Q$quarter $year';
       }
 
-      List<FlSpot> quarterlyData = [];
-      List<String> quarterlyLabels = [];
-      current = dateFrom;
-      int quarterIndex = 0;
-      while (current.isBefore(dateTo) || current.isAtSameMomentAs(dateTo)) {
-        int quarter = ((current.month - 1) ~/ 3) + 1;
-        String quarterKey = '${current.year}-Q$quarter';
-        double sum = quarterlySums[quarterKey] ?? 0;
-        quarterlyData.add(FlSpot(quarterIndex.toDouble(), sum));
-        quarterlyLabels.add('Q$quarter ${current.year}');
-        quarterIndex++;
-        // Move to the start of the next quarter
-        current = DateTime(current.year, current.month + 3 - (current.month - 1) % 3, 1);
-      }
-      aggregatedData['quarterly'] = quarterlyData;
-      xLabels.assignAll(quarterlyLabels);
-      print("Quarterly data length: ${quarterlyData.length}, Labels: ${quarterlyLabels.length}");
-    } else if (selectedTimeRange.value == 'Month') {
-      // Monthly data for 24 months
-      Map<String, double> monthlySums = {};
-      for (int i = 0; i < rawData.length; i++) {
-        String monthKey = '${current.year}-${current.month}';
-        monthlySums[monthKey] = (monthlySums[monthKey] ?? 0) + rawData[i];
-        current = current.add(const Duration(days: 1));
-      }
-
-      List<FlSpot> monthlyData = [];
-      List<String> monthlyLabels = [];
-      current = dateFrom;
-      int monthIndex = 0;
-      while (current.isBefore(dateTo) || current.isAtSameMomentAs(dateTo)) {
-        String monthKey = '${current.year}-${current.month}';
-        double sum = monthlySums[monthKey] ?? 0;
-        monthlyData.add(FlSpot(monthIndex.toDouble(), sum));
-        monthlyLabels.add('${_monthAbbr(current.month)} ${current.year}');
-        monthIndex++;
-        current = DateTime(current.year, current.month + 1, 1);
-      }
-      aggregatedData['monthly'] = monthlyData;
-      xLabels.assignAll(monthlyLabels);
-    } else {
-      // Daily data for 30 days
-      List<FlSpot> dailyData = [];
-      List<String> dailyLabels = [];
-      for (int i = 0; i < rawData.length; i++) {
-        dailyData.add(FlSpot(i.toDouble(), rawData[i]));
-        DateTime date = dateFrom.add(Duration(days: i));
-        dailyLabels.add('${date.day} ${_monthAbbr(date.month)} ${date.year}');
-      }
-      aggregatedData['daily'] = dailyData;
-      xLabels.assignAll(dailyLabels);
+      newData.add(SalesData(
+        period,
+        (item['value'] as num?)?.toDouble() ?? 0.0,
+      ));
     }
+
+    salesData.assignAll(newData);
   }
 
-  void _updateChartData() {
-    String key;
-    if (selectedTimeRange.value == 'Year') {
-      key = 'yearly';
-    } else if (selectedTimeRange.value == 'Quarter') {
-      key = 'quarterly';
-    } else if (selectedTimeRange.value == 'Month') {
-      key = 'monthly';
-    } else {
-      key = 'daily';
-    }
-
-    salesData.assignAll(aggregatedData[key] ?? []);
-    totalDataPoints.value = salesData.length;
-
-    // Ensure currentScrollPosition is within bounds, considering the visible window size
-    int maxStartIndex = salesData.length > 12 ? salesData.length - 12 : 0;
-    currentScrollPosition.value = max(0, min(currentScrollPosition.value, maxStartIndex));
-
-    // Update display points to match the current data length
-    List<int> displayIndices = [];
-    int labelLength = xLabels.length;
-    int dataLength = salesData.length;
-    int maxLength = min(labelLength, dataLength);
-    for (int i = 0; i < maxLength; i++) {
-      displayIndices.add(i);
-    }
-    displayPoints.assignAll(displayIndices);
-
-    print("After update - SalesData length: ${salesData.length}, xLabels length: ${xLabels.length}, DisplayPoints length: ${displayPoints.length}");
-  }
-
-  void updateTimeRange(String range) {
+  void setTimeRange(String range) {
+    print('Setting time range to: $range');
     final now = DateTime.now();
+
     switch (range) {
       case 'Day':
-        dateFrom = DateTime(now.year, now.month, now.day - 30);
+        dateFrom = now.subtract(const Duration(days: 6));
+        dateTo = now;
         break;
       case 'Month':
-        dateFrom = DateTime(now.year, now.month - 24, now.day); // Default to 24 months
+        dateFrom = DateTime(now.year - 1, now.month + 1, 1);
+        dateTo = now;
         break;
       case 'Quarter':
-        dateFrom = DateTime(now.year - 5, now.month, now.day); // 5 years for quarters
+        dateFrom = DateTime(now.year - 2, now.month + 1, 1);
+        dateTo = now;
         break;
       case 'Year':
-        dateFrom = DateTime(now.year - 10, now.month, now.day);
+        dateFrom = DateTime(now.year - 5, 1, 1);
+        dateTo = now;
         break;
     }
-    dateTo = now;
-    selectedTimeRange.value = range;
-    fetchSalesData();
-  }
 
-  void scrollByAmount(int amount) {
-    int newPosition = currentScrollPosition.value + amount;
-    // Ensure newPosition is within bounds, considering the visible window size
-    int maxStartIndex = salesData.length > 12 ? salesData.length - 12 : 0;
-    newPosition = max(0, min(newPosition, maxStartIndex));
-    newPosition = max(0, min(newPosition, xLabels.length - 1));
-    currentScrollPosition.value = newPosition;
-
-    // Update display points to ensure they are within bounds
-    List<int> displayIndices = [];
-    int labelLength = xLabels.length;
-    int dataLength = salesData.length;
-    int maxLength = min(labelLength, dataLength);
-    for (int i = 0; i < maxLength; i++) {
-      displayIndices.add(i);
-    }
-    displayPoints.assignAll(displayIndices);
-  }
-
-  int getCategoryScrollAmount(bool isLeft) {
-    int scrollAmount;
-    switch (selectedTimeRange.value) {
-      case 'Day':
-        scrollAmount = 1;
-        break;
-      case 'Month':
-        scrollAmount = 1;
-        break;
-      case 'Quarter':
-        scrollAmount = 1; // Scroll by one quarter
-        break;
-      case 'Year':
-        scrollAmount = 1; // Scroll by one year
-        break;
-      default:
-        scrollAmount = 1;
-    }
-    return isLeft ? -scrollAmount : scrollAmount;
+    selectedRange.value = range;
+    print('selectedRange updated to: ${selectedRange.value}');
+    fetchData();
   }
 
   @override
   void onInit() {
     super.onInit();
-    fetchSalesData();
+    print('Controller initialized, setting initial range to Day');
+    setTimeRange('Day');
   }
 }
 
-class SalesChartCard extends StatefulWidget {
-  @override
-  _SalesChartCardState createState() => _SalesChartCardState();
-}
+class SalesChartView extends StatelessWidget {
+  SalesChartView({super.key});
 
-class _SalesChartCardState extends State<SalesChartCard> {
-  late final SalesChartController controller;
-
-  bool isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.put(SalesChartController());
-  }
+  final controller = Get.put(SalesChartController());
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Container(
-        margin: const EdgeInsets.all(2),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              height: 25,
-              child: _buildHeader(),
-            ),
-            const SizedBox(height: 8),
-            _buildSwipeGuide(),
-            const SizedBox(height: 8),
-            _buildInteractiveChart(),
-            const SizedBox(height: 8),
-            _buildTopLabel(),
+            _buildHeader(context),
+            const SizedBox(height: 16),
+            _buildChart(context),
+            _buildSelectedBarInfo(context),
+            const SizedBox(height: 12),
+            _buildTimeSelector(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Last ${controller.selectedTimeRange.value}',
-            style: const TextStyle(
-              fontSize: 14,
-            ),
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Sales Overview',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.primary,
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        ),
+        Obx(() {
+          if (controller.isLoading.value || controller.salesData.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: DropdownButton<String>(
-              value: controller.selectedTimeRange.value,
-              items: [
-                'Day',
-                'Month',
-                'Quarter',
-                'Year',
-              ]
-                  .map((v) => DropdownMenuItem(
-                        value: v,
-                        child: Text(
-                          v,
-                          style: TextStyle(
-                            color: isDark(context) ? Colors.white : Colors.black,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ))
-                  .toList(),
-              onChanged: (v) => controller.updateTimeRange(v!),
-              style: const TextStyle(
-                fontSize: 12,
+            child: Text(
+              controller.formatValue(controller.totalSales),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
               ),
-              underline: Container(),
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-              ),
-            ),
-          ),
-        ],
-      );
-
-  Widget _buildSwipeGuide() {
-    return Obx(() {
-      if (controller.isLoading.value || controller.salesData.isEmpty) return const SizedBox.shrink();
-
-      bool canScrollLeft = controller.currentScrollPosition.value > 0;
-      int displayCount = controller.salesData.length > 12 ? 12 : controller.salesData.length;
-      int lastVisibleIndex = controller.currentScrollPosition.value + displayCount - 1;
-      bool canScrollRight = lastVisibleIndex < controller.salesData.length - 1;
-
-      if (!canScrollLeft && !canScrollRight) return const SizedBox.shrink();
-
-      return TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 1.0, end: 0.0),
-        duration: const Duration(seconds: 5),
-        onEnd: () {
-          Future.delayed(const Duration(seconds: 5), () {
-            if (mounted) {
-              setState(() {});
-            }
-          });
-        },
-        builder: (context, opacity, child) {
-          return AnimatedOpacity(
-            opacity: opacity,
-            duration: const Duration(milliseconds: 500),
-            child: Opacity(
-              opacity: (opacity > 0.5) ? 1.0 : 0.5,
-              child: child,
             ),
           );
-        },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.swipe,
-              size: 16,
+        }),
+      ],
+    );
+  }
+
+  Widget _buildChart(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return SizedBox(
+          height: 180,
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            const SizedBox(width: 8),
+          ),
+        );
+      }
+
+      if (controller.errorMessage.value.isNotEmpty) {
+        return SizedBox(
+          height: 180,
+          child: Center(
+            child: Text(
+              controller.errorMessage.value,
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }
+
+      if (controller.salesData.isEmpty) {
+        return const SizedBox(
+          height: 180,
+          child: Center(child: Text('No data available')),
+        );
+      }
+
+      double maxY = controller.maxYValue;
+      return SizedBox(
+        height: 180,
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceAround,
+            maxY: maxY,
+            barTouchData: BarTouchData(
+              enabled: true,
+              handleBuiltInTouches: false,
+              touchCallback: (FlTouchEvent event, BarTouchResponse? response) {
+                if (event is FlTapUpEvent && response != null && response.spot != null) {
+                  final touchedIndex = response.spot!.touchedBarGroupIndex;
+                  controller.selectBar(touchedIndex);
+                }
+              },
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipColor: (_) => theme.cardTheme.color?.withOpacity(0.95) ?? Colors.grey[200]!,
+                tooltipRoundedRadius: 8,
+                tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  final item = controller.salesData[groupIndex];
+                  return BarTooltipItem(
+                    controller.formatValue(item.value),
+                    theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ) ?? const TextStyle(),
+                  );
+                },
+              ),
+            ),
+            titlesData: FlTitlesData(
+              leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index >= controller.salesData.length) return const SizedBox();
+
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Transform.rotate(
+                        angle: (controller.selectedRange.value == 'Month' || controller.selectedRange.value == 'Quarter')
+                            ? 25 * pi / 180
+                            : 0,
+                        child: Text(
+                          controller.salesData[index].period,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? Colors.grey,
+                            fontWeight: controller.selectedBarIndex.value == index
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: min(MediaQuery.of(context).size.width * 0.022, 10.0),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            borderData: FlBorderData(show: false),
+            gridData: const FlGridData(show: false),
+            barGroups: List.generate(
+              controller.salesData.length,
+              (index) {
+                final item = controller.salesData[index];
+                double normalizedValue = maxY == 0 ? 0.5 : (item.value / maxY).clamp(0.0, 1.0);
+                Color barColor = Color.lerp(Colors.redAccent, Colors.greenAccent, normalizedValue)!;
+                final isSelected = controller.selectedBarIndex.value == index;
+
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: item.value,
+                      color: barColor,
+                      width: MediaQuery.of(context).size.width / (controller.salesData.length * 3),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                      backDrawRodData: isSelected
+                          ? BackgroundBarChartRodData(
+                              show: true,
+                              toY: maxY,
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                            )
+                          : null,
+                      rodStackItems: isSelected
+                          ? [BarChartRodStackItem(0, item.value, Colors.white.withOpacity(0.3))]
+                          : [],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSelectedBarInfo(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Obx(() {
+      final selectedData = controller.selectedBarData;
+      if (selectedData == null) return const SizedBox.shrink();
+
+      String diff = controller.selectedDiffFromAvg.toStringAsFixed(1);
+      String diffSign = controller.selectedDiffFromAvg >= 0 ? '+' : '';
+
+      return Container(
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Selected: ${selectedData.period}',
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  controller.formatValue(selectedData.value),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
-              'Swipe left or right to view more data',
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
+              'vs Average: $diffSign$diff%',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: controller.selectedDiffFromAvg >= 0 ? Colors.green : Colors.redAccent,
               ),
             ),
           ],
@@ -419,286 +549,48 @@ class _SalesChartCardState extends State<SalesChartCard> {
     });
   }
 
-  Widget _buildTopLabel() {
-    final startIndex = controller.currentScrollPosition.value;
-    final displayCount = min(12, controller.salesData.length - startIndex);
-    final endIndex = startIndex + displayCount;
+  Widget _buildTimeSelector(BuildContext context) {
+    final theme = Theme.of(context);
 
-    if (controller.xLabels.isEmpty || startIndex < 0 || endIndex > controller.xLabels.length) {
-      return const SizedBox.shrink();
-    }
+    return Obx(() {
+      print('Rebuilding time selector, selectedRange: ${controller.selectedRange.value}');
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal, // Fixed scroll direction for better UX
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: ['Day', 'Month', 'Quarter', 'Year'].map((period) {
+              final isSelected = controller.selectedRange.value == period;
 
-    String label;
-    if (controller.selectedTimeRange.value == 'Day') {
-      // Show the last visible day for the Day time range
-      label = controller.xLabels[endIndex - 1];
-    } else {
-      // Show the first visible label for other time ranges
-      label = controller.xLabels[startIndex];
-    }
-    String displayLabel = label;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Text(
-        displayLabel,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.blueAccent,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInteractiveChart() {
-    if (controller.isLoading.value) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (controller.salesData.isEmpty) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: Text('No data available')),
-      );
-    }
-    return GestureDetector(
-      onHorizontalDragUpdate: (details) {
-        double sensitivity = 3;
-        int scrollAmount = (details.delta.dx / sensitivity).round();
-        controller.scrollByAmount(-scrollAmount);
-      },
-      child: _buildChart(),
-    );
-  }
-
-  Widget _buildChart() {
-    final startIndex = controller.currentScrollPosition.value;
-    final displayCount = min(12, controller.salesData.length - startIndex);
-    final endIndex = startIndex + displayCount;
-
-    if (startIndex >= controller.salesData.length || startIndex < 0 || endIndex > controller.salesData.length) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: Text('Data range error')),
-      );
-    }
-
-    List<FlSpot> visibleData = controller.salesData.sublist(startIndex, endIndex);
-    print("Visible data length: ${visibleData.length}, StartIndex: $startIndex, EndIndex: $endIndex");
-    double maxY = visibleData.isNotEmpty ? visibleData.map((e) => e.y).reduce(max) * 1.1 : 1.0;
-
-    // Calculate the maximum possible startIndex
-    final maxStartIndex = controller.salesData.length > displayCount ? controller.salesData.length - displayCount : 0;
-
-    // Calculate progress
-    double progress = maxStartIndex > 0 ? startIndex / maxStartIndex : 1.0;
-    progress = progress.clamp(0.0, 1.0);
-    print("Progress: $progress, StartIndex: $startIndex, EndIndex: $endIndex, DisplayCount: $displayCount, MaxStartIndex: $maxStartIndex, TotalDataPoints: ${controller.totalDataPoints.value}");
-
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 15),
-          child: Column(
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * .25,
-                width: double.infinity,
-                child: LineChart(
-                  LineChartData(
-                    minX: startIndex.toDouble(),
-                    maxX: (endIndex - 1).toDouble(),
-                    minY: 0,
-                    maxY: maxY,
-                    clipData: FlClipData.all(),
-                    gridData: FlGridData(show: false),
-                    borderData: FlBorderData(show: false),
-                    titlesData: FlTitlesData(
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index >= startIndex &&
-                                index < endIndex &&
-                                controller.displayPoints.contains(index) &&
-                                index >= 0 &&
-                                index < controller.xLabels.length) {
-                              String label = controller.xLabels[index];
-                              String displayLabel;
-
-                              if (controller.selectedTimeRange.value == 'Year') {
-                                displayLabel = label; // e.g., "2020"
-                              } else if (controller.selectedTimeRange.value == 'Quarter') {
-                                displayLabel = label; // e.g., "Q1 2020"
-                              } else if (controller.selectedTimeRange.value == 'Month') {
-                                displayLabel = label; // e.g., "Jan 2020"
-                              } else {
-                                displayLabel = label; // e.g., "1 Apr 2023"
-                              }
-
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Transform.rotate(
-                                  angle: 22 * (3.14159 / 180),
-                                  child: Text(
-                                    displayLabel,
-                                    style: const TextStyle(
-                                      fontSize: 8,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                          getTitlesWidget: (value, meta) {
-                            if (value == 0 || value == maxY / 2 || value == maxY) {
-                              String formattedValue = controller.formatLargeNumber(value);
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 5),
-                                child: Text(
-                                  formattedValue,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      ),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: visibleData,
-                        isCurved: true,
-                        preventCurveOverShooting: true,
-                        curveSmoothness: 0.35,
-                        color: const Color.fromARGB(255, 4, 101, 181),
-                        barWidth: 2.0,
-                        isStrokeCapRound: true,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          cutOffY: 0,
-                          applyCutOffY: true,
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 73, 173, 255).withOpacity(0.4),
-                              Color.fromRGBO(33, 150, 243, 0.0),
-                            ],
-                            stops: [0.1, 0.9],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ],
-                    lineTouchData: LineTouchData(
-                      enabled: true,
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                          return touchedSpots.map((spot) {
-                            spot.x.toInt();
-                            double originalValue = spot.y;
-                            return LineTooltipItem(
-                              controller.formatLargeNumber(originalValue),
-                              const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          }).toList();
-                        },
-                      ),
+              return GestureDetector(
+                onTap: () {
+                  print('Tapped $period');
+                  controller.setTimeRange(period);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? theme.colorScheme.primary.withOpacity(0.2) : Colors.transparent,
+                    border: isSelected ? Border.all(color: theme.colorScheme.primary, width: 1) : null,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    period,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              // Progress Indicator
-              Container(
-                height: 2,
-                width: double.infinity,
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.grey.withOpacity(0.3),
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
         ),
-        Positioned(
-          left: 8,
-          top: 22,
-          child: _buildSwipeIndicator(isLeft: true),
-        ),
-        Positioned(
-          right: 8,
-          top: 22,
-          child: _buildSwipeIndicator(isLeft: false),
-        ),
-      ],
-    );
+      );
+    });
   }
-
-  Widget _buildSwipeIndicator({required bool isLeft}) {
-    bool canScroll;
-    if (isLeft) {
-      canScroll = controller.currentScrollPosition.value > 0;
-    } else {
-      int displayCount = controller.salesData.length > 12 ? 12 : controller.salesData.length;
-      int lastVisibleIndex = controller.currentScrollPosition.value + displayCount - 1;
-      canScroll = lastVisibleIndex < controller.salesData.length - 1;
-    }
-
-    if (!canScroll) return const SizedBox.shrink();
-
-    return GestureDetector(
-      onTap: () {
-        int scrollAmount = controller.getCategoryScrollAmount(isLeft);
-        controller.scrollByAmount(scrollAmount);
-      },
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.blueAccent.withOpacity(0.7),
-        ),
-        child: Center(
-          child: Icon(
-            isLeft ? Icons.chevron_left : Icons.chevron_right,
-            size: 16,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(
-    GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(),
-      home: Scaffold(
-        body: SafeArea(child: SalesChartCard()),
-      ),
-    ),
-  );
 }

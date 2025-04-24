@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  connectivity_plus
   geolocator_windows
   maps_launcher
   syncfusion_pdfviewer_windows
