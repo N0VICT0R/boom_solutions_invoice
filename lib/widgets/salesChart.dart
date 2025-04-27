@@ -303,8 +303,9 @@ class SalesChartView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      // color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -381,7 +382,7 @@ class SalesChartView extends StatelessWidget {
           height: 180,
           child: Center(
             child: Text(
-              controller.errorMessage.value,
+              "please restart the app or contact the admin",
               style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
               textAlign: TextAlign.center,
             ),
@@ -555,7 +556,7 @@ class SalesChartView extends StatelessWidget {
     return Obx(() {
       print('Rebuilding time selector, selectedRange: ${controller.selectedRange.value}');
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 2),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal, // Fixed scroll direction for better UX
           child: Row(

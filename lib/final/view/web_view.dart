@@ -88,7 +88,7 @@ class WebViewScreenState extends State<WebViewScreen> with AutomaticKeepAliveCli
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: isDark ? Colors.black : Colors.white,
+          // backgroundColor: isDark ? Colors.black : Colors.white,
           elevation: 0,
           title: const Text(
             'Odoo Portal',

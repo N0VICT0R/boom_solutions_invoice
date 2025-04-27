@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:animate_do/animate_do.dart';
+import 'package:boom_solutions_invoice/CustomerDetail/Screen/CustomerListScreen.dart';
 import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
-import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 import 'package:boom_solutions_invoice/final/view/homeScreen/homeScreenResponse.dart';
+import 'package:boom_solutions_invoice/final/view/web_view.dart';
+import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 import 'package:boom_solutions_invoice/widgets/notes/notes.dart';
 import 'package:boom_solutions_invoice/widgets/salesChart.dart'
-    show SalesChart, SalesChart22, SalesChartCard, SalesChartView;
+    show SalesChartView, SalesChartController;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
 // Utility for responsive font sizes
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
@@ -23,25 +28,19 @@ double getResponsiveFontSize(BuildContext context, double baseFontSize) {
 // Utility for formatting numbers with k, M, B suffixes
 String formatNumber(double value, {bool isCurrency = true}) {
   if (value < 1000) {
-    // For small numbers, show as is with two decimal places for currency
     if (isCurrency) {
       return NumberFormat("#,##0.00").format(value);
     }
     return value.toStringAsFixed(0);
   }
-
   const suffixes = ['k', 'M', 'B', 'T'];
   int suffixIndex = -1;
   double scaledValue = value;
-
   while (scaledValue >= 1000 && suffixIndex < suffixes.length - 1) {
     scaledValue /= 1000;
     suffixIndex++;
   }
-
-  // Format to two decimal places
   String formatted = NumberFormat("#,##0.00").format(scaledValue);
-  // Remove trailing .00 if the value is effectively an integer
   if (formatted.endsWith('.00')) {
     formatted = formatted.substring(0, formatted.length - 3);
   }
@@ -55,7 +54,7 @@ class SalesDashboard extends StatefulWidget {
   State<SalesDashboard> createState() => _SalesDashboardState();
 }
 
-class _SalesDashboardState extends State<SalesDashboard> {
+class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   String selectedRange = '7d';
@@ -69,48 +68,67 @@ class _SalesDashboardState extends State<SalesDashboard> {
   String? errorMessage;
   bool isRealTimeEnabled = false;
   Timer? _pollingTimer;
+  late PageController _pageController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _filterDataByTimeRange('7d');
-    _fetchHomeScreenData();
+    _fetchAllData().then((_) {
+      _animationController.forward();
+    });
     _startPolling();
   }
 
-  Future<void> _fetchHomeScreenData() async {
+  Future<void> _fetchAllData() async {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-        final authController = Get.find<AuthController>();
-      final baseUrl = 'https://onix.boom-solutions.co/'; // Replace with actual base URL
+      await _fetchHomeScreenData();
+      final salesChartController = Get.find<SalesChartController>();
+      await salesChartController.fetchData();
+      await Get.find<DashboardController>().fetchNotes();
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error refreshing data: $e';
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchHomeScreenData() async {
+    try {
+      final authController = Get.find<AuthController>();
+      final baseUrl = 'https://onix.boom-solutions.co/';
       final token = GetStorage().read('token') ?? '';
-      final url =
-          Uri.parse('$baseUrl/api/v1/users/2/home-screen?api_token=$token');
-     
-
+      final url = Uri.parse('$baseUrl/api/v1/users/2/home-screen?api_token=$token');
       final response = await http.get(url);
-
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
           homeData = HomeScreenResponse.fromJson(jsonData);
-          isLoading = false;
         });
       } else {
-        setState(() {
-          errorMessage = 'Failed to load data: ${response.statusCode}';
-          isLoading = false;
-        });
+        throw Exception('Failed to load data: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Error: $e';
-        isLoading = false;
-      });
+      rethrow;
     }
   }
 
@@ -118,7 +136,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
     if (isRealTimeEnabled) {
       _pollingTimer?.cancel();
       _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-        _fetchHomeScreenData();
+        _fetchAllData();
       });
     }
   }
@@ -137,7 +155,6 @@ class _SalesDashboardState extends State<SalesDashboard> {
   void _filterDataByTimeRange(String range) {
     final today = DateTime.now();
     DateTime filterDate = today;
-
     switch (range) {
       case '7d':
         filterDate = today.subtract(const Duration(days: 7));
@@ -171,7 +188,6 @@ class _SalesDashboardState extends State<SalesDashboard> {
       default:
         filterDate = today.subtract(const Duration(days: 7));
     }
-
     setState(() {
       displayData = fullData.where((item) {
         final itemDate = item['date'] as DateTime;
@@ -181,38 +197,15 @@ class _SalesDashboardState extends State<SalesDashboard> {
     });
   }
 
-  String _formatDateRange() {
-    if (selectedRange == 'custom' && startDate != null && endDate != null) {
-      return '${DateFormat('MMM d').format(startDate!)} - ${DateFormat('MMM d').format(endDate!)}';
-    }
-
-    final Map<String, String> labels = {
-      '7d': 'Last 7 Days',
-      '1m': 'Last Month',
-      '3m': 'Last 3 Months',
-      'q': 'Last Quarter',
-      '1y': 'Last Year',
-    };
-
-    return labels[selectedRange] ?? 'Custom';
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-
-    switch (index) {
-      case 0:
-        Get.offNamed('/dashboard');
-        break;
-      case 1:
-        Get.toNamed('/webView', preventDuplicates: true);
-        break;
-      case 2:
-        Get.toNamed('/settings');
-        break;
-    }
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -222,259 +215,513 @@ class _SalesDashboardState extends State<SalesDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authController = Get.find<AuthController>();
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: _fetchHomeScreenData,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 24.0 : 10.0,
-            vertical: 12.0,
-          ),
-          child: LayoutBuilder(builder: (context, constraints) {
-            return SingleChildScrollView(
+    // Minimalist color palette
+    final Color bgColor = isDark ? Color(0xFF121212) : Color(0xFFFAFAFA);
+    final Color cardBackground = isDark ? Color(0xFF1A1A1A) : Colors.white;
+    final Color cardBorder = isDark ? Color(0xFF2A2A2A) : Color(0xFFE0E0E0);
+    final Color primaryTextColor = isDark ? Colors.white : Color(0xFF212121);
+    final Color secondaryTextColor = isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
+    final Color accentColor = isDark ? Color(0xFF4FC3F7) : Color(0xFF1976D2);
+    final Color shimmerBaseColor = isDark ? Color(0xFF262626) : Colors.grey[300]!;
+    final Color shimmerHighlightColor = isDark ? Color(0xFF303030) : Colors.grey[100]!;
+
+    final List<Widget> pages = [
+      SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _fetchAllData,
+          color: accentColor,
+          backgroundColor: cardBackground,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+            child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 20, 0, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(5, 10, 0, 0),
-                              child: Text(
-                                'Welcome back !',
-                                style: TextStyle(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    FadeInDown(
+                      duration: Duration(milliseconds: 400),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome back',
+                                style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w400,
-                                  fontSize: getResponsiveFontSize(context, 16),
-                                  color: Colors.grey[600],
+                                  fontSize: getResponsiveFontSize(context, 13),
+                                  color: secondaryTextColor,
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(5, 0, 0, 25),
-                              child: Text(
-                                '${authController.currentUser.value?.name ?? 'Guest'}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: getResponsiveFontSize(context, 24),
-                                  color: isDark ? Colors.white : Colors.black,
+                              SizedBox(height: 2),
+                              Text(
+                                '${authController.currentUser.value?.name ?? 'admin'}',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: getResponsiveFontSize(context, 20),
+                                  color: primaryTextColor,
                                 ),
                               ),
+                            ],
+                          ),
+                          // Container(
+                          //   width: 40,
+                          //   height: 40,
+                          //   decoration: BoxDecoration(
+                          //     color: accentColor,
+                          //     shape: BoxShape.circle,
+                          //   ),
+                          //   child: Icon(
+                          //     Icons.notifications_none_rounded,
+                          //     color: Colors.white,
+                          //     size: 20,
+                          //   ),
+                          // ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Sales Chart
+                    FadeInUp(
+                      duration: Duration(milliseconds: 500),
+                      from: 30,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: cardBackground,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            Switch(
-                              value: isRealTimeEnabled,
-                              onChanged: _toggleRealTime,
-                              activeColor: Colors.blue,
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.notifications_none_rounded,
-                                color: isDark ? Colors.white70 : Colors.black54,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SalesChartView(),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  SalesChartView(),
-                  const SizedBox(height: 10),
-                  isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : errorMessage != null
-                          ? Center(
-                              child: Column(
-                                children: [
-                                  Text(errorMessage!),
-                                  ElevatedButton(
-                                    onPressed: _fetchHomeScreenData,
-                                    child: const Text('Retry'),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: isTablet ? 4 : 2,
-                                childAspectRatio: isTablet ? 1.5 : 1.8,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                              itemCount: 4,
-                              itemBuilder: (context, index) {
-                                final metrics = [
-                                  {
-                                    'title': 'Sales Target',
-                                    'value':
-                                        '\$${formatNumber(homeData!.monthlySales.metrics.totalAmount)}/\$${formatNumber(homeData!.monthlySales.metrics.monthTarget)} (${(homeData!.monthlySales.metrics.achievementPercentage).toStringAsFixed(2)}%)',
-                                  },
-                                  {
-                                    'title': 'Pending Collection',
-                                    'value':
-                                        '\$${formatNumber(homeData!.receivables.amountDueToday)} From ${homeData!.receivables.partnerCount} partners',
-                                  },
-                                  {
-                                    'title': 'Completed Visits',
-                                    'value':
-                                        '${homeData!.additionalMetrics.todayVisits}',
-                                  },
-                                  {
-                                    'title': 'New Customers',
-                                    'value':
-                                        '${homeData!.additionalMetrics.newCustomersThisMonth}',
-                                  },
-                                ];
+                    SizedBox(height: 20),
+                    
+                    // Loading or Error State
+                    isLoading
+                        ? _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet)
+                        : errorMessage != null
+                            ? _buildErrorView(errorMessage!, accentColor, isDark)
+                            : FadeInUp(
+                                duration: Duration(milliseconds: 600),
+                                from: 30,
+                                child: Column(
+                                  children: [
+                                    // Key Metrics Header
+                                    // Row(
+                                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    //   children: [
+                                    //     // Text(
+                                    //     //   'Key Metrics',
+                                    //     //   style: GoogleFonts.poppins(
+                                    //     //     fontWeight: FontWeight.w600,
+                                    //     //     fontSize: getResponsiveFontSize(context, 16),
+                                    //     //     color: primaryTextColor,
+                                    //     //   ),
+                                    //     // ),
+                                    //     // Text(
+                                    //     //   'Today',
+                                    //     //   style: GoogleFonts.poppins(
+                                    //     //     fontWeight: FontWeight.w500,
+                                    //     //     fontSize: getResponsiveFontSize(context, 13),
+                                    //     //     color: accentColor,
+                                    //     //   ),
+                                    //     // ),
+                                    //   ],
+                                    // ),
+                                    SizedBox(height: 12),
 
-                                return _MetricCard(
-                                  title: metrics[index]['title']!,
-                                  value: metrics[index]['value']!,
-                                  shade: index * 12,
-                                );
-                              },
+                                    // Metric Cards - Grid Layout
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: NeverScrollableScrollPhysics(),
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: isTablet ? 2 : 2,
+                                        crossAxisSpacing: 12,
+                                        mainAxisSpacing: 12,
+                                        childAspectRatio: 1.0,
+                                      ),
+                                      itemCount: 4,
+                                      itemBuilder: (context, index) {
+                                        return FadeInUp(
+                                          duration: Duration(milliseconds: 600 + index * 100),
+                                          from: 30,
+                                          child: _MetricCard(
+                                            title: [
+                                              'Sales Target',
+                                              'Collections',
+                                              'Visits',
+                                              'New Customers'
+                                            ][index],
+                                            value: [
+                                              '${formatNumber(homeData!.monthlySales.metrics.totalAmount)}/${formatNumber(homeData!.monthlySales.metrics.monthTarget)}',
+                                              formatNumber(homeData!.receivables.amountDueToday),
+                                              '${homeData!.additionalMetrics.todayVisits}',
+                                              '${homeData!.additionalMetrics.newCustomersThisMonth}',
+                                            ][index],
+                                            subtitle: [
+                                              '${(homeData!.monthlySales.metrics.achievementPercentage).toStringAsFixed(1)}% of target',
+                                              '${homeData!.receivables.partnerCount} partners',
+                                              'Completed today',
+                                              'This month',
+                                            ][index],
+                                            icon: [
+                                              Icons.show_chart,
+                                              Icons.account_balance_wallet,
+                                              Icons.check_circle_outline,
+                                              Icons.person_add_alt,
+                                            ][index],
+                                            iconColor: [
+                                              homeData!.monthlySales.metrics.achievementPercentage >= 80
+                                                  ? Colors.green[400]!
+                                                  : Colors.orange[400]!,
+                                              Colors.amber[400]!,
+                                              Colors.green[400]!,
+                                              Colors.blue[400]!,
+                                            ][index],
+                                            isDark: isDark,
+                                            accentColor: accentColor,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                    SizedBox(height: 20),
+                    
+                    // Quick Actions
+                    FadeInUp(
+                      duration: Duration(milliseconds: 700),
+                      from: 30,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Quick Actions',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: getResponsiveFontSize(context, 16),
+                              color: primaryTextColor,
                             ),
-                  const SizedBox(height: 10),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isTablet ? 4 : 2,
-                      childAspectRatio: isTablet ? 2.8 : 3.2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+                          ),
+                          SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _ActionButton(
+                                  icon: Icons.place,
+                                  label: 'Nearby Customers',
+                                  onTap: () => Get.toNamed('/NearByCustomer'),
+                                  isDark: isDark,
+                                  accentColor: accentColor,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: _ActionButton(
+                                  icon: Icons.inventory_2,
+                                  label: 'Stock',
+                                  onTap: () {
+                                    Get.find<DashboardController>().createNewDeal();
+                                    Get.toNamed('/Stock');
+                                  },
+                                  isDark: isDark,
+                                  accentColor: accentColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    itemCount: 4,
-                    itemBuilder: (context, index) {
-                      final actions = [
-                        {
-                          'icon': Icons.store,
-                          'label': 'Stock',
-                          'action': () {
-                            Get.find<DashboardController>().createNewDeal();
-                            Get.toNamed('/Stock');
-                          }
-                        },
-                        {
-                          'icon': Icons.payment,
-                          'label': 'Receive Payment',
-                          'action': () =>
-                              Get.find<DashboardController>().collectPayment()
-                        },
-                        {
-                          'icon': Icons.pin_drop,
-                          'label': 'Nearby Customers',
-                          'action': () => Get.toNamed('/NearByCustomer')
-                        },
-                        {
-                          'icon': Icons.people_alt_outlined,
-                          'label': 'Customers',
-                          'action': () => Get.toNamed('/customers')
-                        },
-                      ];
+                    SizedBox(height: 20),
+                    
+                    // Notes Section
+                    FadeInUp(
+                      duration: Duration(milliseconds: 800),
+                      from: 30,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
 
-                      return _ActionButton(
-                        icon: actions[index]['icon'] as IconData,
-                        label: actions[index]['label'] as String,
-                        shade: (index * 8) + 30,
-                        onTap: actions[index]['action'] as VoidCallback,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  NotesWidget(
-                    height: screenSize.height * (isTablet ? 0.39 : 0.35),
-                    scrollController: _scrollController,
-                  ),
-                ],
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Container(
+                            height: screenSize.height * 0.3,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: cardBackground,
+                              border: Border.all(color: cardBorder, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: NotesWidget(
+                                height: screenSize.height * 0.3,
+                                scrollController: _scrollController,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
               ),
-            );
-          }),
+            ),
+          ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        elevation: 8,
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        selectedItemColor: isDark ? Colors.white : Colors.black,
-        unselectedItemColor: isDark ? Colors.grey[600] : Colors.grey[400],
-        selectedLabelStyle: TextStyle(
-          fontSize: getResponsiveFontSize(context, 12),
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: getResponsiveFontSize(context, 12),
-        ),
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+      Center(child: CustomersListScreen()),
+      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F')),
+      Center(child: SettingsScreen()),
+    ];
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        physics: BouncingScrollPhysics(),
+        children: pages,
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(isDark, accentColor),
+    );
+  }
+
+  Widget _buildShimmerLoading(Color baseColor, Color highlightColor, bool isTablet) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Metrics title shimmer
+          Container(
+            width: 120,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_pin_outlined),
-            activeIcon: Icon(Icons.person_pin),
-            label: 'Odoo',
+          SizedBox(height: 12),
+          
+          // Metric cards shimmer
+          GridView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isTablet ? 2 : 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Container(
+                        width: 80,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        width: 60,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        width: 90,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Settings',
+          SizedBox(height: 20),
+          
+          // Quick Actions shimmer
+          Container(
+            width: 120,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              // Expanded(
+              //   child: Container(
+              //     height: 46,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //   ),
+              // ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  void _showCustomDatePicker() async {
-    startDate ??= DateTime.now().subtract(const Duration(days: 7));
-    endDate ??= DateTime.now();
-
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      initialDateRange: DateTimeRange(start: startDate!, end: endDate!),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
+  Widget _buildErrorView(String message, Color accentColor, bool isDark) {
+    return Center(
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              message,
+              style: GoogleFonts.poppins(
+                color: Colors.red[400],
+                fontSize: getResponsiveFontSize(context, 14),
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-          child: child!,
-        );
-      },
+          _ActionButton(
+            icon: Icons.refresh,
+            label: 'Retry',
+            onTap: _fetchAllData,
+            isDark: isDark,
+            accentColor: accentColor,
+          ),
+        ],
+      ),
     );
+  }
 
-    if (picked != null) {
-      setState(() {
-        startDate = picked.start;
-        endDate = picked.end;
-        _filterDataByTimeRange('custom');
-      });
-    }
+  Widget _buildBottomNavigationBar(bool isDark, Color accentColor) {
+    return SafeArea(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', accentColor, isDark),
+          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt, 'Customers', accentColor, isDark),
+          _buildNavItem(2, Icons.public_outlined, Icons.public, 'Odoo', accentColor, isDark),
+          _buildNavItem(3, Icons.settings_outlined, Icons.settings, 'Settings', accentColor, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, Color accentColor, bool isDark) {
+    bool isSelected = _selectedIndex == index;
+    
+    return InkWell(
+      onTap: () => _onItemTapped(index),
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? accentColor.withOpacity(0.1) : Colors.transparent,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              size: 22,
+              color: isSelected ? accentColor : isDark ? Color(0xFF757575) : Color(0xFFBDBDBD),
+            ),
+            SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? accentColor : isDark ? Color(0xFF757575) : Color(0xFFBDBDBD),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _pollingTimer?.cancel();
+    _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 }
@@ -482,57 +729,90 @@ class _SalesDashboardState extends State<SalesDashboard> {
 class _MetricCard extends StatelessWidget {
   final String title;
   final String value;
-  final int shade;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final bool isDark;
+  final Color accentColor;
 
   const _MetricCard({
     required this.title,
     required this.value,
-    required this.shade,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    required this.isDark,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color cardColor = isDark
-        ? (shade % 2 == 0 ? Colors.grey[800]! : Colors.grey[900]!)
-        : (shade % 2 == 0 ? Colors.white : Colors.grey[100]!);
+    final Color cardColor = isDark ? Color(0xFF1A1A1A) : Colors.white;
+    final Color textColor = isDark ? Colors.white : Color(0xFF212121);
+    final Color subtitleColor = isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
 
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              padding: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor,
+              ),
+            ),
+            // Spacer(),
+            SizedBox(height: 15,),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: getResponsiveFontSize(context, 10),
-                  ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-            const SizedBox(height: 4),
-            Flexible(
-              child: Text(
-                value,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: getResponsiveFontSize(context, 16),
-                    ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                fontSize: getResponsiveFontSize(context, 15),
+                color: subtitleColor,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 4),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                color: textColor,
+                fontSize: getResponsiveFontSize(context, 18),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w400,
+                fontSize: getResponsiveFontSize(context, 13),
+                color: subtitleColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -544,46 +824,47 @@ class _MetricCard extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final int shade;
   final VoidCallback onTap;
+  final bool isDark;
+  final Color accentColor;
 
   const _ActionButton({
     required this.icon,
     required this.label,
-    required this.shade,
     required this.onTap,
+    required this.isDark,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final int calculatedShade = (shade + (isDark ? 600 : 200)).clamp(0, 900);
-    final int normalizedShade = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
-        .reduce((a, b) => (calculatedShade - a).abs() < (calculatedShade - b).abs() ? a : b);
-    final buttonColor = Colors.grey[normalizedShade]!;
-
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        foregroundColor: isDark ? Colors.white : Colors.black,
-        backgroundColor: buttonColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        backgroundColor: isDark ? accentColor.withOpacity(0.2) : accentColor,
+        foregroundColor: isDark ? Colors.white : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 2,
+        padding: EdgeInsets.symmetric(vertical: 14),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 15),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: getResponsiveFontSize(context, 10),
+          Icon(
+            icon,
+            size: 22,
+          ),
+          SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: getResponsiveFontSize(context, 14),
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

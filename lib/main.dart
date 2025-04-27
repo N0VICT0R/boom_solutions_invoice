@@ -15,7 +15,8 @@ import 'package:boom_solutions_invoice/screens/visitsScreens/CheckInScreen.dart'
 import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
 import 'package:boom_solutions_invoice/services/ConnectivityService.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
-import 'package:boom_solutions_invoice/widgets/salesChart.dart' show SalesChartController;
+import 'package:boom_solutions_invoice/widgets/salesChart.dart'
+    show SalesChartController;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -82,7 +83,8 @@ class InvoiceApp extends StatelessWidget {
         GetPage(name: '/NearByCustomer', page: () => MapScreen()),
         GetPage(name: '/VisitsScreen', page: () => VisitsScreen()),
         GetPage(name: '/CheckInScreen', page: () => CheckInScreen()),
-        GetPage(name: '/offline', page: () => const OfflineScreen()), // New route
+        GetPage(
+            name: '/offline', page: () => const OfflineScreen()), // New route
         GetPage(
           name: '/dashboard',
           page: () => SalesDashboard(),
@@ -91,8 +93,11 @@ class InvoiceApp extends StatelessWidget {
         ),
         GetPage(
           name: '/webView',
-          page: () => WebViewScreen(
-              url: 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F'),
+            page: () {
+            final url = 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F';
+            // GetStorage().write('webViewUrl', url);
+            return WebViewScreen(url: url);
+            },
           transition: Transition.leftToRightWithFade,
           preventDuplicates: false,
         ),
