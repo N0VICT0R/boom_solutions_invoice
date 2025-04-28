@@ -29,7 +29,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'CustomerDetail/controllers/CustomerDetailController.dart';
 import 'screens/invoice_detail_screen.dart';
 import 'screens/invoice_list_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();

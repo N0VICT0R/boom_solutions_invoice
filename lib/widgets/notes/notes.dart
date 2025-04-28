@@ -151,29 +151,24 @@ class NotesWidget extends StatelessWidget {
                           horizontal: 12,
                         ),
                         leading: Container(
-                          width: 12,
-                          height: 3,
+                          width: getResponsiveFontSize(context, 10),
+                          height: getResponsiveFontSize(context, 10),
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: controller.getPriorityColor(note['priority']),
-                              width: 0,
-                              style: BorderStyle.solid,
-                            ),
-                            color: controller.getPriorityColor(note['priority']).withOpacity(0.0),
+                          shape: BoxShape.circle,
+                          color: controller.getPriorityColor(note['priority']),
                           ),
                         ),
                         title: Text(
                           note['title'],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: getResponsiveFontSize(context, 14),
+                                fontSize: getResponsiveFontSize(context, 16),
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
                         subtitle: Text(
                           note['message'],
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: getResponsiveFontSize(context, 12),
+                                fontSize: getResponsiveFontSize(context, 14),
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
