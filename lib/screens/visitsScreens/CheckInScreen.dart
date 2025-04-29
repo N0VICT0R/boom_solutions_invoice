@@ -1024,7 +1024,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                 ),
                 Expanded(
                   child: Text(
-                    'Check-in',
+                    'Visit Note',
                     style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -1045,87 +1045,86 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
               child: Center(
                 child: (_isLoadingLocation || _isLoadingCustomerLocation)
                     ? const CircularProgressIndicator(color: Color(0xFF42A5F5))
-                    : Column(
+                    : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // User Location
+                        ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: gradient,
+                          boxShadow: [
+                            BoxShadow(
+                            color: const Color(0xFF1976D2).withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                            ),
+                          ],
+                          ),
+                          child: const Icon(Icons.delivery_dining, color: Colors.white, size: 32),
+                        ),
+                        ),
+                        
+                        Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // User Location
-                          ScaleTransition(
-                            scale: _pulseAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: gradient,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF1976D2).withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.person, color: Colors.white, size: 32),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 75,),
                           CustomPaint(
-                            size: const Size(2, 80),
-                            painter: GradientDashedLinePainter(gradient: gradient),
+                            
+                          size: const Size(80, 2),
+                          painter: GradientDashedLinePainter(gradient: gradient),
                           ),
-                          const SizedBox(height: 8),
-                          // Customer Location
-                          ScaleTransition(
-                            scale: _pulseAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: gradient,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF1976D2).withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.store, color: Colors.white, size: 32),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 15),
                           Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1A1A1A),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1A1A),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                            child: Text(
-                              _distanceToCustomer != null
-                                  ? '${_distanceToCustomer!.toStringAsFixed(2)} km'
-                                  : 'N/A',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
+                            ],
+                          ),
+                          child: Text(
+                            _distanceToCustomer != null
+                              ? '${_distanceToCustomer!.toStringAsFixed(2)} km'
+                              : 'N/A',
+                            style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _customerLocation?['name'] ?? 'Unknown Customer',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
                           ),
                         ],
+                        ),
+                        const SizedBox(width: 16),
+                        // Customer Location
+                        ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: gradient,
+                          boxShadow: [
+                            BoxShadow(
+                            color: const Color(0xFF42A5F5).withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                            ),
+                          ],
+                          ),
+                          child: const Icon(Icons.person, color: Colors.white, size: 32),
+                        ),
+                        ),
+                      ],
                       ),
               ),
             ),
@@ -1204,17 +1203,17 @@ class GradientDashedLinePainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    const dashHeight = 5;
+    const dashWidth = 5;
     const dashSpace = 3;
-    double startY = 0;
+    double startX = 0;
 
-    while (startY < size.height) {
+    while (startX < size.width) {
       canvas.drawLine(
-        Offset(0, startY),
-        Offset(0, startY + dashHeight),
+        Offset(startX, 0),
+        Offset(startX + dashWidth, 0),
         paint,
       );
-      startY += dashHeight + dashSpace;
+      startX += dashWidth + dashSpace;
     }
   }
 

@@ -1,7 +1,3 @@
-import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
-import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
-import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
-import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,9 +5,126 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:maps_launcher/maps_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
+import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
+import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
+import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 
 //=======================
-// Utility Function for Google Maps (Unchanged)
+// Location Service
+//=======================
+class LocationService {
+  static const String baseUrl = 'http://137.184.205.67:2710';
+  static String get apiToken => GetStorage().read('token') ?? '';
+
+  Future<(bool, String?)> _checkAndRequestLocationPermissions() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        await Geolocator.openLocationSettings();
+        return (false, 'Location services are disabled. Please enable them in settings.');
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return (false, 'Location permissions denied. Please allow location access in settings.');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        await Geolocator.openAppSettings();
+        return (false, 'Location permissions are permanently denied. Please enable them in settings.');
+      }
+
+      return (true, null);
+    } catch (e) {
+      print('Error checking location permissions: $e');
+      return (false, 'Error checking location permissions: $e');
+    }
+  }
+
+  Future<(bool, String?, double?, double?)> _getCurrentLocation() async {
+    try {
+      final (permissionGranted, permissionError) = await _checkAndRequestLocationPermissions();
+      if (!permissionGranted) {
+        return (false, permissionError, null, null);
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      print('Fetched current location: Latitude=${position.latitude}, Longitude=${position.longitude}');
+      return (true, null, position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting current location: $e');
+      return (false, 'Error getting current location: $e', null, null);
+    }
+  }
+
+  Future<(bool, String?)> updatePartnerLocation(int partnerId) async {
+    try {
+      // Validate api_token
+      if (apiToken.isEmpty) {
+        return (false, 'API token is missing. Please log in again.');
+      }
+
+      // Log the token for debugging
+      print('API Token: $apiToken');
+
+      // Get the current user location
+      final (locationSuccess, locationError, latitude, longitude) = await _getCurrentLocation();
+      if (!locationSuccess) {
+        return (false, locationError);
+      }
+
+      // Prepare API endpoint with dynamic partnerId
+      final url = Uri.parse('$baseUrl/api/v1/partners/$partnerId/location');
+      print('Updating location for partner ID $partnerId at URL: $url');
+
+      // Prepare request body with current location
+      final body = jsonEncode({
+        'api_token': apiToken,
+        'latitude': latitude,
+        'longitude': longitude,
+        'update_address': true,
+      });
+      print('Request body: $body');
+
+      // Make PUT request with a timeout
+      final response = await http
+          .put(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: body,
+          )
+          .timeout(Duration(seconds: 10));
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      // Check for success (200 OK or 204 No Content)
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return (true, null);
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        return (false, 'Authentication failed: Invalid or expired token. Please log in again.');
+      } else if (response.statusCode == 429) {
+        return (false, 'Too many requests: Please wait before trying again.');
+      } else {
+        return (false, 'Failed to update location: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating location: $e');
+      return (false, 'Error updating location: $e');
+    }
+  }
+}
+
+//=======================
+// Utility Function for Google Maps
 //=======================
 Future<void> launchGoogleMapsByPartnerId({
   required int partnerId,
@@ -281,6 +394,7 @@ class PartnerController extends GetxController {
 class CustomerDetailScreen extends StatelessWidget {
   final CustomerController controller = Get.put(CustomerController());
   final PartnerController partnerController = Get.put(PartnerController());
+  final LocationService locationService = LocationService();
   final List<Color> chartColors = [
     Color(0xFFFF1744),
     Color(0xFFFFD600),
@@ -289,12 +403,13 @@ class CustomerDetailScreen extends StatelessWidget {
     Color(0xFFD500F9),
     Color(0xFFFF9100),
   ];
+  DateTime? lastUpdateTime; // Track the last update time
 
   CustomerDetailScreen({Key? key, required int partnerId}) : super(key: key) {
     final args = Get.arguments ?? {};
     final id = args['partnerId'] ?? partnerId;
     if (id == 0) {
-      // print('Warning: No valid partnerId provided');
+      print('Warning: No valid partnerId provided');
     }
     controller.fetchSalesData(id);
     partnerController.fetchPartnerDetails(id);
@@ -317,7 +432,64 @@ class CustomerDetailScreen extends StatelessWidget {
       elevation: 0,
       actions: [
         IconButton(
-          icon: const Icon(Icons.location_on, size: 20),
+          icon: const Icon(Icons.add_location_alt_outlined, size: 20),
+          onPressed: () async {
+            final partnerId = Get.arguments['partnerId'] ?? 0;
+            print('Attempting to update location for Partner ID: $partnerId');
+            if (partnerId == 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Error: Invalid partner ID')),
+              );
+              return;
+            }
+
+            // Check if enough time has passed since the last update
+            if (lastUpdateTime != null &&
+                DateTime.now().difference(lastUpdateTime!).inSeconds < 30) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please wait 30 seconds before updating again')),
+              );
+              return;
+            }
+
+            try {
+              // Show loading indicator
+              Get.dialog(
+                const Center(child: CircularProgressIndicator()),
+                barrierDismissible: false,
+              );
+
+              // Update location
+              final (success, errorMessage) = await locationService.updatePartnerLocation(partnerId);
+
+              // Close loading dialog
+              Get.back();
+
+              // Show result
+              if (success) {
+                lastUpdateTime = DateTime.now(); // Update the last update time
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Location updated successfully')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(errorMessage ?? 'Failed to update location')),
+                );
+              }
+            } catch (e) {
+              // Close loading dialog if still showing
+              if (Get.isDialogOpen ?? false) {
+                Get.back();
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: ${e.toString()}')),
+              );
+            }
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.navigation, size: 20),
           onPressed: () {
             final partnerId = Get.arguments['partnerId'] ?? 0;
             if (partnerId != 0) {
@@ -397,7 +569,7 @@ class CustomerDetailScreen extends StatelessWidget {
                     return const SizedBox.shrink();
                   }),
                   // Payment
-                   Payment(),
+                  Payment(),
                   const SizedBox(height: 12),
                   // Metrics Grid
                   const MetricsGrid(),
@@ -439,7 +611,7 @@ class CustomerDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               notes,
-              style: const TextStyle(fontSize: 13,),
+              style: const TextStyle(fontSize: 13),
             ),
           ],
         ),
@@ -814,10 +986,9 @@ class MetricsGrid extends StatelessWidget {
                   icon: Icons.map_outlined,
                   title: 'Visit Information',
                   subtitle: 'View customer visit patterns',
-                    onTap: () {
-                      
-                   Get.to(() =>  VisitsScreen(), arguments: {'partnerId': Get.arguments['partnerId']});
-               
+                  onTap: () {
+                    Get.to(() => VisitsScreen(),
+                        arguments: {'partnerId': Get.arguments['partnerId']});
                   },
                 ),
               ],
@@ -906,7 +1077,7 @@ class MetricsGrid extends StatelessWidget {
               value,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: MediaQuery.of(context).size.width*.05,
+                    fontSize: MediaQuery.of(context).size.width * .05,
                   ),
             ),
             const SizedBox(height: 4),
@@ -914,7 +1085,7 @@ class MetricsGrid extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
-                    fontSize: MediaQuery.of(context).size.width*.03,
+                    fontSize: MediaQuery.of(context).size.width * .03,
                   ),
             ),
           ],
