@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/partner_list.dart';  // Single import source
@@ -19,9 +20,10 @@ class CustomerListController extends GetxController {
     try {
       isLoading(true);
       hasError(false);
-      
+            final apiurl = GetStorage().read("apiUrl");
+      final token = GetStorage().read('token') ?? '';
       final response = await http.get(Uri.parse(
-        'http://137.184.205.67:2710/api/v1/partners?api_token=VKwmwcRzwAIY9ef6A7Gp2qBOISwwPCke&limit=10&page=1&state_id='
+        '$apiurl/api/v1/partners?api_token=$token&limit=10&page=1&state_id='
       ));
 
       if (response.statusCode == 200) {

@@ -332,10 +332,13 @@ class _CustomersListScreenState extends State<CustomersListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Failed to load customers'),
+          Text('please load customers',
+          style: TextStyle(fontSize: 15),
+          ),
+          SizedBox(height: 15,),
           ElevatedButton(
             onPressed: controller.fetchCustomers,
-            child: Text('Retry'),
+            child: Text('Load'),
           ),
         ],
       ),
@@ -427,9 +430,10 @@ class CustomerListController extends GetxController {
     try {
       isLoading(true);
       hasError(false);
+            final apiurl = GetStorage().read("apiUrl");
       final token = GetStorage().read('token') ?? '';
       final url =
-          'http://137.184.205.67:2710/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
+          '$apiurl/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {

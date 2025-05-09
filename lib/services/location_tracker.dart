@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:io' show Platform;
 import 'dart:isolate' show SendPort;
+import 'dart:io' show Platform, SocketException;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,7 +15,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 class LocationTrackerController extends GetxController with WidgetsBindingObserver {
   static LocationTrackerController get to => Get.find<LocationTrackerController>();
-  
+
   // Singleton pattern
   static final LocationTrackerController _instance = LocationTrackerController._internal();
   factory LocationTrackerController() => _instance;
@@ -43,15 +44,15 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   final int _maxUpdateInterval = 300000; // 5 minutes
   final double _movementThreshold = 20; // meters
   final int _batchSize = 6;
-  final String _apiUrl = 'https://onix.boom-solutions.co/api/v1/user/locations/batch';
+  final String _apiUrl = GetStorage().read('apiUrl') ?? 'https://onix.boom-solutions.co/api/v1/user/locations/batch';
   final int _maxRetries = 3;
   final Duration _debounceDuration = Duration(milliseconds: 500);
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
-    initialize();
+    await initialize();
   }
 
   @override
@@ -93,7 +94,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   Future<void> initialize() async {
     debugPrint('Initializing LocationTracker...');
     locationStatus.value = 'Checking location service...';
-    
+
     final prefs = await SharedPreferences.getInstance();
     _deviceId = prefs.getString('device_id') ?? await _generateDeviceId();
     await prefs.setString('device_id', _deviceId);
@@ -124,11 +125,17 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     }
 
     if (Platform.isAndroid) {
-      debugPrint('Requesting battery optimization exemption...');
-      try {
-        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-      } catch (e) {
-        debugPrint('Error requesting battery optimization exemption: $e');
+      debugPrint('Checking battery optimization status...');
+      bool isIgnoringBatteryOptimizations = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+      if (!isIgnoringBatteryOptimizations) {
+        debugPrint('Requesting battery optimization exemption...');
+        try {
+          await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+        } catch (e) {
+          debugPrint('Error requesting battery optimization exemption: $e');
+        }
+      } else {
+        debugPrint('Battery optimization already ignored');
       }
     }
 
@@ -152,14 +159,14 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   }
 
   void setApiToken(String token) {
-    debugPrint('API token set');
+    debugPrint('API token set: $token');
     _apiToken = token;
   }
 
   Future<String> _generateDeviceId() async {
     final deviceInfo = DeviceInfoPlugin();
     String id = 'device_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(10000)}';
-    
+
     try {
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
@@ -171,7 +178,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     } catch (e) {
       debugPrint('Error generating device ID: $e');
     }
-    
+
     debugPrint('Generated Device ID: $id');
     return id;
   }
@@ -259,7 +266,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     _debounceTimer = Timer(_debounceDuration, () {
       currentLocation.value = location;
       debugPrint('UI updated with debounced location: ${location.latitude}, ${location.longitude}');
-      
+
       final now = DateTime.now();
       final timeDiff = now.difference(_lastUpdateTime ?? now).inMilliseconds;
 
@@ -275,7 +282,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
         );
 
         debugPrint('Movement: ${distance.toStringAsFixed(2)} meters in ${(timeDiff/1000).toStringAsFixed(2)} seconds');
-        
+
         if (distance > _movementThreshold) {
           _lastSpeed = distance / (timeDiff / 1000);
           debugPrint('Calculated speed: ${_lastSpeed?.toStringAsFixed(2)} m/s');
@@ -362,7 +369,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     while (retryCount < _maxRetries) {
       try {
         debugPrint('Attempt ${retryCount + 1} of $_maxRetries');
-        
+
         final response = await http.post(
           Uri.parse(_apiUrl),
           headers: {
@@ -370,7 +377,9 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
             'Content-Type': 'application/json',
           },
           body: jsonBody,
-        );
+        ).timeout(Duration(seconds: 10), onTimeout: () {
+          throw TimeoutException('Request timed out');
+        });
 
         debugPrint('Response status: ${response.statusCode}');
         debugPrint('Response body: ${response.body}');
@@ -383,10 +392,22 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
         } else {
           debugPrint('Batch send failed with status: ${response.statusCode}');
           retryCount++;
+          if (retryCount == _maxRetries) {
+            _showErrorSnackbar('Server Error', 'Unable to send location data. Data will be saved locally.');
+          }
         }
       } catch (e) {
         debugPrint('Error sending location batch: $e');
         retryCount++;
+        if (retryCount == _maxRetries) {
+          String errorMessage = 'Failed to send location data. Data will be saved locally.';
+          if (e is SocketException && e.message.contains('Failed host lookup')) {
+            errorMessage = 'Cannot reach server (DNS error). Data will be saved locally.';
+          } else if (e is TimeoutException) {
+            errorMessage = 'Request timed out. Data will be saved locally.';
+          }
+          _showErrorSnackbar('Connection Error', errorMessage);
+        }
       }
 
       if (retryCount < _maxRetries) {
@@ -404,12 +425,29 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     _isSendingBatch = false;
   }
 
+  void _showErrorSnackbar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.withOpacity(0.8),
+      colorText: Colors.white,
+      duration: Duration(seconds: 3),
+      margin: EdgeInsets.all(10),
+      borderRadius: 8,
+      isDismissible: true,
+      onTap: (snack) {
+        Get.toNamed('/webView');
+      },
+    );
+  }
+
   Future<void> _saveBatchToStorage() async {
     if (_locationBatch.isEmpty) {
       debugPrint('No locations to save');
       return;
     }
-    
+
     debugPrint('Saving ${_locationBatch.length} locations to storage');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('pending_location_batch', jsonEncode(_locationBatch));
@@ -419,11 +457,10 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     debugPrint('Loading pending batches...');
     final prefs = await SharedPreferences.getInstance();
     final storedBatch = prefs.getString('pending_location_batch');
-    
+
     if (storedBatch != null) {
       try {
-        final batch = (jsonDecode(storedBatch) as List).map((item) => 
-          Map<String, dynamic>.from(item as Map)).toList();
+        final batch = (jsonDecode(storedBatch) as List).map((item) => Map<String, dynamic>.from(item as Map)).toList();
         debugPrint('Loaded ${batch.length} pending locations');
         _locationBatch.addAll(batch);
       } catch (e) {

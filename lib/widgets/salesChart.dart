@@ -1,6 +1,7 @@
-import 'dart:math';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
@@ -14,18 +15,6 @@ extension IterableExtension<T> on Iterable<T> {
     }
     return null;
   }
-}
-
-void main() {
-  runApp(
-    GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
-      theme: ThemeModes.lightTheme,
-      darkTheme: ThemeModes.darkTheme,
-      home: const SalesChartPage(),
-    ),
-  );
 }
 
 class ThemeModes {
@@ -68,19 +57,6 @@ class ThemeModes {
   );
 }
 
-class SalesChartPage extends StatelessWidget {
-  const SalesChartPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SalesChartView(),
-      ),
-    );
-  }
-}
-
 class SalesData {
   final String period;
   final double value;
@@ -89,13 +65,13 @@ class SalesData {
 }
 
 class SalesChartController extends GetxController {
-  final String baseUrl = "http://137.184.205.67:2710/";
-  final String token = "gln5EU3jkGwBy7GZWnSpm9N7EffslYS5";
+  final String apiurl = GetStorage().read("apiUrl") ?? "";
+  final token = GetStorage().read('token') ?? '';
 
   var isLoading = true.obs;
-  var selectedRange = 'Quarter'.obs;
+  var selectedRange = 'Day'.obs;
   var errorMessage = ''.obs;
-  var selectedBarIndex = RxInt(-1); // -1 means no selection
+  var selectedBarIndex = RxInt(-1);
 
   var salesData = <SalesData>[].obs;
   var dateFrom = DateTime.now();
@@ -148,25 +124,63 @@ class SalesChartController extends GetxController {
     return ((selectedBarData!.value / averageSales) - 1) * 100;
   }
 
-  Future<void> fetchData() async {
+  Future<bool> refreshToken() async {
+    try {
+      final apiUrl = GetStorage().read("apiUrl") ?? "";
+      final refreshToken = GetStorage().read('refresh_token') ?? '';
+      final url = Uri.parse('$apiUrl/api/v1/refresh-token');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
+      );
+      print('Token refresh response: ${response.statusCode}, ${response.body}');
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        GetStorage().write('token', jsonData['access_token']);
+        GetStorage().write('refresh_token', jsonData['refresh_token']);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Token refresh failed: $e');
+      return false;
+    }
+  }
+
+  Future<void> fetchData({int retryCount = 0, int maxRetries = 2}) async {
+    if (GetStorage().read('user_id') == null || token.isEmpty) {
+      errorMessage.value = 'Please log in again.';
+      isLoading(false);
+      return;
+    }
     isLoading(true);
     errorMessage.value = '';
     selectedBarIndex.value = -1;
-
+    final userId = GetStorage().read('user_id');
     try {
       String groupBy = selectedRange.value.toLowerCase();
       final uri = Uri.parse(
-        "$baseUrl/api/v1/users/2/sales?api_token=$token&"
+        "$apiurl/api/v1/users/$userId/sales?api_token=$token&"
         "date_from=${_formatDate(dateFrom)}&date_to=${_formatDate(dateTo)}&group_by=$groupBy",
       );
-
+      print('Fetching sales data from: $uri');
       final response = await http.get(uri).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          throw Exception("Request timed out. Please check your connection.");
+          if (retryCount < maxRetries) {
+            print('Timeout, retrying fetchData, attempt ${retryCount + 1}');
+            // Return a dummy response to satisfy the type requirement
+            return http.Response('{"error": "Request timed out"}', 408);
+          }
+          throw Exception("Request timed out.");
         },
       );
-
+      print('Sales API response: ${response.statusCode}, ${response.body}');
+      if (response.statusCode == 408 && retryCount < maxRetries) {
+        // Handle timeout retry
+        return fetchData(retryCount: retryCount + 1);
+      }
       List<Map<String, dynamic>> dataList = [];
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -174,10 +188,17 @@ class SalesChartController extends GetxController {
           dataList = List<Map<String, dynamic>>.from(data['data']);
           dataList.sort((a, b) => a['date'].compareTo(b['date']));
         } else {
-          errorMessage.value = "No data returned from API";
+          errorMessage.value = "No sales data available.";
         }
+      } else if (response.statusCode == 401) {
+        errorMessage.value = "Session expired. Please log in again.";
+      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+        if (await refreshToken()) {
+          return fetchData(retryCount: retryCount);
+        }
+        errorMessage.value = "Authentication error.";
       } else {
-        errorMessage.value = "Failed to fetch data: HTTP ${response.statusCode}";
+        errorMessage.value = "Server error: HTTP ${response.statusCode}";
       }
 
       int maxItems;
@@ -220,7 +241,7 @@ class SalesChartController extends GetxController {
 
       processData(paddedData);
     } catch (e) {
-      errorMessage.value = "Error: $e";
+      errorMessage.value = "Network error: $e";
       print('Fetch error: $e');
     } finally {
       isLoading(false);
@@ -298,12 +319,11 @@ class SalesChartController extends GetxController {
 class SalesChartView extends StatelessWidget {
   SalesChartView({super.key});
 
-  final controller = Get.put(SalesChartController());
+  final controller = Get.find<SalesChartController>();
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      // color: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -335,7 +355,7 @@ class SalesChartView extends StatelessWidget {
           ),
         ),
         Obx(() {
-          if (controller.isLoading.value || controller.salesData.isEmpty) {
+          if (controller.salesData.isEmpty) {
             return const SizedBox.shrink();
           }
           return Container(
@@ -361,28 +381,12 @@ class SalesChartView extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Obx(() {
-      if (controller.isLoading.value) {
-        return SizedBox(
-          height: 180,
-          child: Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
-        );
-      }
-
       if (controller.errorMessage.value.isNotEmpty) {
         return SizedBox(
           height: 180,
           child: Center(
             child: Text(
-              "please restart the app or contact the admin",
+              controller.errorMessage.value,
               style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
               textAlign: TextAlign.center,
             ),
@@ -558,7 +562,7 @@ class SalesChartView extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Fixed scroll direction for better UX
+          scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: ['Day', 'Month', 'Quarter', 'Year'].map((period) {

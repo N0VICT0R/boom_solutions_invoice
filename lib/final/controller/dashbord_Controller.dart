@@ -1,6 +1,7 @@
 import 'package:boom_solutions_invoice/services/ConnectivityService.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../controller/auth_controller.dart';
@@ -42,8 +43,8 @@ class DashboardController extends GetxController {
   }
 
   Future<void> fetchNotes() async {
-    final baseUrl = "https://onix.boom-solutions.co/"; // Assume baseUrl is stored in AuthController
-    final token = "gln5EU3jkGwBy7GZWnSpm9N7EffslYS5"; // Assume apiToken is stored in AuthController
+    final token = GetStorage().read('token') ?? '';
+    final baseUrl = GetStorage().read('apiUrl') ?? ''; // Assume apiToken is stored in AuthController
     final url = Uri.parse('$baseUrl/api/v1/users/notes?api_token=$token');
 
     try {
@@ -72,8 +73,8 @@ class DashboardController extends GetxController {
   Future<void> addNote() async {
     if (noteController.text.trim().isEmpty) return;
 
-    final baseUrl = "https://onix.boom-solutions.co/";
-    final token = "gln5EU3jkGwBy7GZWnSpm9N7EffslYS5";
+    final token = GetStorage().read('token') ?? '';
+    final baseUrl = GetStorage().read('apiUrl') ?? '';
     final url = Uri.parse('$baseUrl/api/v1/users/notes?api_token=$token');
 
     try {

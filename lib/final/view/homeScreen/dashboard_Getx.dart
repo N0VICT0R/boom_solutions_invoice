@@ -17,6 +17,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 // Utility for responsive font sizes
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
@@ -67,10 +68,12 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   bool isLoading = true;
   String? errorMessage;
   bool isRealTimeEnabled = false;
+  bool isOffline = false;
   Timer? _pollingTimer;
   late PageController _pageController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
@@ -88,9 +91,73 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       _animationController.forward();
     });
     _startPolling();
+
+    // Initialize connectivity monitoring
+    _checkConnectivity();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      bool wasOffline = isOffline;
+      setState(() {
+        isOffline = results.every((result) => result == ConnectivityResult.none);
+      });
+      if (wasOffline && !isOffline) {
+        // Internet restored, refresh data
+        _fetchAllData();
+      } else if (isOffline && _selectedIndex != 2) {
+        // Navigate to Odoo when offline, unless already on Odoo
+        _onItemTapped(2);
+      }
+    });
+  }
+
+  Future<void> _checkConnectivity() async {
+    var connectivityResults = await Connectivity().checkConnectivity();
+    setState(() {
+      isOffline = connectivityResults.every((result) => result == ConnectivityResult.none);
+    });
+    if (isOffline && _selectedIndex != 2) {
+      _onItemTapped(2);
+    }
+  }
+
+  Future<bool> _refreshToken() async {
+    try {
+      final authController = Get.find<AuthController>();
+      final apiUrl = GetStorage().read("apiUrl") ?? "";
+      final userId = GetStorage().read('user_id');
+      // Replace with your actual token refresh endpoint and logic
+      final url = Uri.parse('$apiUrl/api/v1/users/$userId/refresh-token');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          // Add necessary parameters, e.g., refresh token
+        }),
+      );
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final newToken = jsonData['token'];
+        GetStorage().write('token', newToken);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Token refresh failed: $e');
+      return false;
+    }
   }
 
   Future<void> _fetchAllData() async {
+    if (isOffline) {
+      setState(() {
+        errorMessage = 'Check your internet connection or try again later.';
+        isLoading = false;
+      });
+      if (_selectedIndex != 2) {
+        _onItemTapped(2);
+      }
+      return;
+    }
+
     setState(() {
       isLoading = true;
       errorMessage = null;
@@ -105,26 +172,45 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         isLoading = false;
       });
     } catch (e) {
+      if (e.toString().contains('400') && e.toString().contains('invalid CSRF token')) {
+        // Attempt to refresh token
+        if (await _refreshToken()) {
+          // Retry fetching data after token refresh
+          await _fetchAllData();
+          return;
+        }
+      }
       setState(() {
-        errorMessage = 'Error refreshing data: $e';
+        errorMessage = 'Check your internet connection or try again later.';
         isLoading = false;
       });
+      if (_selectedIndex != 2) {
+        _onItemTapped(2);
+      }
     }
   }
 
   Future<void> _fetchHomeScreenData() async {
     try {
       final authController = Get.find<AuthController>();
-      final baseUrl = 'https://onix.boom-solutions.co/';
+      final apiurl = GetStorage().read("apiUrl") ?? "";
       final token = GetStorage().read('token') ?? '';
-      final url = Uri.parse('$baseUrl/api/v1/users/2/home-screen?api_token=$token');
-      final response = await http.get(url);
+      final userId = GetStorage().read('user_id');
+      print("Usssser id is $userId");
+      final url = Uri.parse('$apiurl/api/v1/users/$userId/home-screen?api_token=$token');
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
           homeData = HomeScreenResponse.fromJson(jsonData);
         });
       } else {
+        if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+          throw Exception('400: invalid CSRF token');
+        }
         throw Exception('Failed to load data: ${response.statusCode}');
       }
     } catch (e) {
@@ -226,280 +312,268 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     final Color shimmerHighlightColor = isDark ? Color(0xFF303030) : Colors.grey[100]!;
 
     final List<Widget> pages = [
-      SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchAllData,
-          color: accentColor,
-          backgroundColor: cardBackground,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    FadeInDown(
-                      duration: Duration(milliseconds: 400),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome back',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: getResponsiveFontSize(context, 13),
-                                  color: secondaryTextColor,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                '${authController.currentUser.value?.name ?? 'admin'}',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: getResponsiveFontSize(context, 20),
-                                  color: primaryTextColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          // Container(
-                          //   width: 40,
-                          //   height: 40,
-                          //   decoration: BoxDecoration(
-                          //     color: accentColor,
-                          //     shape: BoxShape.circle,
-                          //   ),
-                          //   child: Icon(
-                          //     Icons.notifications_none_rounded,
-                          //     color: Colors.white,
-                          //     size: 20,
-                          //   ),
-                          // ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    
-                    // Sales Chart
-                    FadeInUp(
-                      duration: Duration(milliseconds: 500),
-                      from: 30,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: cardBackground,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SalesChartView(),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    
-                    // Loading or Error State
-                    isLoading
-                        ? _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet)
-                        : errorMessage != null
-                            ? _buildErrorView(errorMessage!, accentColor, isDark)
-                            : FadeInUp(
-                                duration: Duration(milliseconds: 600),
-                                from: 30,
-                                child: Column(
-                                  children: [
-                                    // Key Metrics Header
-                                    // Row(
-                                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    //   children: [
-                                    //     // Text(
-                                    //     //   'Key Metrics',
-                                    //     //   style: GoogleFonts.poppins(
-                                    //     //     fontWeight: FontWeight.w600,
-                                    //     //     fontSize: getResponsiveFontSize(context, 16),
-                                    //     //     color: primaryTextColor,
-                                    //     //   ),
-                                    //     // ),
-                                    //     // Text(
-                                    //     //   'Today',
-                                    //     //   style: GoogleFonts.poppins(
-                                    //     //     fontWeight: FontWeight.w500,
-                                    //     //     fontSize: getResponsiveFontSize(context, 13),
-                                    //     //     color: accentColor,
-                                    //     //   ),
-                                    //     // ),
-                                    //   ],
-                                    // ),
-                                    SizedBox(height: 12),
-
-                                    // Metric Cards - Grid Layout
-                                    GridView.builder(
-                                      shrinkWrap: true,
-                                      physics: NeverScrollableScrollPhysics(),
-                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: isTablet ? 2 : 2,
-                                        crossAxisSpacing: 12,
-                                        mainAxisSpacing: 12,
-                                        childAspectRatio: 1.0,
-                                      ),
-                                      itemCount: 4,
-                                      itemBuilder: (context, index) {
-                                        return FadeInUp(
-                                          duration: Duration(milliseconds: 600 + index * 100),
-                                          from: 30,
-                                          child: _MetricCard(
-                                            title: [
-                                              'Sales Target',
-                                              'Collections',
-                                              'Visits',
-                                              'New Customers'
-                                            ][index],
-                                            value: [
-                                              '${formatNumber(homeData!.monthlySales.metrics.totalAmount)}/${formatNumber(homeData!.monthlySales.metrics.monthTarget)}',
-                                              formatNumber(homeData!.receivables.amountDueToday),
-                                              '${homeData!.additionalMetrics.todayVisits}',
-                                              '${homeData!.additionalMetrics.newCustomersThisMonth}',
-                                            ][index],
-                                            subtitle: [
-                                              '${(homeData!.monthlySales.metrics.achievementPercentage).toStringAsFixed(1)}% of target',
-                                              '${homeData!.receivables.partnerCount} partners',
-                                              'Completed today',
-                                              'This month',
-                                            ][index],
-                                            icon: [
-                                              Icons.show_chart,
-                                              Icons.account_balance_wallet,
-                                              Icons.check_circle_outline,
-                                              Icons.person_add_alt,
-                                            ][index],
-                                            iconColor: [
-                                              homeData!.monthlySales.metrics.achievementPercentage >= 80
-                                                  ? Colors.green[400]!
-                                                  : Colors.orange[400]!,
-                                              Colors.amber[400]!,
-                                              Colors.green[400]!,
-                                              Colors.blue[400]!,
-                                            ][index],
-                                            isDark: isDark,
-                                            accentColor: accentColor,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                    SizedBox(height: 20),
-                    
-                    // Quick Actions
-                    FadeInUp(
-                      duration: Duration(milliseconds: 700),
-                      from: 30,
+      // Dashboard Page
+      isOffline
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet),
+              ),
+            )
+          : SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _fetchAllData,
+                color: accentColor,
+                backgroundColor: cardBackground,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Quick Actions',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: getResponsiveFontSize(context, 16),
-                              color: primaryTextColor,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ActionButton(
-                                  icon: Icons.place,
-                                  label: 'Nearby Customers',
-                                  onTap: () => Get.toNamed('/NearByCustomer'),
-                                  isDark: isDark,
-                                  accentColor: accentColor,
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: _ActionButton(
-                                  icon: Icons.inventory_2,
-                                  label: 'Stock',
-                                  onTap: () {
-                                    Get.find<DashboardController>().createNewDeal();
-                                    Get.toNamed('/Stock');
-                                  },
-                                  isDark: isDark,
-                                  accentColor: accentColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    
-                    // Notes Section
-                    FadeInUp(
-                      duration: Duration(milliseconds: 800),
-                      from: 30,
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          Container(
-                            height: screenSize.height * 0.3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: cardBackground,
-                              border: Border.all(color: cardBorder, width: 1),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
+                          // Header
+                          FadeInDown(
+                            duration: Duration(milliseconds: 400),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Welcome back',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: getResponsiveFontSize(context, 13),
+                                        color: secondaryTextColor,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      '${authController.currentUser.value?.name ?? 'admin'}',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: getResponsiveFontSize(context, 20),
+                                        color: primaryTextColor,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: NotesWidget(
-                                height: screenSize.height * 0.3,
-                                scrollController: _scrollController,
+                          ),
+                          SizedBox(height: 20),
+
+                          // Sales Chart
+                          FadeInUp(
+                            duration: Duration(milliseconds: 500),
+                            from: 30,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: cardBackground,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: SalesChartView(),
                               ),
                             ),
                           ),
+                          SizedBox(height: 20),
+
+                          // Loading or Error State
+                          isLoading
+                              ? _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet)
+                              : errorMessage != null
+                                  ? _buildErrorView(errorMessage!, accentColor, isDark)
+                                  : FadeInUp(
+                                      duration: Duration(milliseconds: 600),
+                                      from: 30,
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 12),
+
+                                          // Metric Cards - Grid Layout
+                                          GridView.builder(
+                                            shrinkWrap: true,
+                                            physics: NeverScrollableScrollPhysics(),
+                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: isTablet ? 2 : 2,
+                                              crossAxisSpacing: 12,
+                                              mainAxisSpacing: 12,
+                                              childAspectRatio: 1.0,
+                                            ),
+                                            itemCount: 4,
+                                            itemBuilder: (context, index) {
+                                              return FadeInUp(
+                                                duration: Duration(milliseconds: 600 + index * 100),
+                                                from: 30,
+                                                child: _MetricCard(
+                                                  title: [
+                                                    'Sales Target',
+                                                    'Collections',
+                                                    'Visits',
+                                                    'New Customers'
+                                                  ][index],
+                                                  value: [
+                                                    '${formatNumber(homeData!.monthlySales.metrics.totalAmount)}/${formatNumber(homeData!.monthlySales.metrics.monthTarget)}',
+                                                    formatNumber(homeData!.receivables.amountDueToday),
+                                                    '${homeData!.additionalMetrics.todayVisits}',
+                                                    '${homeData!.additionalMetrics.newCustomersThisMonth}',
+                                                  ][index],
+                                                  subtitle: [
+                                                    '${(homeData!.monthlySales.metrics.achievementPercentage).toStringAsFixed(1)}% of target',
+                                                    '${homeData!.receivables.partnerCount} partners',
+                                                    'Completed today',
+                                                    'This month',
+                                                  ][index],
+                                                  icon: [
+                                                    Icons.show_chart,
+                                                    Icons.account_balance_wallet,
+                                                    Icons.check_circle_outline,
+                                                    Icons.person_add_alt,
+                                                  ][index],
+                                                  iconColor: [
+                                                    homeData!.monthlySales.metrics.achievementPercentage >= 80
+                                                        ? Colors.green[400]!
+                                                        : Colors.orange[400]!,
+                                                    Colors.amber[400]!,
+                                                    Colors.green[400]!,
+                                                    Colors.blue[400]!,
+                                                  ][index],
+                                                  isDark: isDark,
+                                                  accentColor: accentColor,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                          SizedBox(height: 20),
+
+                          // Quick Actions
+                          FadeInUp(
+                            duration: Duration(milliseconds: 700),
+                            from: 30,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Quick Actions',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: getResponsiveFontSize(context, 16),
+                                    color: primaryTextColor,
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionButton(
+                                        icon: Icons.place,
+                                        label: 'Nearby Customers',
+                                        onTap: () => Get.toNamed('/NearByCustomer'),
+                                        isDark: isDark,
+                                        accentColor: accentColor,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: _ActionButton(
+                                        icon: Icons.inventory_2,
+                                        label: 'Stock',
+                                        onTap: () {
+                                          Get.find<DashboardController>().createNewDeal();
+                                          Get.toNamed('/Stock');
+                                        },
+                                        isDark: isDark,
+                                        accentColor: accentColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 20),
+
+                          // Notes Section
+                          FadeInUp(
+                            duration: Duration(milliseconds: 800),
+                            from: 30,
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [],
+                                ),
+                                SizedBox(height: 12),
+                                Container(
+                                  height: screenSize.height * 0.3,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: cardBackground,
+                                    border: Border.all(color: cardBorder, width: 1),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: NotesWidget(
+                                      height: screenSize.height * 0.3,
+                                      scrollController: _scrollController,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 16),
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-      Center(child: CustomersListScreen()),
+      // Customers Page
+      isOffline
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildCustomersShimmer(shimmerBaseColor, shimmerHighlightColor),
+              ),
+            )
+          : Center(child: CustomersListScreen()),
+      // Odoo Page
       Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F')),
-      Center(child: SettingsScreen()),
+      // Settings Page
+      isOffline
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildSettingsShimmer(shimmerBaseColor, shimmerHighlightColor),
+              ),
+            )
+          : Center(child: SettingsScreen()),
     ];
 
     return Scaffold(
@@ -511,10 +585,35 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
             _selectedIndex = index;
           });
         },
-        physics: BouncingScrollPhysics(),
+        physics: NeverScrollableScrollPhysics(), // Disable swipe gesture
         children: pages,
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(isDark, accentColor),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBottomNavigationBar(isDark, accentColor),
+          if (isOffline)
+            Container(
+              color: Colors.red[600],
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4, color: Colors.white, size: 16),
+                  SizedBox(width: 8),
+                  Text(
+                    'You Are Offline',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -522,119 +621,390 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Metrics title shimmer
-          Container(
-            width: 120,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header shimmer
+            Container(
+              width: 150,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
-          SizedBox(height: 12),
-          
-          // Metric cards shimmer
-          GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isTablet ? 2 : 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.0,
+            SizedBox(height: 8),
+            Container(
+              width: 100,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-            itemCount: 4,
-            itemBuilder: (context, index) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        width: 80,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Container(
-                        width: 60,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Container(
-                        width: 90,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          SizedBox(height: 20),
-          
-          // Quick Actions shimmer
-          Container(
-            width: 120,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
+            SizedBox(height: 20),
+
+            // Sales Chart shimmer
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              // Expanded(
-              //   child: Container(
-              //     height: 46,
-              //     decoration: BoxDecoration(
-              //       color: Colors.white,
-              //       borderRadius: BorderRadius.circular(8),
-              //     ),
-              //   ),
-              // ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 46,
+            SizedBox(height: 20),
+
+            // Metric Cards shimmer
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isTablet ? 2 : 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.0,
+              ),
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                return Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          width: 80,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          width: 60,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          width: 90,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 20),
+
+            // Quick Actions shimmer
+            Container(
+              width: 120,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+
+            // Notes shimmer
+            Container(
+              width: 120,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
               ),
-            ],
-          ),
-        ],
+            ),
+            SizedBox(height: 12),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomersShimmer(Color baseColor, Color highlightColor) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            Stack(
+              children: [
+              Row(
+                children: [
+                Expanded(
+                  child: Container(
+                  height: 60,
+                  width: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Customers",
+                      style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                      ),
+                    ),
+                    ),
+                  ),
+                  ),
+                ),
+                ],
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.add, color: Colors.grey[700]),
+                ),
+              ),
+              ],
+            ),
+            SizedBox(height: 5,),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 45,
+                    width: 180,
+                    // color: Colors.white,
+                    decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                  ),
+                ),
+                IconButton(onPressed: (){}, icon: Icon(Icons.sort_by_alpha)),
+              ],
+            ),
+            Column(
+              children: List.generate(6, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 100,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Container(
+                                  width: 60,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsShimmer(Color baseColor, Color highlightColor) {
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Profile section shimmer
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Container(
+                            width: 80,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Settings options shimmer
+            Column(
+              children: List.generate(4, (index) {
+                return Container(
+                  height: 60,
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -642,6 +1012,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   Widget _buildErrorView(String message, Color accentColor, bool isDark) {
     return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.all(16),
@@ -682,7 +1053,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
 
   Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, Color accentColor, bool isDark) {
     bool isSelected = _selectedIndex == index;
-    
+
     return InkWell(
       onTap: () => _onItemTapped(index),
       borderRadius: BorderRadius.circular(12),
@@ -722,6 +1093,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     _pollingTimer?.cancel();
     _pageController.dispose();
     _animationController.dispose();
+    _connectivitySubscription?.cancel();
     super.dispose();
   }
 }
@@ -780,8 +1152,7 @@ class _MetricCard extends StatelessWidget {
                 color: iconColor,
               ),
             ),
-            // Spacer(),
-            SizedBox(height: 15,),
+            SizedBox(height: 15),
             Text(
               title,
               style: GoogleFonts.poppins(

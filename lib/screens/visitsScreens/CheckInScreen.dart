@@ -998,7 +998,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      // backgroundColor: const Color(0xFF121212),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFF42A5F5)))
@@ -1019,7 +1019,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                  icon: const Icon(Icons.arrow_back, ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 Expanded(
@@ -1028,7 +1028,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                     style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      // color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1085,7 +1085,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              // color: Colors.black.withOpacity(0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
