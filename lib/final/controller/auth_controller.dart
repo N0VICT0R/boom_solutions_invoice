@@ -176,11 +176,13 @@ class AuthController extends GetxController {
     await storage.write('token', apiTokenController.text.trim());
   }
 
-  Future<void> logout() async {
-    await storage.erase();
-    currentUser.value = null;
-    Get.offAllNamed('/login');
-  }
+Future<void> logout() async {
+  await GetStorage().remove('token');
+  await GetStorage().remove('user_id');
+  Get.find<LocationTrackerController>().stopTracking();
+  currentUser.value = null;
+  Get.offAllNamed('/login');
+}
 
   @override
   void onClose() {
