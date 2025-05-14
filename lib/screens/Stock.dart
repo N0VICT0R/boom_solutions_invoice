@@ -118,7 +118,7 @@ class Product {
 }
 
 class InventoryScreen extends StatefulWidget {
-  const InventoryScreen({Key? key}) : super(key: key);
+  const InventoryScreen({super.key});
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -352,7 +352,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 },
               )
             : Text(
-                "${_inventoryData?.location.name ?? 'Inventory'}",
+                _inventoryData?.location.name ?? 'Inventory',
                 style: theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge,
               ),
         leading: _isSearchActive
@@ -619,7 +619,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
 // Add this screen to your app
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {

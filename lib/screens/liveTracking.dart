@@ -292,7 +292,7 @@ class _AnimatedDeliveryMarker extends StatelessWidget {
       curve: Curves.easeInOut,
       builder: (context, scale, child) {
         return Transform.scale(
-          scale: scale as double,
+          scale: scale,
           child: const Icon(
             Icons.delivery_dining,
             color: Colors.red,

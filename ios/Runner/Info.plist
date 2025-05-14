@@ -45,6 +45,7 @@
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+
     <!-- Location permissions -->
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to track your movements.</string>
@@ -52,10 +53,18 @@
     <string>We need your location to track your movements even when the app is in the background.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location to track your movements even when the app is not in use.</string>
+
     <!-- Background modes -->
     <key>UIBackgroundModes</key>
     <array>
         <string>location</string>
+    </array>
+
+    <!-- Supported Localizations -->
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>ar</string>
     </array>
 </dict>
 </plist>

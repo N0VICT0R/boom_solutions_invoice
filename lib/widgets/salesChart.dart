@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -134,7 +135,6 @@ class SalesChartController extends GetxController {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh_token': refreshToken}),
       );
-      print('Token refresh response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         GetStorage().write('token', jsonData['access_token']);
@@ -143,14 +143,15 @@ class SalesChartController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Token refresh failed: $e');
+      
       return false;
     }
   }
 
   Future<void> fetchData({int retryCount = 0, int maxRetries = 2}) async {
+    final l10n = Get.context != null ? S.of(Get.context!) : null;
     if (GetStorage().read('user_id') == null || token.isEmpty) {
-      errorMessage.value = 'Please log in again.';
+      errorMessage.value = l10n?.pleaseLoginAgain ?? 'Please log in again.';
       isLoading(false);
       return;
     }
@@ -170,7 +171,6 @@ class SalesChartController extends GetxController {
         onTimeout: () {
           if (retryCount < maxRetries) {
             print('Timeout, retrying fetchData, attempt ${retryCount + 1}');
-            // Return a dummy response to satisfy the type requirement
             return http.Response('{"error": "Request timed out"}', 408);
           }
           throw Exception("Request timed out.");
@@ -178,7 +178,6 @@ class SalesChartController extends GetxController {
       );
       print('Sales API response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 408 && retryCount < maxRetries) {
-        // Handle timeout retry
         return fetchData(retryCount: retryCount + 1);
       }
       List<Map<String, dynamic>> dataList = [];
@@ -188,17 +187,18 @@ class SalesChartController extends GetxController {
           dataList = List<Map<String, dynamic>>.from(data['data']);
           dataList.sort((a, b) => a['date'].compareTo(b['date']));
         } else {
-          errorMessage.value = "No sales data available.";
+          errorMessage.value = l10n?.noDataAvailable ?? "No sales data available.";
         }
       } else if (response.statusCode == 401) {
-        errorMessage.value = "Session expired. Please log in again.";
+        errorMessage.value = l10n?.sessionExpired ?? "Session expired. Please log in again.";
       } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
         if (await refreshToken()) {
           return fetchData(retryCount: retryCount);
         }
-        errorMessage.value = "Authentication error.";
+        errorMessage.value = l10n?.authenticationError ?? "Authentication error.";
       } else {
-        errorMessage.value = "Server error: HTTP ${response.statusCode}";
+        errorMessage.value = l10n?.serverError(response.statusCode.toString()) ??
+            "Server error: HTTP ${response.statusCode}";
       }
 
       int maxItems;
@@ -241,8 +241,8 @@ class SalesChartController extends GetxController {
 
       processData(paddedData);
     } catch (e) {
-      errorMessage.value = "Network error: $e";
-      print('Fetch error: $e');
+      errorMessage.value = l10n?.networkError(e.toString()) ?? "Network error.";
+     
     } finally {
       isLoading(false);
     }
@@ -323,6 +323,7 @@ class SalesChartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context); // Access localized strings
     return Card(
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -344,12 +345,13 @@ class SalesChartView extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Sales Overview',
+          l10n.salesOverview, // Localized string
           style: theme.textTheme.titleLarge?.copyWith(
             color: theme.colorScheme.primary,
           ),
@@ -379,6 +381,7 @@ class SalesChartView extends StatelessWidget {
 
   Widget _buildChart(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Obx(() {
       if (controller.errorMessage.value.isNotEmpty) {
@@ -395,9 +398,9 @@ class SalesChartView extends StatelessWidget {
       }
 
       if (controller.salesData.isEmpty) {
-        return const SizedBox(
+        return SizedBox(
           height: 180,
-          child: Center(child: Text('No data available')),
+          child: Center(child: Text(l10n.noDataAvailable)), // Localized string
         );
       }
 
@@ -419,7 +422,7 @@ class SalesChartView extends StatelessWidget {
               },
               touchTooltipData: BarTouchTooltipData(
                 getTooltipColor: (_) => theme.cardTheme.color?.withOpacity(0.95) ?? Colors.grey[200]!,
-                tooltipRoundedRadius: 8,
+                tooltipBorderRadius: BorderRadius.circular(8),
                 tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   final item = controller.salesData[groupIndex];
@@ -483,7 +486,8 @@ class SalesChartView extends StatelessWidget {
                       toY: item.value,
                       color: barColor,
                       width: MediaQuery.of(context).size.width / (controller.salesData.length * 3),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3
+)),
                       backDrawRodData: isSelected
                           ? BackgroundBarChartRodData(
                               show: true,
@@ -507,6 +511,7 @@ class SalesChartView extends StatelessWidget {
 
   Widget _buildSelectedBarInfo(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Obx(() {
       final selectedData = controller.selectedBarData;
@@ -529,7 +534,7 @@ class SalesChartView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Selected: ${selectedData.period}',
+                  l10n.selected(selectedData.period), // Localized string
                   style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -543,7 +548,7 @@ class SalesChartView extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'vs Average: $diffSign$diff%',
+              l10n.vsAverage(diffSign, diff), // Localized string
               style: theme.textTheme.bodySmall?.copyWith(
                 color: controller.selectedDiffFromAvg >= 0 ? Colors.green : Colors.redAccent,
               ),
@@ -556,6 +561,7 @@ class SalesChartView extends StatelessWidget {
 
   Widget _buildTimeSelector(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Obx(() {
       print('Rebuilding time selector, selectedRange: ${controller.selectedRange.value}');
@@ -565,13 +571,20 @@ class SalesChartView extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ['Day', 'Month', 'Quarter', 'Year'].map((period) {
-              final isSelected = controller.selectedRange.value == period;
+            children: [
+              l10n.day,
+              l10n.month,
+              l10n.quarter,
+              l10n.year
+            ].asMap().entries.map((entry) {
+              final index = entry.key;
+              final period = entry.value;
+              final isSelected = controller.selectedRange.value == ['Day', 'Month', 'Quarter', 'Year'][index];
 
               return GestureDetector(
                 onTap: () {
                   print('Tapped $period');
-                  controller.setTimeRange(period);
+                  controller.setTimeRange(['Day', 'Month', 'Quarter', 'Year'][index]);
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

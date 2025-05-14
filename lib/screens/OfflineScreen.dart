@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 
 class OfflineScreen extends StatelessWidget {
-  const OfflineScreen({Key? key}) : super(key: key);
+  const OfflineScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

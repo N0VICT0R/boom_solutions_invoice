@@ -1,0 +1,383 @@
+{
+  "@@locale": "ar",
+  "welcomeBack": "مرحبًا ",
+  "@welcomeBack": {
+    "description": "Welcome message displayed on the authentication screen"
+  },
+  "enterYourEmail": "أدخل بريدك الإلكتروني",
+  "@enterYourEmail": {
+    "description": "Hint text for the email input field"
+  },
+  "apiToken": " أدخل الرمز الخاص بك  ",
+  "@apiToken": {
+    "description": "Hint text for the API token input field"
+  },
+  "signIn": "تسجيل الدخول",
+  "@signIn": {
+    "description": "Text for the sign-in button"
+  },
+  "forgotApiToken": "هل نسيت رمز API الخاص بك؟",
+  "@forgotApiToken": {
+    "description": "Text for the link to recover a forgotten API token"
+  },
+  "contactAdmin": "يرجى التواصل مع مسؤول النظام للحصول على رمز API جديد.",
+  "@contactAdmin": {
+    "description": "SnackBar message shown when the user clicks the forgot API token link"
+  },
+  "salesOverview": "المبيعات",
+  "@salesOverview": {
+    "description": "Title for the sales chart section"
+  },
+  "noDataAvailable": "لا توجد بيانات متاحة",
+  "@noDataAvailable": {
+    "description": "Message shown when no sales data is available"
+  },
+  "day": "يوم",
+  "@day": {
+    "description": "Time range option for daily sales data"
+  },
+  "month": "شهر",
+  "@month": {
+    "description": "Time range option for monthly sales data"
+  },
+  "quarter": "ربع سنة",
+  "@quarter": {
+    "description": "Time range option for quarterly sales data"
+  },
+  "year": "سنة",
+  "@year": {
+    "description": "Time range option for yearly sales data"
+  },
+  "pleaseLoginAgain": "يرجى تسجيل الدخول مرة أخرى.",
+  "@pleaseLoginAgain": {
+    "description": "Error message when user is not logged in"
+  },
+  "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+  "@sessionExpired": {
+    "description": "Error message when session token is invalid"
+  },
+  "authenticationError": "خطأ في المصادقة.",
+  "@authenticationError": {
+    "description": "Error message when authentication fails"
+  },
+  "serverError": "خطأ في الخادم: HTTP {statusCode}",
+  "@serverError": {
+    "description": "Error message for server errors with HTTP status code",
+    "placeholders": {
+      "statusCode": {}
+    }
+  },
+  "networkError": "خطأ في الشبكة: {error}",
+  "@networkError": {
+    "description": "Error message for network-related errors",
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "selected": "المحدد: {period}",
+  "@selected": {
+    "description": "Label for the selected sales period in the chart",
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "vsAverage": "مقارنة بالمتوسط: {sign}{diff}%",
+  "@vsAverage": {
+    "description": "Label showing the difference from average sales",
+    "placeholders": {
+      "sign": {},
+      "diff": {}
+    }
+  },
+  "quickActions": "إجراءات سريعة",
+  "@quickActions": {
+    "description": "Title for the quick actions section"
+  },
+  "nearbyCustomers": "العملاء القريبون",
+  "@nearbyCustomers": {
+    "description": "Label for the nearby customers action button"
+  },
+  "stock": "المخزون",
+  "@stock": {
+    "description": "Label for the stock action button"
+  },
+  "dashboard": "لوحة التحكم",
+  "@dashboard": {
+    "description": "Label for the dashboard navigation item"
+  },
+  "customers": "العملاء",
+  "@customers": {
+    "description": "Label for the customers navigation item"
+  },
+  "odoo": "أودو",
+  "@odoo": {
+    "description": "Label for the Odoo navigation item"
+  },
+  "settings": "الإعدادات",
+  "@settings": {
+    "description": "Label for the settings navigation item"
+  },
+  "youAreOffline": "أنت غير متصل",
+  "@youAreOffline": {
+    "description": "Message shown when the app is offline"
+  },
+  "checkInternetConnection": "تحقق من اتصالك بالإنترنت أو حاول مرة أخرى لاحقًا.",
+  "@checkInternetConnection": {
+    "description": "Error message when there is no internet connection"
+  },
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "Label for the retry action button"
+  },
+  "salesTarget": "هدف المبيعات",
+  "@salesTarget": {
+    "description": "Title for the sales target metric card"
+  },
+  "collections": "التحصيلات",
+  "@collections": {
+    "description": "Title for the collections metric card"
+  },
+  "visits": "الزيارات",
+  "@visits": {
+    "description": "Title for the visits metric card"
+  },
+  "newCustomers": "عملاء جدد",
+  "@newCustomers": {
+    "description": "Title for the new customers metric card"
+  },
+  "ofTarget": "{percentage}% من الهدف",
+  "@ofTarget": {
+    "description": "Subtitle showing the percentage of sales target achieved",
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "partners": "{count} شركاء",
+  "@partners": {
+    "description": "Subtitle showing the number of partners",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "completedToday": "تم اليوم",
+  "@completedToday": {
+    "description": "Subtitle for visits completed today"
+  },
+  "thisMonth": "هذا الشهر",
+  "@thisMonth": {
+    "description": "Subtitle for new customers this month"
+  },
+  "thousand": "ألف",
+  "@thousand": {
+    "description": "Suffix for thousand"
+  },
+  "million": "مليون",
+  "@million": {
+    "description": "Suffix for million"
+  },
+  "billion": "مليار",
+  "@billion": {
+    "description": "Suffix for billion"
+  },
+  "trillion": "تريليون",
+  "@trillion": {
+    "description": "Suffix for trillion"
+  },
+  "notes": "ملاحظات",
+  "@notes": {
+    "description": "Label for the notes section"
+  },
+  "noNotesYet": "لا توجد ملاحظات بعد",
+  "@noNotesYet": {
+    "description": "Message shown when there are no notes yet"
+  },
+  "inspirationalQuotes": "النجاح ليس غياب العقبات، بل الشجاعة لتخطيها.\nالحد الوحيد لإدراكنا للمستقبل هو شكوكنا في الحاضر.\nوقتك محدود، فلا تهدره في عيش حياة شخص آخر.\nالمستقبل ملك لأولئك الذين يؤمنون بجمال أحلامهم.\nافعل ما تستطيع، بما لديك، حيثما كنت.\nكل لحظة هي بداية جديدة.\nأفضل طريقة للتنبؤ بالمستقبل هي صنعه.\nابقَ جائعًا، ابقَ أحمقًا.\nستفوتك 100% من الفرص التي لا تأخذها.\nاحلم كبيرًا، اعمل بجد، ركز.",
+  "@inspirationalQuotes": {
+    "description": "A list of inspirational quotes in Arabic, separated by newlines"
+  },
+  "customersTitle": "العملاء",
+  "@customersTitle": {
+    "description": "Title for the customers list screen in the app bar"
+  },
+  "searchCustomersHint": "البحث عن العملاء...",
+  "@searchCustomersHint": {
+    "description": "Hint text for the search input field"
+  },
+  "sortByName": "فرز حسب الاسم",
+  "@sortByName": {
+    "description": "Tooltip or accessibility label for the sort button"
+  },
+  "failedToLoadCustomers": "يرجى تحميل العملاء",
+  "@failedToLoadCustomers": {
+    "description": "Error message when customer loading fails"
+  },
+  "noCustomersFound": "لم يتم العثور على عملاء",
+  "@noCustomersFound": {
+    "description": "Message displayed when no customers are available"
+  },
+  "retryButton": "إعادة المحاولة",
+  "@retryButton": {
+    "description": "Text for the retry button in error or empty states"
+  },
+  "addCustomer": "إضافة عميل",
+  "@addCustomer": {
+    "description": "Tooltip or accessibility label for the add customer button"
+  },
+  "addressLabel": "العنوان",
+  "@addressLabel": {
+    "description": "Label for the address field in customer card"
+  },
+  "countryLabel": "الدولة",
+  "@countryLabel": {
+    "description": "Label for the country field in customer card"
+  },
+  "phoneLabel": "الهاتف",
+  "@phoneLabel": {
+    "description": "Label for the phone field in customer card"
+  },
+  "mobileLabel": "الجوال",
+  "@mobileLabel": {
+    "description": "Label for the mobile field in customer card"
+  },
+
+  "settingsTitle": "الإعدادات",
+  "@settingsTitle": {
+    "description": "Title for the settings screen in the app bar"
+  },
+  "darkModeTitle": "الوضع المظلم",
+  "@darkModeTitle": {
+    "description": "Title for the theme settings card"
+  },
+  "editProfileTitle": "تعديل الملف الشخصي",
+  "@editProfileTitle": {
+    "description": "Title for the edit profile settings item"
+  },
+  "securityTitle": "الأمان",
+  "@securityTitle": {
+    "description": "Title for the security settings item"
+  },
+  "notificationsTitle": "الإشعارات",
+  "@notificationsTitle": {
+    "description": "Title for the notifications settings item"
+  },
+  "logoutTitle": "تسجيل الخروج",
+  "@logoutTitle": {
+    "description": "Title for the logout settings item"
+  },
+  "logoutDialogTitle": "تسجيل الخروج",
+  "@logoutDialogTitle": {
+    "description": "Title for the logout confirmation dialog"
+  },
+  "logoutDialogMessage": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+  "@logoutDialogMessage": {
+    "description": "Message in the logout confirmation dialog"
+  },
+  "cancelButton": "إلغاء",
+  "@cancelButton": {
+    "description": "Button text to cancel logout"
+  },
+  "logoutButton": "تسجيل الخروج",
+  "@logoutButton": {
+    "description": "Button text to confirm logout"
+  },
+  "logoutSuccessTitle": "تم تسجيل الخروج",
+  "@logoutSuccessTitle": {
+    "description": "Title for the success snackbar after logout"
+  },
+  "logoutSuccessMessage": "تم تسجيل الخروج بنجاح",
+  "@logoutSuccessMessage": {
+    "description": "Message for the success snackbar after logout"
+  },
+  "logoutErrorTitle": "خطأ في تسجيل الخروج",
+  "@logoutErrorTitle": {
+    "description": "Title for the error snackbar during logout"
+  },
+  "logoutErrorMessage": "فشل في إكمال تسجيل الخروج",
+  "@logoutErrorMessage": {
+    "description": "Message for the error snackbar during logout"
+  },
+  "defaultUserInitial": "م",
+  "@defaultUserInitial": {
+    "description": "Default initial for user avatar when no name"
+  },
+  "defaultUserName": "مستخدم",
+  "@defaultUserName": {
+    "description": "Default name when no user data"
+  },
+  "defaultUserEmail": "لا يوجد بريد إلكتروني",
+  "@defaultUserEmail": {
+    "description": "Default email when no user data"
+  },
+  "profileTitle": "الملف الشخصي",
+  "@profileTitle": {
+    "description": "Title for the profile screen in the app bar"
+  },
+  "noUserData": "لا توجد بيانات مستخدم متاحة",
+  "@noUserData": {
+    "description": "Message when no user data is available"
+  },
+  "emailLabel": "البريد الإلكتروني",
+  "@emailLabel": {
+    "description": "Label for email in profile details"
+  },
+  "loginLabel": "تسجيل الدخول",
+  "@loginLabel": {
+    "description": "Label for login in profile details"
+  },
+  "storeLabel": "المتجر",
+  "@storeLabel": {
+    "description": "Label for store name in profile details"
+  },
+  "storeIdLabel": "معرف المتجر",
+  "@storeIdLabel": {
+    "description": "Label for store ID in profile details"
+  },
+  "partnerIdLabel": "معرف الشريك",
+  "@partnerIdLabel": {
+    "description": "Label for partner ID in profile details"
+  },
+  "add_customer": "إضافة عميل",
+  "name": "الاسم",
+  "address": "العنوان",
+  "city": "المدينة",
+  "state": "الولاية",
+  "country": "الدولة",
+  "phone": "الهاتف",
+  "mobile": "الموبايل",
+  "payment_terms": "شروط الدفع",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "success": "نجاح",
+  "customer_added": "تمت إضافة العميل بنجاح!",
+  "error": "خطأ",
+  "required_field": "{field} مطلوب",
+  "@required_field": {
+    "description": "Error message for required fields",
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "invalid_number": "{field} يجب أن يكون رقمًا صالحًا",
+  "@invalid_number": {
+    "description": "Error message for invalid number fields",
+    "placeholders": {
+      "field": {}
+    }
+  },
+  "please_fill_fields": "يرجى ملء جميع الحقول المطلوبة",
+  "no_token": "لم يتم العثور على رمز API. يرجى تسجيل الدخول.",
+  "api_error": "فشل إضافة العميل: {message}",
+  "@api_error": {
+    "description": "Error message for API error when adding customer",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "connection_error": "خطأ في الاتصال: {error}",
+  "@connection_error": {
+    "description": "Error message for connection error",
+    "placeholders": {
+      "error": {}
+    }},
+  "field_required":"هذا العنصر مطلوب"
+  }

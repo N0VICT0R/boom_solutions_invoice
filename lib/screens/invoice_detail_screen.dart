@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../models/invoice.dart';
 
 class InvoiceDetailScreen extends StatelessWidget {
+  const InvoiceDetailScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     // استقبال الفاتورة من الـ arguments
@@ -51,10 +53,10 @@ class InvoiceDetailScreen extends StatelessWidget {
                 // الرجوع إلى صفحة لوحة التحكم
                 Get.offAllNamed('/');
               },
-              child: Text('إنشاء الفاتورة'),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 50),
               ),
+              child: Text('إنشاء الفاتورة'),
             ),
           ],
         ),

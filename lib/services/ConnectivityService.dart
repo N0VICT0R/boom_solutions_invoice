@@ -130,9 +130,9 @@ class ConnectivityService extends GetxService {
         _updateConnectionStatus(results);
       });
     } catch (e) {
-      print('Error listening to connectivity changes: $e');
+      print('Error listening to connectivity changes: ');
       isConnected.value = false;
-      _showConnectionSnackbar('Connection Error', 'Failed to monitor connectivity.');
+      // _showConnectionSnackbar('Connection Error', 'Failed to monitor connectivity.');
     }
   }
 
@@ -148,9 +148,9 @@ class ConnectivityService extends GetxService {
       var connectivityResults = await _connectivity.checkConnectivity();
       await _updateConnectionStatus(connectivityResults);
     } catch (e) {
-      print('Error checking connectivity: $e');
+      print('Error checking connectivity:');
       isConnected.value = false;
-      _showConnectionSnackbar('Connection Error', 'Unable to check connectivity.');
+      // _showConnectionSnackbar('Connection Error', 'Unable to check connectivity.');
     }
   }
 
@@ -185,7 +185,7 @@ class ConnectivityService extends GetxService {
       if (!hasInternet) {
         _showConnectionSnackbar('No Internet', 'No internet access. Please check your connection.');
       } else {
-        _showConnectionSnackbar('Connected', 'Back online!', isSuccess: true);
+        // _showConnectionSnackbar('Connected', 'Back online!', isSuccess: true);
       }
     }
   }

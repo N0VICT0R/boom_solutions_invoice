@@ -42,6 +42,8 @@ import 'package:get/get.dart';
 import '../controllers/customer_controller.dart';
 
 class SalesSummary extends GetView<CustomerController> {
+  const SalesSummary({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {

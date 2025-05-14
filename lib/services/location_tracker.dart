@@ -5,6 +5,7 @@ import 'dart:isolate' show SendPort;
 import 'dart:io' show Platform, SocketException;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart';
@@ -12,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:boom_solutions_invoice/final/controller/auth_controller.dart'; // Ensure this path matches your project
 
 class LocationTrackerController extends GetxController with WidgetsBindingObserver {
   static LocationTrackerController get to => Get.find<LocationTrackerController>();
@@ -53,6 +55,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
     await initialize();
+    _listenToAuthState(); // Start listening to auth state changes
   }
 
   @override
@@ -62,6 +65,23 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     _debounceTimer?.cancel();
     dispose();
     super.onClose();
+  }
+
+  // Listen to authentication state changes based on currentUser
+  void _listenToAuthState() {
+    final authController = Get.find<AuthController>();
+    ever(authController.currentUser, (User? user) {
+      debugPrint('Auth state changed: currentUser = $user');
+      if (user == null) {
+        stopTracking();
+        debugPrint('User logged out, location tracking stopped');
+      } else {
+        _startTracking();
+        debugPrint('User logged in, starting location tracking');
+        // Set API token when user logs in
+        Get.find<LocationTrackerController>().setApiToken(authController.storage.read('token') ?? '');
+      }
+    });
   }
 
   @override
@@ -208,6 +228,14 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   }
 
   void _startTracking() async {
+    // Check if user is logged in before starting tracking
+    final authController = Get.find<AuthController>();
+    if (authController.currentUser.value == null) {
+      debugPrint('User not logged in, skipping tracking start');
+      locationStatus.value = 'User not logged in';
+      return;
+    }
+
     if (_locationSubscription != null) {
       debugPrint('Tracking already started');
       return;
@@ -393,7 +421,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
           debugPrint('Batch send failed with status: ${response.statusCode}');
           retryCount++;
           if (retryCount == _maxRetries) {
-            _showErrorSnackbar('Server Error', 'Unable to send location data. Data will be saved locally.');
+            // _showErrorSnackbar(' internet connection Error', 'Please check your internet connection..');
           }
         }
       } catch (e) {
@@ -406,7 +434,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
           } else if (e is TimeoutException) {
             errorMessage = 'Request timed out. Data will be saved locally.';
           }
-          _showErrorSnackbar('Connection Error', errorMessage);
         }
       }
 
@@ -423,23 +450,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     }
 
     _isSendingBatch = false;
-  }
-
-  void _showErrorSnackbar(String title, String message) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red.withOpacity(0.8),
-      colorText: Colors.white,
-      duration: Duration(seconds: 3),
-      margin: EdgeInsets.all(10),
-      borderRadius: 8,
-      isDismissible: true,
-      onTap: (snack) {
-        Get.toNamed('/webView');
-      },
-    );
   }
 
   Future<void> _saveBatchToStorage() async {
@@ -516,6 +526,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     currentLocation.value = null;
   }
 
+  @override
   Future<void> dispose() async {
     debugPrint('Disposing LocationTracker');
     await _saveBatchToStorage();

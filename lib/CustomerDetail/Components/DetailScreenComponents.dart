@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:boom_solutions_invoice/controllers/customer_controller.dart';
 
 class SalesSummary extends GetView<CustomerController> {
+  const SalesSummary({super.key});
+
   
   @override
   Widget build(BuildContext context) {
@@ -72,6 +74,8 @@ class SalesSummary extends GetView<CustomerController> {
   }
 }
 class Payment extends GetView<CustomerController> {
+  const Payment({super.key});
+
   
   @override
   Widget build(BuildContext context) {
@@ -193,7 +197,7 @@ class SalesChart extends GetView<CustomerController> {
   }
   final List<Color> chartColors;
 
-  SalesChart({required this.chartColors});
+  const SalesChart({super.key, required this.chartColors});
 
   @override
   Widget build(BuildContext context) {
@@ -439,6 +443,8 @@ class SalesChart extends GetView<CustomerController> {
 }
 
 class MetricsGrid extends GetView<CustomerController> {
+  const MetricsGrid({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {

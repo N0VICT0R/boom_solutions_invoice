@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
 class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
@@ -101,16 +103,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     items: [
                       DropdownMenuItem(
-                        child: Text('System'),
                         value: ThemeMode.system,
+                        child: Text('System'),
                       ),
                       DropdownMenuItem(
-                        child: Text('Light'),
                         value: ThemeMode.light,
+                        child: Text('Light'),
                       ),
                       DropdownMenuItem(
-                        child: Text('Dark'),
                         value: ThemeMode.dark,
+                        child: Text('Dark'),
                       ),
                     ],
                     onChanged: (ThemeMode? newTheme) {

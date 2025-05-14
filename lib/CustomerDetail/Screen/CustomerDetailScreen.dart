@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   
-  final CustomerController controller = Get.put(CustomerController());
+  late final CustomerController controller = Get.put(CustomerController());
   final List<Color> chartColors = [
     Colors.black,
     Colors.orangeAccent,
@@ -16,6 +16,8 @@ class CustomerDetailScreen extends StatelessWidget {
     Colors.redAccent,
     Colors.tealAccent,
   ];
+
+  CustomerDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +56,9 @@ class CustomerDetailScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context) {
     if (controller.isLoading.value) return _buildLoading();
-    if (controller.hasError.value || controller.salesData.value == null)
+    if (controller.hasError.value || controller.salesData.value == null) {
       return _buildError();
+    }
     return _buildMainContent(context);
   }
 

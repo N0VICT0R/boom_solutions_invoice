@@ -405,7 +405,7 @@ class CustomerDetailScreen extends StatelessWidget {
   ];
   DateTime? lastUpdateTime; // Track the last update time
 
-  CustomerDetailScreen({Key? key, required int partnerId}) : super(key: key) {
+  CustomerDetailScreen({super.key, required int partnerId}) {
     final args = Get.arguments ?? {};
     final id = args['partnerId'] ?? partnerId;
     if (id == 0) {
@@ -624,6 +624,8 @@ class CustomerDetailScreen extends StatelessWidget {
 // Widgets
 //=======================
 class Payment extends GetView<CustomerController> {
+  const Payment({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -671,7 +673,7 @@ class Payment extends GetView<CustomerController> {
 class SalesChart extends GetView<CustomerController> {
   final List<Color> chartColors;
 
-  SalesChart({required this.chartColors});
+  const SalesChart({super.key, required this.chartColors});
 
   @override
   Widget build(BuildContext context) {
@@ -897,7 +899,7 @@ class SalesChart extends GetView<CustomerController> {
 }
 
 class MetricsGrid extends StatelessWidget {
-  const MetricsGrid({Key? key}) : super(key: key);
+  const MetricsGrid({super.key});
 
   @override
   Widget build(BuildContext context) {

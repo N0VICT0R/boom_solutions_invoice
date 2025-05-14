@@ -1,3 +1,4 @@
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -11,13 +12,12 @@ Animation<double> getAnimation(BuildContext context) {
 }
 
 class AuthScreen extends StatelessWidget {
-  const AuthScreen({Key? key}) : super(key: key);
+  const AuthScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Make sure both ThemeController and AuthController are available via GetX.
     Get.find<ThemeController>();
-    Get.put(AuthController()); // Ensures the AuthController is created
+    Get.put(AuthController());
 
     return Scaffold(
       body: SafeArea(
@@ -28,7 +28,6 @@ class AuthScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo with scale animation
                 AnimatedScale(
                   scale: 1.0,
                   duration: const Duration(milliseconds: 800),
@@ -43,7 +42,6 @@ class AuthScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Auth form with slide up animation
                 SlideTransition(
                   position: Tween<Offset>(
                     begin: const Offset(0, 0.3),
@@ -65,9 +63,8 @@ class AuthScreen extends StatelessWidget {
   }
 }
 
-/// Converted _ProfessionalAuthForm to a StatefulWidget to create a local GlobalKey.
 class _ProfessionalAuthForm extends StatefulWidget {
-  const _ProfessionalAuthForm({Key? key}) : super(key: key);
+  const _ProfessionalAuthForm({super.key});
 
   @override
   State<_ProfessionalAuthForm> createState() => _ProfessionalAuthFormState();
@@ -76,9 +73,9 @@ class _ProfessionalAuthForm extends StatefulWidget {
 class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
   @override
   Widget build(BuildContext context) {
-    // Retrieve the controllers using Get.find
     final authController = Get.find<AuthController>();
     final isDarkMode = Get.find<ThemeController>().isDarkMode;
+    final l10n = S.of(context); // Access localized strings
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
@@ -96,13 +93,11 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
           ),
         ],
       ),
-      // Use the controller's form key for validation.
       child: Form(
         key: authController.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Title with fade animation
             FadeTransition(
               opacity: Tween<double>(begin: 0, end: 1).animate(
                 CurvedAnimation(
@@ -111,7 +106,7 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
                 ),
               ),
               child: Text(
-                'Welcome Back',
+                l10n.welcomeBack, // Use localized string
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
@@ -122,7 +117,6 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
               ),
             ),
             const SizedBox(height: 30),
-            // Email field with slide animation
             SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(-0.5, 0),
@@ -139,7 +133,6 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
               ),
             ),
             const SizedBox(height: 20),
-            // Token field with slide animation
             SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0.5, 0),
@@ -156,10 +149,8 @@ class _ProfessionalAuthFormState extends State<_ProfessionalAuthForm> {
               ),
             ),
             const SizedBox(height: 40),
-            // Sign in button with loading animation
             _ProfessionalSignInButton(),
             const SizedBox(height: 20),
-            // Forgot token link with fade animation
             FadeTransition(
               opacity: Tween<double>(begin: 0, end: 1).animate(
                 CurvedAnimation(
@@ -181,23 +172,25 @@ class _ProfessionalEmailField extends StatelessWidget {
   final bool isDarkMode;
 
   const _ProfessionalEmailField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return TextFormField(
       controller: controller,
-      // validator: (value) => GetUtils.isEmail(value!) ? null : 'Invalid email',
+      // validator: (value) => GetUtils.isEmail(value!) ? null : l10n.invalidEmail,
       keyboardType: TextInputType.emailAddress,
       style: TextStyle(
         color: isDarkMode ? Colors.white : Colors.black87,
         fontSize: 16,
       ),
       decoration: InputDecoration(
-        hintText: 'Enter your email',
+        hintText: l10n.enterYourEmail, // Use localized string
         hintStyle: TextStyle(
           color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
         ),
@@ -225,23 +218,25 @@ class _ProfessionalTokenField extends StatelessWidget {
   final bool isDarkMode;
 
   const _ProfessionalTokenField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return TextFormField(
       controller: controller,
-      validator: (value) => value!.isEmpty ? 'Enter API token' : null,
+      validator: (value) => value!.isEmpty ? l10n.apiToken : null, // Use localized string
       obscureText: true,
       style: TextStyle(
         color: isDarkMode ? Colors.white : Colors.black87,
         fontSize: 16,
       ),
       decoration: InputDecoration(
-        hintText: 'API Token',
+        hintText: l10n.apiToken, // Use localized string
         hintStyle: TextStyle(
           color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
         ),
@@ -265,12 +260,13 @@ class _ProfessionalTokenField extends StatelessWidget {
 }
 
 class _ProfessionalSignInButton extends StatelessWidget {
-  const _ProfessionalSignInButton({Key? key}) : super(key: key);
+  const _ProfessionalSignInButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final isDarkMode = Get.find<ThemeController>().isDarkMode;
+    final l10n = S.of(context);
 
     return Obx(() => AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -281,13 +277,13 @@ class _ProfessionalSignInButton extends StatelessWidget {
         gradient: authController.isLoading.value
             ? null
             : LinearGradient(
-          colors: [
-            isDarkMode ? Colors.blueAccent : Colors.blue,
-            isDarkMode ? Colors.lightBlueAccent : Colors.lightBlue,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+                colors: [
+                  isDarkMode ? Colors.blueAccent : Colors.blue,
+                  isDarkMode ? Colors.lightBlueAccent : Colors.lightBlue,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         color: authController.isLoading.value
             ? (isDarkMode ? Colors.grey[800] : Colors.grey[300])
             : null,
@@ -311,22 +307,22 @@ class _ProfessionalSignInButton extends StatelessWidget {
           child: Center(
             child: authController.isLoading.value
                 ? SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: isDarkMode ? Colors.white : Colors.blue,
-              ),
-            )
-                : const Text(
-              'Sign In',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: isDarkMode ? Colors.white : Colors.blue,
+                    ),
+                  )
+                : Text(
+                    l10n.signIn, // Use localized string
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -337,16 +333,18 @@ class _ProfessionalSignInButton extends StatelessWidget {
 class _ForgotTokenLink extends StatelessWidget {
   final bool isDarkMode;
 
-  const _ForgotTokenLink({Key? key, required this.isDarkMode}) : super(key: key);
+  const _ForgotTokenLink({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return TextButton(
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Contact your system administrator for a new API token.',
+              l10n.contactAdmin, // Use localized string
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
@@ -363,7 +361,7 @@ class _ForgotTokenLink extends StatelessWidget {
         padding: const EdgeInsets.all(12),
       ),
       child: Text(
-        'Forgot your API Token?',
+        l10n.forgotApiToken, // Use localized string
         style: TextStyle(
           color: isDarkMode ? Colors.blue[200] : Colors.blue[600],
           fontSize: 14,

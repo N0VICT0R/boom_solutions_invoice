@@ -1,71 +1,77 @@
 import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 import 'package:boom_solutions_invoice/final/controller/themeController.dart';
 import 'package:boom_solutions_invoice/final/view/auth_Getx.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
-Future<void> logout() async {
+  const SettingsScreen({super.key});
+
+  Future<void> logout() async {
     try {
       // Show loading indicator
-      
+      Get.dialog(
+        Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
       // Get SharedPreferences instance
       final prefs = await SharedPreferences.getInstance();
-      
-      // Verify we have the instance
-      if (prefs == null) {
-        throw Exception("Failed to access SharedPreferences");
-      }
-      
+
       // Clear ALL stored data
       final success = await prefs.clear();
-      
+
       // Verify everything was cleared
       if (!success) {
         throw Exception("Failed to clear SharedPreferences");
       }
-      
+
       // Verify clearing worked by checking keys
       final keys = prefs.getKeys();
       if (keys.isNotEmpty) {
         throw Exception("Some preferences weren't cleared: ${keys.join(', ')}");
       }
-      
+
       // Reset user state
- 
-      
+      final authController = Get.find<AuthController>();
+      authController.logout();
+
       // Navigate to login screen
       Get.offAllNamed('/login');
-      
+
       // Show success message
+      Get.back(); // Close loading dialog
       Get.snackbar(
-        'Logged Out', 
-        'You have been successfully logged out',
+        S.of(Get.context!).logoutSuccessTitle,
+        S.of(Get.context!).logoutSuccessMessage,
         duration: Duration(seconds: 2),
       );
-      
     } catch (e) {
       // Log the error and show message
       debugPrint("Logout error: ${e.toString()}");
+      Get.back(); // Close loading dialog
       Get.snackbar(
-        'Logout Error', 
-        'Failed to complete logout: ${e.toString()}',
+        S.of(Get.context!).logoutErrorTitle,
+        S.of(Get.context!).logoutErrorMessage + ': ${e.toString()}',
         duration: Duration(seconds: 3),
       );
     } finally {
-    
+      // Ensure loading dialog is closed if still open
+      if (Get.isDialogOpen ?? false) Get.back();
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
     final authController = Get.put<AuthController>(AuthController());
+    final l10n = S.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text(l10n.settingsTitle),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -74,29 +80,29 @@ Future<void> logout() async {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Card with real user data
-            Obx(() => _buildProfileCard(authController.currentUser.value)),
-            
+            Obx(() => _buildProfileCard(authController.currentUser.value, l10n)),
+
             SizedBox(height: 16),
 
             // Theme Settings Card
-            _buildThemeSettingsCard(themeController),
-            
+            _buildThemeSettingsCard(themeController, l10n),
+
             SizedBox(height: 16),
 
             // Account Settings Card
-            _buildAccountSettingsCard(),
-            
+            _buildAccountSettingsCard(l10n),
+
             SizedBox(height: 16),
 
             // Notifications Card with proper logout
-            _buildNotificationsCard(authController),
+            _buildNotificationsCard(authController, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileCard(User? user) {
+  Widget _buildProfileCard(User? user, S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -110,7 +116,7 @@ Future<void> logout() async {
               radius: 40,
               backgroundColor: Colors.blue,
               child: Text(
-                user?.name.substring(0, 1) ?? 'U',
+                user?.name.substring(0, 1) ?? l10n.defaultUserInitial,
                 style: TextStyle(
                   fontSize: 24,
                   color: Colors.white,
@@ -124,14 +130,14 @@ Future<void> logout() async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user?.name ?? 'User',
+                    user?.name ?? l10n.defaultUserName,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    user?.email ?? 'No email',
+                    user?.email ?? l10n.defaultUserEmail,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -157,7 +163,7 @@ Future<void> logout() async {
     );
   }
 
-  Widget _buildThemeSettingsCard(ThemeController themeController) {
+  Widget _buildThemeSettingsCard(ThemeController themeController, S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -169,7 +175,7 @@ Future<void> logout() async {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Dark Mode',
+              l10n.darkModeTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -188,7 +194,7 @@ Future<void> logout() async {
     );
   }
 
-  Widget _buildAccountSettingsCard() {
+  Widget _buildAccountSettingsCard(S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -198,7 +204,7 @@ Future<void> logout() async {
         children: [
           _buildSettingsItem(
             icon: Icons.person_outline,
-            title: 'Edit Profile',
+            title: l10n.editProfileTitle,
             onTap: () {
               Get.to(() => ProfileScreen());
             },
@@ -206,7 +212,7 @@ Future<void> logout() async {
           Divider(height: 1),
           _buildSettingsItem(
             icon: Icons.security,
-            title: 'Security',
+            title: l10n.securityTitle,
             onTap: () {
               // Implement security settings
             },
@@ -216,7 +222,7 @@ Future<void> logout() async {
     );
   }
 
-  Widget _buildNotificationsCard(AuthController authController) {
+  Widget _buildNotificationsCard(AuthController authController, S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -226,7 +232,7 @@ Future<void> logout() async {
         children: [
           _buildSettingsItem(
             icon: Icons.notifications_outlined,
-            title: 'Notifications',
+            title: l10n.notificationsTitle,
             onTap: () {
               // Implement notifications
             },
@@ -234,9 +240,9 @@ Future<void> logout() async {
           Divider(height: 1),
           _buildSettingsItem(
             icon: Icons.logout,
-            title: 'Logout',
+            title: l10n.logoutTitle,
             onTap: () {
-              _showLogoutDialog(authController);
+              _showLogoutDialog(authController, l10n);
             },
           ),
         ],
@@ -244,15 +250,15 @@ Future<void> logout() async {
     );
   }
 
-  void _showLogoutDialog(AuthController authController) {
+  void _showLogoutDialog(AuthController authController, S l10n) {
     Get.dialog(
       AlertDialog(
-        title: Text('Logout'),
-        content: Text('Are you sure you want to logout?'),
+        title: Text(l10n.logoutDialogTitle),
+        content: Text(l10n.logoutDialogMessage),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: Text('Cancel'),
+            child: Text(l10n.cancelButton),
           ),
           TextButton(
             onPressed: () {
@@ -261,7 +267,7 @@ Future<void> logout() async {
               authController.logout();
             },
             child: Text(
-              'Logout',
+              l10n.logoutButton,
               style: TextStyle(color: Colors.red),
             ),
           ),
@@ -287,23 +293,26 @@ Future<void> logout() async {
 class ProfileScreen extends StatelessWidget {
   final AuthController authController = Get.find();
 
+  ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: Text(l10n.profileTitle),
       ),
       body: Obx(() {
         final user = authController.currentUser.value;
         return user == null
-            ? Center(child: Text('No user data available'))
+            ? Center(child: Text(l10n.noUserData))
             : SingleChildScrollView(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildProfileHeader(user),
+                    _buildProfileHeader(user, l10n),
                     SizedBox(height: 24),
-                    _buildProfileDetails(user),
+                    _buildProfileDetails(user, l10n),
                   ],
                 ),
               );
@@ -311,7 +320,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(User user) {
+  Widget _buildProfileHeader(User user, S l10n) {
     return Column(
       children: [
         CircleAvatar(
@@ -346,7 +355,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileDetails(User user) {
+  Widget _buildProfileDetails(User user, S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -356,15 +365,15 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildDetailItem('Email', user.email),
+            _buildDetailItem(l10n.emailLabel, user.email),
             Divider(),
-            _buildDetailItem('Login', user.login),
+            _buildDetailItem(l10n.loginLabel, user.login),
             Divider(),
-            _buildDetailItem('Store', user.storeName),
+            _buildDetailItem(l10n.storeLabel, user.storeName ?? ''),
             Divider(),
-            _buildDetailItem('Store ID', user.storeId.toString()),
+            _buildDetailItem(l10n.storeIdLabel, user.storeId.toString()),
             Divider(),
-            _buildDetailItem('Partner ID', user.partnerId.toString()),
+            _buildDetailItem(l10n.partnerIdLabel, user.partnerId.toString()),
           ],
         ),
       ),

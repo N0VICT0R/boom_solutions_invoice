@@ -123,7 +123,7 @@ class Partner {
 }
 
 class MapScreen extends StatelessWidget {
-  MapScreen({Key? key}) : super(key: key);
+  MapScreen({super.key});
   
   final controller = Get.put(PartnerController());
 
@@ -498,7 +498,7 @@ class MapScreen extends StatelessWidget {
                     ),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

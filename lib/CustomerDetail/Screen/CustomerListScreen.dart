@@ -174,58 +174,23 @@
 //=======================
 // Screens
 //=======================
+import 'dart:async';
 import 'dart:convert';
+import 'package:boom_solutions_invoice/controllers/customer_list_controller.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:boom_solutions_invoice/screens/customer_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:shimmer/shimmer.dart';
 
-
-
-class PartnerList {
-  final int id;
-  final String name;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? country;
-  final dynamic phone;
-  final dynamic mobile;
-
-  PartnerList({
-    required this.id,
-    required this.name,
-    this.address,
-    this.city,
-    this.state,
-    this.country,
-    this.phone,
-    this.mobile,
-  });
-
-  factory PartnerList.fromJson(Map<String, dynamic> json) {
-    return PartnerList(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? 'No Name',
-      address: _parseString(json['address']),
-      city: _parseString(json['city']),
-      state: _parseString(json['state']),
-      country: _parseString(json['country']),
-      phone: json['phone'],
-      mobile: json['mobile'],
-    );
-  }
-
-  static String? _parseString(dynamic value) {
-    if (value is String) return value;
-    if (value == false) return null;
-    return value?.toString();
-  }
-}
+import 'package:boom_solutions_invoice/CustomerDetail/Datamodels/PartnerListModel.dart';
 
 class CustomersListScreen extends StatefulWidget {
+  const CustomersListScreen({super.key});
+
   @override
   _CustomersListScreenState createState() => _CustomersListScreenState();
 }
@@ -255,15 +220,18 @@ class _CustomersListScreenState extends State<CustomersListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
     return Obx(
       () => Scaffold(
         appBar: AppBar(
-          title: Text('Customers'),
+          title: Text(l10n.customersTitle),
           elevation: 0,
           actions: [
             IconButton(
               icon: Icon(
-                  controller.isDarkMode.value ? Icons.add_outlined : Icons.add),
+                controller.isDarkMode.value ? Icons.add_outlined : Icons.add,
+              ),
+              tooltip: l10n.addCustomer,
               onPressed: () {
                 Get.toNamed("addcustomer");
               },
@@ -272,15 +240,15 @@ class _CustomersListScreenState extends State<CustomersListScreen>
         ),
         body: Column(
           children: [
-            _buildSearchAndSort(),
-            Expanded(child: _buildBody()),
+            _buildSearchAndSort(l10n),
+            Expanded(child: _buildBody(l10n)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchAndSort() {
+  Widget _buildSearchAndSort(S l10n) {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: Row(
@@ -289,7 +257,7 @@ class _CustomersListScreenState extends State<CustomersListScreen>
             child: TextField(
               onChanged: controller.searchCustomers,
               decoration: InputDecoration(
-                hintText: 'Search customers...',
+                hintText: l10n.searchCustomersHint,
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
@@ -299,6 +267,7 @@ class _CustomersListScreenState extends State<CustomersListScreen>
           ),
           IconButton(
             icon: Icon(Icons.sort_by_alpha),
+            tooltip: l10n.sortByName,
             onPressed: controller.sortCustomers,
           ),
         ],
@@ -306,11 +275,11 @@ class _CustomersListScreenState extends State<CustomersListScreen>
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(S l10n) {
     return Obx(() {
       if (controller.isLoading.value) return _buildLoading();
-      if (controller.hasError.value) return _buildError();
-      if (controller.filteredPartners.isEmpty) return _buildEmptyState();
+      if (controller.hasError.value) return _buildError(l10n);
+      if (controller.filteredPartners.isEmpty) return _buildEmptyState(l10n);
       return RefreshIndicator(
         onRefresh: controller.fetchCustomers,
         child: ListView.builder(
@@ -318,7 +287,7 @@ class _CustomersListScreenState extends State<CustomersListScreen>
           itemCount: controller.filteredPartners.length,
           itemBuilder: (context, index) {
             final partner = controller.filteredPartners[index];
-            return _buildCustomerCard(partner);
+            return _buildCustomerCard(partner, l10n);
           },
         ),
       );
@@ -327,42 +296,43 @@ class _CustomersListScreenState extends State<CustomersListScreen>
 
   Widget _buildLoading() => Center(child: CircularProgressIndicator());
 
-  Widget _buildError() {
+  Widget _buildError(S l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('please load customers',
-          style: TextStyle(fontSize: 15),
+          Text(
+            l10n.failedToLoadCustomers,
+            style: TextStyle(fontSize: 15),
           ),
-          SizedBox(height: 15,),
+          SizedBox(height: 15),
           ElevatedButton(
             onPressed: controller.fetchCustomers,
-            child: Text('Load'),
+            child: Text(l10n.retryButton),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(S l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.people_alt_outlined, size: 64),
           SizedBox(height: 16),
-          Text('No customers found', style: TextStyle(fontSize: 18)),
+          Text(l10n.noCustomersFound, style: TextStyle(fontSize: 18)),
           ElevatedButton(
             onPressed: controller.fetchCustomers,
-            child: Text('Retry'),
+            child: Text(l10n.retryButton),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCustomerCard(PartnerList partner) {
+  Widget _buildCustomerCard(PartnerList partner, S l10n) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
@@ -376,16 +346,13 @@ class _CustomersListScreenState extends State<CustomersListScreen>
           children: [
             SizedBox(height: 4),
             if (partner.address?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.location_on, partner.address!),
-            if (partner.phone != null)
-              _buildInfoRow(Icons.phone, partner.phone.toString()),
-            if (partner.mobile != null)
+              _buildInfoRow(Icons.location_on, partner.address!, l10n.addressLabel),
+            if (partner.phone != null && partner.phone.toString().isNotEmpty)
+              _buildInfoRow(Icons.phone, partner.phone.toString(), l10n.phoneLabel),
+            if (partner.mobile != null && partner.mobile.toString().isNotEmpty)
+              _buildInfoRow(Icons.phone_iphone, partner.mobile.toString(), l10n.mobileLabel),
             if (partner.country?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.public, partner.country!),
-            if (partner.phone != null)
-              _buildInfoRow(Icons.phone, partner.phone.toString()),
-            if (partner.mobile != null)
-              _buildInfoRow(Icons.phone_iphone, partner.mobile.toString()),
+              _buildInfoRow(Icons.public, partner.country!, l10n.countryLabel),
           ],
         ),
         trailing: Icon(Icons.chevron_right),
@@ -395,81 +362,16 @@ class _CustomersListScreenState extends State<CustomersListScreen>
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(IconData icon, String text, String label) {
     return Visibility(
       visible: text.isNotEmpty,
       child: Row(
         children: [
           Icon(icon, size: 16),
           SizedBox(width: 8),
-          Expanded(child: Text(text)),
+          Expanded(child: Text('$label: $text')),
         ],
       ),
     );
-  }
-}
-//=======================
-// Controllers
-//=======================
-class CustomerListController extends GetxController {
-  final isLoading = true.obs;
-  final hasError = false.obs;
-  final partners = <PartnerList>[].obs;
-  final filteredPartners = <PartnerList>[].obs;
-  final isDarkMode = true.obs;
-
-  void toggleTheme() => isDarkMode.value = !isDarkMode.value;
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchCustomers();
-  }
-
-  Future<void> fetchCustomers() async {
-    try {
-      isLoading(true);
-      hasError(false);
-            final apiurl = GetStorage().read("apiUrl");
-      final token = GetStorage().read('token') ?? '';
-      final url =
-          '$apiurl/api/v1/partners?api_token=$token&limit=10&page=1&state_id=';
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['partners'] is List) {
-          partners.assignAll(
-            (data['partners'] as List)
-                .map((e) => PartnerList.fromJson(e))
-                .toList(),
-          );
-          filteredPartners.assignAll(partners);
-        }
-      } else {
-        hasError(true);
-      }
-    } catch (e) {
-      hasError(true);
-    } finally {
-      isLoading(false);
-    }
-  }
-
-  void searchCustomers(String query) {
-    if (query.isEmpty) {
-      filteredPartners.assignAll(partners);
-    } else {
-      filteredPartners.assignAll(
-        partners
-            .where((partner) =>
-                partner.name.toLowerCase().contains(query.toLowerCase()))
-            .toList(),
-      );
-    }
-  }
-
-  void sortCustomers() {
-    filteredPartners.sort((a, b) => a.name.compareTo(b.name));
   }
 }

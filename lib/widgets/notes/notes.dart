@@ -1,33 +1,25 @@
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
-import 'package:boom_solutions_invoice/final/view/homeScreen/dashboard_Getx.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:math';
 
-// Random quotes list
-final List<String> inspirationalQuotes = [
-  "Success is not the absence of obstacles, but the courage to push through them.",
-  "The only limit to our realization of tomorrow is our doubts of today.",
-  "Your time is limited, so don’t waste it living someone else’s life.",
-  "The future belongs to those who believe in the beauty of their dreams.",
-  "Do what you can, with what you have, where you are.",
-  "Every moment is a fresh beginning.",
-  "The best way to predict the future is to create it.",
-  "Stay hungry, stay foolish.",
-  "You miss 100% of the shots you don’t take.",
-  "Dream big, work hard, stay focused.",
-];
-
-String getRandomQuote() {
-  final random = Random();
-  return inspirationalQuotes[random.nextInt(inspirationalQuotes.length)];
-}
 
 class NotesWidget extends StatelessWidget {
   final double height;
-  final ScrollController? scrollController; // Optional for scroll-to-bottom
+  final ScrollController? scrollController;
 
   const NotesWidget({super.key, required this.height, this.scrollController});
+
+  String getInspirationalQuotes(BuildContext context) {
+    return S.of(context)!.inspirationalQuotes;
+  }
+
+  String getRandomQuote(BuildContext context) {
+    final random = Random();
+    final quotes = getInspirationalQuotes(context);
+    return quotes[random.nextInt(quotes.length)];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +50,12 @@ class NotesWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Notes',
+              S.of(context)!.notes,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
-                    fontSize: getResponsiveFontSize(context, 18),
+                    fontSize: 18,
                   ),
             ),
          
@@ -78,7 +70,7 @@ class NotesWidget extends StatelessWidget {
                       controller.errorMessage.value,
                       style: TextStyle(
                         color: Colors.red,
-                        fontSize: getResponsiveFontSize(context, 14),
+                        fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -90,20 +82,20 @@ class NotesWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'No notes yet',
+                          S.of(context)!.noNotesYet,
                           style: TextStyle(
                             color: isDark ? Colors.grey[500] : Colors.grey[400],
                             fontStyle: FontStyle.italic,
-                            fontSize: getResponsiveFontSize(context, 14),
+                            fontSize: 14,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '"${getRandomQuote()}"',
+                          '"${getRandomQuote(context)}"',
                           style: TextStyle(
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontStyle: FontStyle.italic,
-                            fontSize: getResponsiveFontSize(context, 12),
+                            fontSize: 12,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 3,
@@ -125,11 +117,11 @@ class NotesWidget extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          '"${getRandomQuote()}"',
+                          '"${getRandomQuote(context)}"',
                           style: TextStyle(
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontStyle: FontStyle.italic,
-                            fontSize: getResponsiveFontSize(context, 12),
+                            fontSize: 12,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 3,
@@ -141,7 +133,6 @@ class NotesWidget extends StatelessWidget {
                     return Container(
                       margin: const EdgeInsets.symmetric(vertical: 1),
                       decoration: BoxDecoration(
-                        // color: controller.getPriorityColor(note['priority']).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ListTile(
@@ -151,24 +142,24 @@ class NotesWidget extends StatelessWidget {
                           horizontal: 12,
                         ),
                         leading: Container(
-                          width: getResponsiveFontSize(context, 10),
-                          height: getResponsiveFontSize(context, 10),
+                          width: 10,
+                          height: 10,
                           decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: controller.getPriorityColor(note['priority']),
+                            shape: BoxShape.circle,
+                            color: controller.getPriorityColor(note['priority']),
                           ),
                         ),
                         title: Text(
                           note['title'],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: getResponsiveFontSize(context, 16),
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
                         subtitle: Text(
                           note['message'],
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: getResponsiveFontSize(context, 14),
+                                fontSize: 14,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -177,7 +168,7 @@ class NotesWidget extends StatelessWidget {
                           note['priority_text'],
                           style: TextStyle(
                             color: controller.getPriorityColor(note['priority']),
-                            fontSize: getResponsiveFontSize(context, 12),
+                            fontSize: 12,
                           ),
                         ),
                       ),

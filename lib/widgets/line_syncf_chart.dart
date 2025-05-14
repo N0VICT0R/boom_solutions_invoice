@@ -60,6 +60,8 @@ class SalesData {
 class SalesLineChart extends StatelessWidget {
   final SalesController controller = Get.put(SalesController());
 
+  SalesLineChart({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

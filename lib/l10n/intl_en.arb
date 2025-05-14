@@ -1,0 +1,459 @@
+
+{
+  "@@locale": "en",
+  "welcomeBack": "Welcome Back",
+  "@welcomeBack": {
+    "description": "Welcome message displayed on the authentication screen"
+    },
+  "@dashboard": {
+    "description": "Label for the dashboard navigation item"
+  },
+  "@customers": {
+    "description": "Label for the customers navigation item"
+  },
+  "@odoo": {
+    "description": "Label for the Odoo navigation item"
+  },
+  "@settings": {
+    "description": "Label for the settings navigation item"
+  },
+  "@salesTarget": {
+    "description": "Title for the sales target metric card"
+  },
+  "@collections": {
+    "description": "Title for the collections metric card"
+  },
+  "@visits": {
+    "description": "Title for the visits metric card"
+  },
+  "@newCustomers": {
+    "description": "Title for the new customers metric card"
+  },
+  "@ofTarget": {
+    "description": "Subtitle showing the percentage of sales target achieved",
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "@partners": {
+    "description": "Subtitle showing the number of partners",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@completedToday": {
+    "description": "Subtitle for visits completed today"
+  },
+  "@thisMonth": {
+    "description": "Subtitle for new customers this month"
+  },
+  "@quickActions": {
+    "description": "Title for the quick actions section"
+  },
+  "@nearbyCustomers": {
+    "description": "Label for the nearby customers action button"
+  },
+  "@stock": {
+    "description": "Label for the stock action button"
+  },
+  "@youAreOffline": {
+    "description": "Message shown when the app is offline"
+  },
+  "@retry": {
+    "description": "Label for the retry action button"
+  },
+  "checkConnection": "Check your internet connection or try again later.",
+  "@checkConnection": {
+    "description": "Error message when there is no internet connection"
+  },
+  "enterYourEmail": "Enter your email",
+  "@enterYourEmail": {
+    "description": "Hint text for the email input field"
+  },
+  "apiToken": "API Token",
+  "@apiToken": {
+    "description": "Hint text for the API token input field"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Text for the sign-in button"
+  },
+  "forgotApiToken": "Forgot your API Token?",
+  "@forgotApiToken": {
+    "description": "Text for the link to recover a forgotten API token"
+  },
+  "contactAdmin": "Contact your system administrator for a new API token.",
+  "@contactAdmin": {
+    "description": "SnackBar message shown when the user clicks the forgot API token link"
+  },
+  "salesOverview": "Sales Overview",
+  "@salesOverview": {
+    "description": "Title for the sales chart section"
+  },
+  "noDataAvailable": "No data available",
+  "@noDataAvailable": {
+    "description": "Message shown when no sales data is available"
+  },
+  "day": "Day",
+  "@day": {
+    "description": "Time range option for daily sales data"
+  },
+  "month": "Month",
+  "@month": {
+    "description": "Time range option for monthly sales data"
+  },
+  "quarter": "Quarter",
+  "@quarter": {
+    "description": "Time range option for quarterly sales data"
+  },
+  "year": "Year",
+  "@year": {
+    "description": "Time range option for yearly sales data"
+  },
+  "pleaseLoginAgain": "Please log in again.",
+  "@pleaseLoginAgain": {
+    "description": "Error message when user is not logged in"
+  },
+  "sessionExpired": "Session expired. Please log in again.",
+  "@sessionExpired": {
+    "description": "Error message when session token is invalid"
+  },
+  "authenticationError": "Authentication error.",
+  "@authenticationError": {
+    "description": "Error message when authentication fails"
+  },
+  "serverError": "Server error: HTTP {statusCode}",
+  "@serverError": {
+    "description": "Error message for server errors with HTTP status code",
+    "placeholders": {
+      "statusCode": {}
+    }
+  },
+  "networkError": "Network error: {error}",
+  "@networkError": {
+    "description": "Error message for network-related errors",
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "selected": "Selected: {period}",
+  "@selected": {
+    "description": "Label for the selected sales period in the chart",
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "vsAverage": "vs Average: {sign}{diff}%",
+  "@vsAverage": {
+    "description": "Label showing the difference from average sales",
+    "placeholders": {
+      "sign": {},
+      "diff": {}
+    }
+  },
+  "quickActions": "Quick Actions",
+  "nearbyCustomers": "Nearby Customers",
+  "stock": "Stock",
+  "dashboard": "Dashboard",
+  "customers": "Customers",
+  "odoo": "Odoo",
+  "settings": "Settings",
+  "youAreOffline": "You Are Offline",
+  "checkInternetConnection": "Check your internet connection or try again later.",
+  "@checkInternetConnection": {
+    "description": "Error message when there is no internet connection"
+  },
+  "retry": "Retry",
+  "salesTarget": "Sales Target",
+  "collections": "Collections",
+  "visits": "Visits",
+  "newCustomers": "New Customers",
+  "ofTarget": "{percentage}% of target",
+  "@ofTarget": {
+    "description": "Subtitle showing the percentage of sales target achieved",
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "partners": "{count} partners",
+  "@partners": {
+    "description": "Subtitle showing the number of partners",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "completedToday": "Completed today",
+  "@completedToday": {
+    "description": "Subtitle for visits completed today"
+  },
+  "thisMonth": "This month",
+  "@thisMonth": {
+    "description": "Subtitle for new customers this month"
+  },
+  "thousand": "k",
+  "@thousand": {
+    "description": "Suffix for thousand"
+  },
+  "million": "M",
+  "@million": {
+    "description": "Suffix for million"
+  },
+  "billion": "B",
+  "@billion": {
+    "description": "Suffix for billion"
+  },
+  "trillion": "T",
+    "@trillion": {
+      "description": "Suffix for trillion"
+    },
+    "notes": "Notes",
+    "noNotesYet": "No notes yet",
+    "inspirationalQuotes": "Success is not the absence of obstacles, but the courage to push through them.",
+    "customersTitle": "Customers",
+    "@customersTitle": {
+      "description": "Title for the customers list screen in the app bar"
+    },
+    "searchCustomersHint": "Search customers...",
+    "@searchCustomersHint": {
+      "description": "Hint text for the search input field"
+    },
+    "sortByName": "Sort by name",
+    "@sortByName": {
+      "description": "Tooltip or accessibility label for the sort button"
+    },
+    "failedToLoadCustomers": "Failed to load customers",
+    "@failedToLoadCustomers": {
+      "description": "Error message when customer loading fails"
+    },
+    "noCustomersFound": "No customers found",
+    "@noCustomersFound": {
+      "description": "Message displayed when no customers are available"
+    },
+    "retryButton": "Retry",
+    "@retryButton": {
+      "description": "Text for the retry button in error or empty states"
+    },
+    "addCustomer": "Add customer",
+    "@addCustomer": {
+      "description": "Tooltip or accessibility label for the add customer button"
+    },
+    "toggleTheme": "Toggle theme",
+    "@toggleTheme": {
+      "description": "Tooltip for the theme toggle button"
+    },
+    "addressLabel": "Address",
+    "@addressLabel": {
+      "description": "Label for the address field in customer card"
+    },
+    "cityLabel": "City",
+    "@cityLabel": {
+      "description": "Label for the city field in customer card"
+    },
+    "stateLabel": "State",
+    "@stateLabel": {
+      "description": "Label for the state field in customer card"
+    },
+    "countryLabel": "Country",
+    "@countryLabel": {
+      "description": "Label for the country field in customer card"
+    },
+    "phoneLabel": "Phone",
+      "@phoneLabel": {
+        "description": "Label for the phone field in customer card"
+      },
+      "mobileLabel": "Mobile",
+      "@mobileLabel": {
+        "description": "Label for the mobile field in customer card"
+      },
+      "settingsTitle": "Settings",
+      "@settingsTitle": {
+        "description": "Title for the settings screen in the app bar"
+      },
+      "darkModeTitle": "Dark Mode",
+      "@darkModeTitle": {
+        "description": "Title for the theme settings card"
+      },
+      "editProfileTitle": "Edit Profile",
+      "@editProfileTitle": {
+        "description": "Title for the edit profile settings item"
+      },
+      "securityTitle": "Security",
+      "@securityTitle": {
+        "description": "Title for the security settings item"
+      },
+      "notificationsTitle": "Notifications",
+      "@notificationsTitle": {
+        "description": "Title for the notifications settings item"
+      },
+      "logoutTitle": "Logout",
+      "@logoutTitle": {
+        "description": "Title for the logout settings item"
+      },
+      "logoutDialogTitle": "Logout",
+      "@logoutDialogTitle": {
+        "description": "Title for the logout confirmation dialog"
+      },
+      "logoutDialogMessage": "Are you sure you want to logout?",
+      "@logoutDialogMessage": {
+        "description": "Message in the logout confirmation dialog"
+      },
+      "cancelButton": "Cancel",
+      "@cancelButton": {
+        "description": "Button text to cancel logout"
+      },
+      "logoutButton": "Logout",
+      "@logoutButton": {
+        "description": "Button text to confirm logout"
+      },
+      "logoutSuccessTitle": "Logged Out",
+      "@logoutSuccessTitle": {
+        "description": "Title for the success snackbar after logout"
+      },
+      "logoutSuccessMessage": "You have been successfully logged out",
+      "@logoutSuccessMessage": {
+        "description": "Message for the success snackbar after logout"
+      },
+      "logoutErrorTitle": "Logout Error",
+      "@logoutErrorTitle": {
+        "description": "Title for the error snackbar during logout"
+      },
+      "logoutErrorMessage": "Failed to complete logout",
+      "@logoutErrorMessage": {
+        "description": "Message for the error snackbar during logout"
+      },
+      "defaultUserInitial": "U",
+      "@defaultUserInitial": {
+        "description": "Default initial for user avatar when no name"
+      },
+      "defaultUserName": "User",
+      "@defaultUserName": {
+        "description": "Default name when no user data"
+      },
+      "defaultUserEmail": "No email",
+      "@defaultUserEmail": {
+        "description": "Default email when no user data"
+      },
+      "profileTitle": "Profile",
+      "@profileTitle": {
+        "description": "Title for the profile screen in the app bar"
+      },
+      "noUserData": "No user data available",
+      "@noUserData": {
+        "description": "Message when no user data is available"
+      },
+      "emailLabel": "Email",
+      "@emailLabel": {
+        "description": "Label for email in profile details"
+      },
+      "loginLabel": "Login",
+      "@loginLabel": {
+        "description": "Label for login in profile details"
+      },
+      "storeLabel": "Store",
+      "@storeLabel": {
+        "description": "Label for store name in profile details"
+      },
+      "storeIdLabel": "Store ID",
+      "@storeIdLabel": {
+        "description": "Label for store ID in profile details"
+      },
+      "partnerIdLabel": "Partner ID",
+      "@partnerIdLabel": {
+        "description": "Label for partner ID in profile details"
+      },
+      "add_customer": "Add Customer",
+      "@add_customer": {
+        "description": "Button text for adding a new customer"
+      },
+      "name": "Name",
+      "@name": {
+        "description": "Label for the name field"
+      },
+      "address": "Address",
+      "@address": {
+        "description": "Label for the address field"
+      },
+      "city": "City",
+      "@city": {
+        "description": "Label for the city field"
+      },
+      "state": "State",
+      "@state": {
+        "description": "Label for the state field"
+      },
+      "country": "Country",
+      "@country": {
+        "description": "Label for the country field"
+      },
+      "phone": "Phone",
+      "@phone": {
+        "description": "Label for the phone field"
+      },
+      "mobile": "Mobile",
+      "@mobile": {
+        "description": "Label for the mobile field"
+      },
+      "payment_terms": "Payment Terms",
+      "@payment_terms": {
+        "description": "Label for the payment terms field"
+      },
+      "save": "Save",
+      "@save": {
+        "description": "Button text to save customer"
+      },
+      "cancel": "Cancel",
+      "@cancel": {
+        "description": "Button text to cancel action"
+      },
+      "success": "Success",
+      "@success": {
+        "description": "Title for success dialogs or snackbars"
+      },
+      "customer_added": "Customer added successfully!",
+      "@customer_added": {
+        "description": "Message shown when a customer is added successfully"
+      },
+      "error": "Error",
+      "@error": {
+        "description": "Title for error dialogs or snackbars"
+      },
+      "required_field": "{field} is required",
+      "@required_field": {
+        "description": "Validation message for required fields",
+        "placeholders": {
+          "field": {}
+        }
+      },
+      "invalid_number": "{field} must be a valid number",
+      "@invalid_number": {
+        "description": "Validation message for invalid number fields",
+        "placeholders": {
+          "field": {}
+        }
+      },
+      "please_fill_fields": "Please fill all required fields",
+      "@please_fill_fields": {
+        "description": "Message prompting user to fill all required fields"
+      },
+      "no_token": "No API token found. Please log in.",
+      "@no_token": {
+        "description": "Error message when API token is missing"
+      },
+      "api_error": "Failed to add customer: {message}",
+      "@api_error": {
+        "description": "Error message when API returns an error while adding customer",
+        "placeholders": {
+          "message": {}
+        }
+      },
+      "connection_error": "Connection error: {error}",
+      "@connection_error": {
+        "description": "Error message for connection errors",
+        "placeholders": {
+          "error": {}
+        }
+      },
+      "field_required": "This field is required",
+      "@field_required": {
+        "description": "Validation message shown when a field is required"
+      }}

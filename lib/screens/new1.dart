@@ -6,7 +6,7 @@ import 'dart:math';
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 }
 
 class TimeSeriesChartPage extends StatefulWidget {
-  const TimeSeriesChartPage({Key? key}) : super(key: key);
+  const TimeSeriesChartPage({super.key});
 
   @override
   State<TimeSeriesChartPage> createState() => _TimeSeriesChartPageState();
@@ -190,7 +190,7 @@ class _TimeSeriesChartPageState extends State<TimeSeriesChartPage> {
               ],
             ),
             const SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 180, // Reduced height for minimalism
               width: double.infinity,
               child: displayData.isEmpty
@@ -244,10 +244,10 @@ class MinimalLineChart extends StatelessWidget {
   final String timeRange;
   
   const MinimalLineChart({
-    Key? key, 
+    super.key, 
     required this.data, 
     required this.timeRange,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +351,7 @@ class MinimalLineChart extends StatelessWidget {
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
             // tooltipBgColor: Colors.blue[700]!.withOpacity(0.8),
-            tooltipRoundedRadius: 8,
+            tooltipBorderRadius: BorderRadius.circular(8),
             tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             getTooltipItems: (List<LineBarSpot> touchedSpots) {
               return touchedSpots.map((spot) {

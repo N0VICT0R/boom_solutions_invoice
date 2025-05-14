@@ -9,8 +9,7 @@ import 'dart:convert';
 class InvoicePaymentPage extends StatefulWidget {
   final int partnerId;
 
-  const InvoicePaymentPage({Key? key, required this.partnerId})
-      : super(key: key);
+  const InvoicePaymentPage({super.key, required this.partnerId});
 
   @override
   State<InvoicePaymentPage> createState() => _InvoicePaymentPageState();
@@ -38,7 +37,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
     return Scaffold(
       appBar: AppBar(
         title: Obx(() => Text(
-              "${controller.partnerName.value}",
+              controller.partnerName.value,
               style: const TextStyle(fontWeight: FontWeight.bold),
             )),
         centerTitle: true,
