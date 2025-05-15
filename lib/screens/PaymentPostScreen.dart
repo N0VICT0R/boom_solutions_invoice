@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:boom_solutions_invoice/generated/l10n.dart'; // Import localization
 
 class InvoicePaymentPage extends StatefulWidget {
   final int partnerId;
@@ -21,8 +22,8 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
   String? selectedPaymentMethod;
 
   final List<Map<String, dynamic>> paymentMethods = [
-    {'id': '1', 'name': 'Cash'},
-    {'id': '2', 'name': 'Card'},
+    {'id': '1', 'name': S.current.cash}, // Localized
+    {'id': '2', 'name': S.current.card}, // Localized
   ];
 
   @override
@@ -81,7 +82,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                       child: DropdownButtonFormField<String>(
                         value: selectedPaymentMethod,
                         decoration: InputDecoration(
-                          labelText: 'Payment Method',
+                          labelText: S.of(context).payment_method, // Localized
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -103,7 +104,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                         },
                         validator: (value) {
                           if (value == null) {
-                            return 'Please select a payment method';
+                            return S.of(context).please_select_payment_method; // Localized
                           }
                           return null;
                         },
@@ -114,7 +115,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Obx(() => Text(
-                              "Total: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
+                              "${S.of(context).total}: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -124,7 +125,8 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                           onPressed: () {
                             if (selectedPaymentMethod == null) {
                               Get.snackbar(
-                                  'Error', 'Please select a payment method');
+                                  S.of(context).error, // Localized
+                                  S.of(context).please_select_payment_method); // Localized
                               return;
                             }
                             final paymentMethodId =
@@ -134,17 +136,13 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               token,
                               paymentMethodId,
                             );
-                            // Lazily inject the PartnerController if not already injected
-
                             Get.lazyPut<CustomerController>(
                                 () => CustomerController(),
                                 fenix: true);
                             Get.lazyPut<PartnerController>(
                                 () => PartnerController());
-                            // Retrieve the instance and call a method if needed
                             final partnerController =
                                 Get.find<PartnerController>();
-                            // e.g. partnerController.fetchPartnerDetails(widget.partnerId);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
@@ -155,7 +153,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                             ),
                           ),
                           child: Text(
-                            "    Pay All    ",
+                            "    ${S.of(context).pay_all}    ", // Localized
                             style: TextStyle(
                               // color: Colors.green[600],
                               fontWeight: FontWeight.bold,
@@ -276,7 +274,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'INVOICE DATE',
+                                  S.of(context).invoice_date, // Localized
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -336,7 +334,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  'DUE DATE',
+                                  S.of(context).due_date, // Localized
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -379,7 +377,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                'PENDING',
+                                S.of(context).pending, // Localized
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
@@ -436,9 +434,9 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               maxValue: invoice.pendingAmount),
                         ],
                         decoration: InputDecoration(
-                          labelText: "Payment amount",
+                          labelText: S.of(context).payment_amount, // Localized
                           hintText:
-                              "Max ${invoice.pendingAmount.toStringAsFixed(2)}",
+                              "${S.of(context).max} ${invoice.pendingAmount.toStringAsFixed(2)}",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.dividerColor),
@@ -452,14 +450,14 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Due Now: ${invoice.dueNow.toStringAsFixed(2)}",
+                            "${S.of(context).due_now}: ${invoice.dueNow.toStringAsFixed(2)}",
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               color: theme.textTheme.bodySmall?.color,
                             ),
                           ),
                           Text(
-                            "Due Later: ${invoice.dueLater.toStringAsFixed(2)}",
+                            "${S.of(context).due_later}: ${invoice.dueLater.toStringAsFixed(2)}",
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               color: theme.textTheme.bodySmall?.color,
@@ -502,7 +500,6 @@ class InvoiceController extends GetxController {
     isLoading.value = true;
     try {
       final apiurl = GetStorage().read("apiUrl");
-      final token = GetStorage().read('token') ?? '';
       final url = Uri.parse(
           '$apiurl/api/v1/partners/$partnerId/invoices?api_token=$token');
       final response =
@@ -531,7 +528,7 @@ class InvoiceController extends GetxController {
         getTotalPayment(); // Initial calculation
       }
     } catch (e) {
-      Get.snackbar("Error", "An error occurred");
+      Get.snackbar(S.of(Get.context!).error, S.of(Get.context!).an_error_occurred); // Localized
     } finally {
       isLoading.value = false;
     }
@@ -540,7 +537,7 @@ class InvoiceController extends GetxController {
   Future<void> payAllInvoices(
       int partnerId, String token, int paymentMethodId) async {
     if (token.isEmpty) {
-      Get.snackbar("Error", "Authentication token not found");
+      Get.snackbar(S.of(Get.context!).error, S.of(Get.context!).auth_token_not_found); // Localized
       return;
     }
 
@@ -557,7 +554,7 @@ class InvoiceController extends GetxController {
 
     if (invoicePayments.isEmpty) {
       Get.snackbar(
-          "Error", "Please enter valid amounts for at least one invoice");
+          S.of(Get.context!).error, S.of(Get.context!).please_enter_valid_amounts); // Localized
       return;
     }
 
@@ -573,38 +570,30 @@ class InvoiceController extends GetxController {
           'api_token': token,
           'amount': totalPayment.value,
           'payment_method_id': paymentMethodId,
-          'memo': "Payment for ${invoicePayments.length} invoices",
+          'memo': "${S.of(Get.context!).payment_for} ${invoicePayments.length} ${S.of(Get.context!).invoices}",
           'post_immediately': true,
           'invoices': invoicePayments,
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Get.snackbar(
-        //   overlayColor:Colors.green ,
-        //   'Success',
-        //   'Payment posted successfully',
-        //   snackPosition: SnackPosition.BOTTOM,
-        // );
         for (var controller in textControllers.values) {
           controller.clear();
         }
         fetchInvoices(partnerId, token);
         await Future.delayed(const Duration(seconds: 2));
         Get.back(result: true);
-
-        // Get.offAll(CustomerDetailScreen(partnerId: partnerId));
       } else {
         Get.snackbar(
-          'Error',
-          json.decode(response.body)['message'] ?? 'Payment failed',
+          S.of(Get.context!).error,
+          json.decode(response.body)['message'] ?? S.of(Get.context!).payment_failed, // Localized
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'An error occurred',
+        S.of(Get.context!).error,
+        S.of(Get.context!).an_error_occurred,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

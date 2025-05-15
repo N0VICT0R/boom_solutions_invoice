@@ -94,6 +94,7 @@ class WebViewScreenState extends State<WebViewScreen> with AutomaticKeepAliveCli
             'Odoo Portal',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
+          centerTitle: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),

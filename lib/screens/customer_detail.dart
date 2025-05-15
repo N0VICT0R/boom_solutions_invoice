@@ -1,3 +1,6 @@
+import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
+import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
+import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -6,10 +9,8 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
-import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
-import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
 import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart'; // Import localization
 
 //=======================
 // Location Service
@@ -23,26 +24,26 @@ class LocationService {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         await Geolocator.openLocationSettings();
-        return (false, 'Location services are disabled. Please enable them in settings.');
+        return (false, S.current.location_services_disabled);
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          return (false, 'Location permissions denied. Please allow location access in settings.');
+          return (false, S.current.location_permissions_denied);
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
         await Geolocator.openAppSettings();
-        return (false, 'Location permissions are permanently denied. Please enable them in settings.');
+        return (false, S.current.location_permissions_denied_forever);
       }
 
       return (true, null);
     } catch (e) {
       print('Error checking location permissions: $e');
-      return (false, 'Error checking location permissions: $e');
+      return (false, '${S.current.error}: $e');
     }
   }
 
@@ -61,31 +62,26 @@ class LocationService {
       return (true, null, position.latitude, position.longitude);
     } catch (e) {
       print('Error getting current location: $e');
-      return (false, 'Error getting current location: $e', null, null);
+      return (false, '${S.current.error_getting_location}: $e', null, null);
     }
   }
 
   Future<(bool, String?)> updatePartnerLocation(int partnerId) async {
     try {
-      // Validate api_token
       if (apiToken.isEmpty) {
-        return (false, 'API token is missing. Please log in again.');
+        return (false, S.current.no_token);
       }
 
-      // Log the token for debugging
       print('API Token: $apiToken');
 
-      // Get the current user location
       final (locationSuccess, locationError, latitude, longitude) = await _getCurrentLocation();
       if (!locationSuccess) {
         return (false, locationError);
       }
 
-      // Prepare API endpoint with dynamic partnerId
       final url = Uri.parse('$baseUrl/api/v1/partners/$partnerId/location');
       print('Updating location for partner ID $partnerId at URL: $url');
 
-      // Prepare request body with current location
       final body = jsonEncode({
         'api_token': apiToken,
         'latitude': latitude,
@@ -94,7 +90,6 @@ class LocationService {
       });
       print('Request body: $body');
 
-      // Make PUT request with a timeout
       final response = await http
           .put(
             url,
@@ -106,19 +101,18 @@ class LocationService {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      // Check for success (200 OK or 204 No Content)
       if (response.statusCode == 200 || response.statusCode == 204) {
         return (true, null);
       } else if (response.statusCode == 401 || response.statusCode == 403) {
-        return (false, 'Authentication failed: Invalid or expired token. Please log in again.');
+        return (false, S.current.auth_failed);
       } else if (response.statusCode == 429) {
-        return (false, 'Too many requests: Please wait before trying again.');
+        return (false, S.current.too_many_requests);
       } else {
-        return (false, 'Failed to update location: ${response.statusCode} - ${response.body}');
+        return (false, '${S.current.failed_to_update_location}: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error updating location: $e');
-      return (false, 'Error updating location: $e');
+      return (false, '${S.current.error_updating_location}: $e');
     }
   }
 }
@@ -143,22 +137,22 @@ Future<void> launchGoogleMapsByPartnerId({
       if (data['success'] && data['partners'] != null && data['partners'].isNotEmpty) {
         final partnerJson = (data['partners'] as List).firstWhere(
           (p) => p['id'] == partnerId,
-          orElse: () => throw Exception('Partner with ID $partnerId not found'),
+          orElse: () => throw Exception('${S.current.partner_not_found} $partnerId'),
         );
         final partner = _Partner.fromJson(partnerJson);
         if (partner.latitude == 0.0 || partner.longitude == 0.0) {
-          throw Exception('No valid coordinates for partner ID $partnerId');
+          throw Exception('${S.current.no_valid_coordinates} $partnerId');
         }
         await MapsLauncher.launchCoordinates(partner.latitude, partner.longitude);
       } else {
-        throw Exception('No partners found');
+        throw Exception(S.current.no_partners_found);
       }
     } else {
-      throw Exception('Failed to fetch partner data: ${response.statusCode}');
+      throw Exception('${S.current.failed_to_fetch_partner_data}: ${response.statusCode}');
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $e')),
+      SnackBar(content: Text('${S.current.error}: $e')),
     );
   }
 }
@@ -181,7 +175,7 @@ class _Partner {
   factory _Partner.fromJson(Map<String, dynamic> json) {
     return _Partner(
       id: json['id'] ?? 0,
-      name: json['name'] ?? 'Customer',
+      name: json['name'] ?? S.current.customer,
       latitude: json['latitude']?.toDouble() ?? 0.0,
       longitude: json['longitude']?.toDouble() ?? 0.0,
       address: json['address'] ?? '',
@@ -220,7 +214,7 @@ class PartnerDetails {
   factory PartnerDetails.fromJson(Map<String, dynamic> json) {
     return PartnerDetails(
       id: json['id'] ?? 0,
-      name: json['name'] ?? 'Customer',
+      name: json['name'] ?? S.current.customer,
       balance: (json['balance'] ?? 0.0).toDouble(),
       amountDueToday: (json['amount_due_today'] ?? 0.0).toDouble(),
       daysOldestDue: json['days_oldest_due'] ?? 0,
@@ -276,7 +270,7 @@ class Partner {
   factory Partner.fromJson(Map<String, dynamic> json) {
     return Partner(
       id: json['id'] ?? 0,
-      name: json['name'] ?? 'Customer',
+      name: json['name'] ?? S.current.customer,
       internalNotes: json['internal_notes'],
     );
   }
@@ -295,7 +289,7 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      name: json['name']?['en_US']?['en_US'] ?? 'Unnamed Product',
+      name: json['name']?['en_US']?['en_US'] ?? S.current.unnamed_product,
       amount: json['amount']?.toDouble() ?? 0.0,
       percentage: json['percentage']?.toDouble() ?? 0.0,
     );
@@ -324,8 +318,7 @@ class CustomerController extends GetxController {
         return;
       }
 
-      final url =
-          "http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token";
+      final url = "http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -366,8 +359,7 @@ class PartnerController extends GetxController {
         return;
       }
 
-      final url =
-          'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token';
+      final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -403,13 +395,13 @@ class CustomerDetailScreen extends StatelessWidget {
     Color(0xFFD500F9),
     Color(0xFFFF9100),
   ];
-  DateTime? lastUpdateTime; // Track the last update time
+  DateTime? lastUpdateTime;
 
   CustomerDetailScreen({super.key, required int partnerId}) {
     final args = Get.arguments ?? {};
     final id = args['partnerId'] ?? partnerId;
     if (id == 0) {
-      print('Warning: No valid partnerId provided');
+      print('Warning: ${S.current.no_valid_partner_id}');
     }
     controller.fetchSalesData(id);
     partnerController.fetchPartnerDetails(id);
@@ -426,7 +418,7 @@ class CustomerDetailScreen extends StatelessWidget {
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       title: Obx(() => Text(
-            controller.salesData.value?.partner.name ?? 'Customer',
+            controller.salesData.value?.partner.name ?? S.of(context).customer,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           )),
       elevation: 0,
@@ -438,52 +430,46 @@ class CustomerDetailScreen extends StatelessWidget {
             print('Attempting to update location for Partner ID: $partnerId');
             if (partnerId == 0) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Error: Invalid partner ID')),
+                SnackBar(content: Text(S.of(context).invalid_partner_id)),
               );
               return;
             }
 
-            // Check if enough time has passed since the last update
             if (lastUpdateTime != null &&
                 DateTime.now().difference(lastUpdateTime!).inSeconds < 30) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please wait 30 seconds before updating again')),
+                SnackBar(content: Text(S.of(context).wait_30_seconds)),
               );
               return;
             }
 
             try {
-              // Show loading indicator
               Get.dialog(
                 const Center(child: CircularProgressIndicator()),
                 barrierDismissible: false,
               );
 
-              // Update location
               final (success, errorMessage) = await locationService.updatePartnerLocation(partnerId);
 
-              // Close loading dialog
               Get.back();
 
-              // Show result
               if (success) {
-                lastUpdateTime = DateTime.now(); // Update the last update time
+                lastUpdateTime = DateTime.now();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Location updated successfully')),
+                  SnackBar(content: Text(S.of(context).location_updated_successfully)),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(errorMessage ?? 'Failed to update location')),
+                  SnackBar(content: Text(errorMessage ?? S.of(context).failed_to_update_location)),
                 );
               }
             } catch (e) {
-              // Close loading dialog if still showing
               if (Get.isDialogOpen ?? false) {
                 Get.back();
               }
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${e.toString()}')),
+                SnackBar(content: Text('${S.of(context).error}: ${e.toString()}')),
               );
             }
           },
@@ -499,7 +485,7 @@ class CustomerDetailScreen extends StatelessWidget {
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Error: Invalid partner ID')),
+                SnackBar(content: Text(S.of(context).invalid_partner_id)),
               );
             }
           },
@@ -511,7 +497,7 @@ class CustomerDetailScreen extends StatelessWidget {
   Widget _buildBody(BuildContext context) {
     if (controller.isLoading.value) return _buildLoading();
     if (controller.hasError.value || controller.salesData.value == null) {
-      return _buildError();
+      return _buildError(context);
     }
     return _buildMainContent(context);
   }
@@ -520,20 +506,20 @@ class CustomerDetailScreen extends StatelessWidget {
     return const Center(child: CircularProgressIndicator());
   }
 
-  Widget _buildError() {
+  Widget _buildError(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'No data available',
+          Text(
+            S.of(context).no_data_available,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () =>
                 controller.fetchSalesData(Get.arguments['partnerId'] ?? 0),
-            child: const Text('Retry'),
+            child: Text(S.of(context).retry),
           ),
         ],
       ),
@@ -557,24 +543,20 @@ class CustomerDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Notes (Moved to top)
                   Obx(() {
                     final notes = controller.salesData.value?.partner.internalNotes;
                     if (notes?.isNotEmpty ?? false) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildNotesCard(notes!),
+                        child: _buildNotesCard(notes!, context),
                       );
                     }
                     return const SizedBox.shrink();
                   }),
-                  // Payment
                   Payment(),
                   const SizedBox(height: 12),
-                  // Metrics Grid
-                  const MetricsGrid(),
+                  MetricsGrid(),
                   const SizedBox(height: 12),
-                  // Sales Chart
                   SalesChart(chartColors: chartColors),
                   const SizedBox(height: 24),
                 ],
@@ -586,7 +568,7 @@ class CustomerDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotesCard(String notes) {
+  Widget _buildNotesCard(String notes, BuildContext context) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -596,12 +578,12 @@ class CustomerDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.note, size: 16, color: Colors.yellow),
-                SizedBox(width: 8),
+              children: [
+                const Icon(Icons.note, size: 16, color: Colors.yellow),
+                const SizedBox(width: 8),
                 Text(
-                  'Notes',
-                  style: TextStyle(
+                  S.of(context).notes,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -652,15 +634,15 @@ class Payment extends GetView<CustomerController> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text(
-                  'Make Payment',
-                  style: TextStyle(
+                  S.of(context).make_payment,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
               ],
             ),
           ),
@@ -692,18 +674,18 @@ class SalesChart extends GetView<CustomerController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Product Distribution',
-                    style: TextStyle(
+                  Text(
+                    S.of(context).product_distribution,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   _buildMetricCard(
-                    'Top Product',
+                    S.of(context).top_product,
                     salesData.products.isNotEmpty
                         ? salesData.products.first.name
-                        : 'N/A',
+                        : S.of(context).na,
                     Icons.star,
                   ),
                 ],
@@ -748,9 +730,9 @@ class SalesChart extends GetView<CustomerController> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Total',
-                            style: TextStyle(fontSize: 12),
+                          Text(
+                            S.of(context).total,
+                            style: const TextStyle(fontSize: 12),
                           ),
                           Text(
                             '${salesData.totalSales.toStringAsFixed(0)} ${salesData.currencySymbol}',
@@ -772,6 +754,7 @@ class SalesChart extends GetView<CustomerController> {
                         controller.selectedProduct.value!,
                         chartColors[controller.selectedIndex.value! %
                             chartColors.length],
+                        context,
                       ),
                     )
                   : const SizedBox.shrink()),
@@ -806,7 +789,7 @@ class SalesChart extends GetView<CustomerController> {
     }).toList();
   }
 
-  Widget _buildProductDetails(Product product, Color color) {
+  Widget _buildProductDetails(Product product, Color color, BuildContext context) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -839,10 +822,12 @@ class SalesChart extends GetView<CustomerController> {
             ),
             const SizedBox(height: 8),
             _buildDetailRow(
-                'Percentage', '${product.percentage.toStringAsFixed(1)}%'),
-            _buildDetailRow('Amount',
+                S.of(context).percentage, '${product.percentage.toStringAsFixed(1)}%'),
+            _buildDetailRow(
+                S.of(context).amount,
                 '${controller.salesData.value!.currencySymbol} ${product.amount.toStringAsFixed(2)}'),
-            _buildDetailRow('Share of Total',
+            _buildDetailRow(
+                S.of(context).share_of_total,
                 '${(product.amount / controller.salesData.value!.totalSales * 100).toStringAsFixed(2)}%'),
           ],
         ),
@@ -910,7 +895,7 @@ class MetricsGrid extends StatelessWidget {
         }
         final partner = controller.partnerDetails.value;
         if (partner == null) {
-          return const Center(child: Text("No Data"));
+          return Center(child: Text(S.of(context).no_data));
         }
 
         return LayoutBuilder(
@@ -932,7 +917,7 @@ class MetricsGrid extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return _buildMetricCard(
                       context: context,
-                      title: _getMetricTitle(index, partner),
+                      title: _getMetricTitle(index, partner, context),
                       value: _getMetricValue(index, partner),
                       icon: _getMetricIcon(index),
                     );
@@ -940,7 +925,7 @@ class MetricsGrid extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Details',
+                  S.of(context).details,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -950,15 +935,15 @@ class MetricsGrid extends StatelessWidget {
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.receipt_long,
-                  title: 'Statement of Account',
-                  subtitle: 'View transaction history',
+                  title: S.of(context).statement_of_account,
+                  subtitle: S.of(context).view_transaction_history,
                   onTap: () async {
                     final pickedFromDate = await showDatePicker(
                       context: context,
                       initialDate: DateTime.now(),
                       firstDate: DateTime(2000),
                       lastDate: DateTime.now(),
-                      helpText: 'Select Start Date',
+                      helpText: S.of(context).select_start_date,
                     );
 
                     if (pickedFromDate != null) {
@@ -967,7 +952,7 @@ class MetricsGrid extends StatelessWidget {
                         initialDate: pickedFromDate,
                         firstDate: pickedFromDate,
                         lastDate: DateTime.now(),
-                        helpText: 'Select End Date',
+                        helpText: S.of(context).select_end_date,
                       );
 
                       if (pickedToDate != null) {
@@ -986,8 +971,8 @@ class MetricsGrid extends StatelessWidget {
                 _buildDetailsCard(
                   context: context,
                   icon: Icons.map_outlined,
-                  title: 'Visit Information',
-                  subtitle: 'View customer visit patterns',
+                  title: S.of(context).visit_information,
+                  subtitle: S.of(context).view_customer_visit_patterns,
                   onTap: () {
                     Get.to(() => VisitsScreen(),
                         arguments: {'partnerId': Get.arguments['partnerId']});
@@ -1001,20 +986,20 @@ class MetricsGrid extends StatelessWidget {
     );
   }
 
-  String _getMetricTitle(int index, PartnerDetails partner) {
+  String _getMetricTitle(int index, PartnerDetails partner, BuildContext context) {
     switch (index) {
       case 0:
-        return 'Balance';
+        return S.of(context).balance;
       case 1:
-        return 'Dues';
+        return S.of(context).dues;
       case 2:
-        return 'AOV';
+        return S.of(context).aov;
       case 3:
-        return 'OCT';
+        return S.of(context).oct;
       case 4:
-        return 'Oldest Due';
+        return S.of(context).oldest_due;
       case 5:
-        return 'Last Purchase';
+        return S.of(context).last_purchase;
       default:
         return '';
     }
@@ -1029,11 +1014,11 @@ class MetricsGrid extends StatelessWidget {
       case 2:
         return '${partner.currency} ${partner.aov.toStringAsFixed(1)}';
       case 3:
-        return '${partner.oct.toStringAsFixed(2)} days';
+        return '${partner.oct.toStringAsFixed(2)} ${S.current.days}';
       case 4:
-        return '${partner.daysOldestDue} days';
+        return '${partner.daysOldestDue} ${S.current.days}';
       case 5:
-        return '${partner.daysSincePurchase} days';
+        return '${partner.daysSincePurchase} ${S.current.days}';
       default:
         return '';
     }

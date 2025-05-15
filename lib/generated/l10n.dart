@@ -478,12 +478,22 @@ class S {
 
   /// `Notes`
   String get notes {
-    return Intl.message('Notes', name: 'notes', desc: '', args: []);
+    return Intl.message(
+      'Notes',
+      name: 'notes',
+      desc: 'Label for notes section',
+      args: [],
+    );
   }
 
   /// `No notes yet`
   String get noNotesYet {
-    return Intl.message('No notes yet', name: 'noNotesYet', desc: '', args: []);
+    return Intl.message(
+      'No notes yet',
+      name: 'noNotesYet',
+      desc: 'Message shown when there are no notes',
+      args: [],
+    );
   }
 
   /// `Success is not the absence of obstacles, but the courage to push through them.`
@@ -491,7 +501,7 @@ class S {
     return Intl.message(
       'Success is not the absence of obstacles, but the courage to push through them.',
       name: 'inspirationalQuotes',
-      desc: '',
+      desc: 'Motivational message shown in the app',
       args: [],
     );
   }
@@ -1006,16 +1016,6 @@ class S {
     );
   }
 
-  /// `Error`
-  String get error {
-    return Intl.message(
-      'Error',
-      name: 'error',
-      desc: 'Title for error dialogs or snackbars',
-      args: [],
-    );
-  }
-
   /// `{field} is required`
   String required_field(Object field) {
     return Intl.message(
@@ -1047,10 +1047,10 @@ class S {
   }
 
   /// `No API token found. Please log in.`
-  String get no_token {
+  String get token_missing {
     return Intl.message(
       'No API token found. Please log in.',
-      name: 'no_token',
+      name: 'token_missing',
       desc: 'Error message when API token is missing',
       args: [],
     );
@@ -1067,12 +1067,442 @@ class S {
   }
 
   /// `Connection error: {error}`
-  String connection_error(Object error) {
+  String connection_error(String error) {
     return Intl.message(
       'Connection error: $error',
       name: 'connection_error',
       desc: 'Error message for connection errors',
       args: [error],
+    );
+  }
+
+  /// `Customer`
+  String get customer {
+    return Intl.message(
+      'Customer',
+      name: 'customer',
+      desc: 'Label for customer',
+      args: [],
+    );
+  }
+
+  /// `Location services are disabled. Please enable them in settings.`
+  String get location_services_disabled {
+    return Intl.message(
+      'Location services are disabled. Please enable them in settings.',
+      name: 'location_services_disabled',
+      desc: 'Message shown when location services are disabled',
+      args: [],
+    );
+  }
+
+  /// `Location permissions denied. Please allow location access in settings.`
+  String get location_permissions_denied {
+    return Intl.message(
+      'Location permissions denied. Please allow location access in settings.',
+      name: 'location_permissions_denied',
+      desc: 'Message shown when location permissions are denied',
+      args: [],
+    );
+  }
+
+  /// `Location permissions are permanently denied. Please enable them in settings.`
+  String get location_permissions_denied_forever {
+    return Intl.message(
+      'Location permissions are permanently denied. Please enable them in settings.',
+      name: 'location_permissions_denied_forever',
+      desc: 'Message shown when location permissions are permanently denied',
+      args: [],
+    );
+  }
+
+  /// `Error`
+  String get error {
+    return Intl.message(
+      'Error',
+      name: 'error',
+      desc: 'Generic error message',
+      args: [],
+    );
+  }
+
+  /// `Error getting current location`
+  String get error_getting_location {
+    return Intl.message(
+      'Error getting current location',
+      name: 'error_getting_location',
+      desc: 'Error message when unable to get location',
+      args: [],
+    );
+  }
+
+  /// `Error updating location`
+  String get error_updating_location {
+    return Intl.message(
+      'Error updating location',
+      name: 'error_updating_location',
+      desc: 'Error message when unable to update location',
+      args: [],
+    );
+  }
+
+  /// `API token is missing. Please log in again.`
+  String get no_token {
+    return Intl.message(
+      'API token is missing. Please log in again.',
+      name: 'no_token',
+      desc: 'Error message when API token is missing',
+      args: [],
+    );
+  }
+
+  /// `Authentication failed: Invalid or expired token. Please log in again.`
+  String get auth_failed {
+    return Intl.message(
+      'Authentication failed: Invalid or expired token. Please log in again.',
+      name: 'auth_failed',
+      desc: 'Error message for authentication failure',
+      args: [],
+    );
+  }
+
+  /// `Too many requests: Please wait before trying again.`
+  String get too_many_requests {
+    return Intl.message(
+      'Too many requests: Please wait before trying again.',
+      name: 'too_many_requests',
+      desc: 'Error message for rate limiting',
+      args: [],
+    );
+  }
+
+  /// `Failed to update location`
+  String get failed_to_update_location {
+    return Intl.message(
+      'Failed to update location',
+      name: 'failed_to_update_location',
+      desc: 'Error message when location update fails',
+      args: [],
+    );
+  }
+
+  /// `Partner with ID`
+  String get partner_not_found {
+    return Intl.message(
+      'Partner with ID',
+      name: 'partner_not_found',
+      desc: 'Error message when partner is not found',
+      args: [],
+    );
+  }
+
+  /// `No valid coordinates for partner ID`
+  String get no_valid_coordinates {
+    return Intl.message(
+      'No valid coordinates for partner ID',
+      name: 'no_valid_coordinates',
+      desc: 'Error message when coordinates are invalid',
+      args: [],
+    );
+  }
+
+  /// `No partners found`
+  String get no_partners_found {
+    return Intl.message(
+      'No partners found',
+      name: 'no_partners_found',
+      desc: 'Message shown when no partners are found',
+      args: [],
+    );
+  }
+
+  /// `Failed to fetch partner data`
+  String get failed_to_fetch_partner_data {
+    return Intl.message(
+      'Failed to fetch partner data',
+      name: 'failed_to_fetch_partner_data',
+      desc: 'Error message when partner data fetch fails',
+      args: [],
+    );
+  }
+
+  /// `Unnamed Product`
+  String get unnamed_product {
+    return Intl.message(
+      'Unnamed Product',
+      name: 'unnamed_product',
+      desc: 'Default name for products without names',
+      args: [],
+    );
+  }
+
+  /// `No valid partnerId provided`
+  String get no_valid_partner_id {
+    return Intl.message(
+      'No valid partnerId provided',
+      name: 'no_valid_partner_id',
+      desc: 'Error message for invalid partner ID',
+      args: [],
+    );
+  }
+
+  /// `Error: Invalid partner ID`
+  String get invalid_partner_id {
+    return Intl.message(
+      'Error: Invalid partner ID',
+      name: 'invalid_partner_id',
+      desc: 'Error message for invalid partner ID format',
+      args: [],
+    );
+  }
+
+  /// `Please wait 30 seconds before updating again`
+  String get wait_30_seconds {
+    return Intl.message(
+      'Please wait 30 seconds before updating again',
+      name: 'wait_30_seconds',
+      desc: 'Message for rate limiting cooldown',
+      args: [],
+    );
+  }
+
+  /// `No data available`
+  String get no_data_available {
+    return Intl.message(
+      'No data available',
+      name: 'no_data_available',
+      desc: 'Message shown when no data is available',
+      args: [],
+    );
+  }
+
+  /// `Make Payment`
+  String get make_payment {
+    return Intl.message(
+      'Make Payment',
+      name: 'make_payment',
+      desc: 'Label for payment action',
+      args: [],
+    );
+  }
+
+  /// `Product Distribution`
+  String get product_distribution {
+    return Intl.message(
+      'Product Distribution',
+      name: 'product_distribution',
+      desc: 'Label for product distribution section',
+      args: [],
+    );
+  }
+
+  /// `Top Product`
+  String get top_product {
+    return Intl.message(
+      'Top Product',
+      name: 'top_product',
+      desc: 'Label for top product',
+      args: [],
+    );
+  }
+
+  /// `N/A`
+  String get na {
+    return Intl.message(
+      'N/A',
+      name: 'na',
+      desc: 'Abbreviation for not applicable',
+      args: [],
+    );
+  }
+
+  /// `Total`
+  String get total {
+    return Intl.message(
+      'Total',
+      name: 'total',
+      desc: 'Label for total amount',
+      args: [],
+    );
+  }
+
+  /// `Percentage`
+  String get percentage {
+    return Intl.message(
+      'Percentage',
+      name: 'percentage',
+      desc: 'Label for percentage values',
+      args: [],
+    );
+  }
+
+  /// `Amount`
+  String get amount {
+    return Intl.message(
+      'Amount',
+      name: 'amount',
+      desc: 'Label for monetary amounts',
+      args: [],
+    );
+  }
+
+  /// `Share of Total`
+  String get share_of_total {
+    return Intl.message(
+      'Share of Total',
+      name: 'share_of_total',
+      desc: 'Label for share of total values',
+      args: [],
+    );
+  }
+
+  /// `No Data`
+  String get no_data {
+    return Intl.message(
+      'No Data',
+      name: 'no_data',
+      desc: 'Message when no data is present',
+      args: [],
+    );
+  }
+
+  /// `Balance`
+  String get balance {
+    return Intl.message(
+      'Balance',
+      name: 'balance',
+      desc: 'Label for balance amounts',
+      args: [],
+    );
+  }
+
+  /// `Dues`
+  String get dues {
+    return Intl.message(
+      'Dues',
+      name: 'dues',
+      desc: 'Label for due amounts',
+      args: [],
+    );
+  }
+
+  /// `AOV`
+  String get aov {
+    return Intl.message(
+      'AOV',
+      name: 'aov',
+      desc: 'Label for Average Order Value',
+      args: [],
+    );
+  }
+
+  /// `OCT`
+  String get oct {
+    return Intl.message(
+      'OCT',
+      name: 'oct',
+      desc: 'Label for October',
+      args: [],
+    );
+  }
+
+  /// `Oldest Due`
+  String get oldest_due {
+    return Intl.message(
+      'Oldest Due',
+      name: 'oldest_due',
+      desc: 'Label for oldest due amount',
+      args: [],
+    );
+  }
+
+  /// `Last Purchase`
+  String get last_purchase {
+    return Intl.message(
+      'Last Purchase',
+      name: 'last_purchase',
+      desc: 'Label for last purchase date',
+      args: [],
+    );
+  }
+
+  /// `days`
+  String get days {
+    return Intl.message(
+      'days',
+      name: 'days',
+      desc: 'Label for number of days',
+      args: [],
+    );
+  }
+
+  /// `Details`
+  String get details {
+    return Intl.message(
+      'Details',
+      name: 'details',
+      desc: 'Label for details section',
+      args: [],
+    );
+  }
+
+  /// `Statement of Account`
+  String get statement_of_account {
+    return Intl.message(
+      'Statement of Account',
+      name: 'statement_of_account',
+      desc: 'Label for account statement',
+      args: [],
+    );
+  }
+
+  /// `View transaction history`
+  String get view_transaction_history {
+    return Intl.message(
+      'View transaction history',
+      name: 'view_transaction_history',
+      desc: 'Label for transaction history action',
+      args: [],
+    );
+  }
+
+  /// `Visit Information`
+  String get visit_information {
+    return Intl.message(
+      'Visit Information',
+      name: 'visit_information',
+      desc: 'Label for visit information section',
+      args: [],
+    );
+  }
+
+  /// `View customer visit patterns`
+  String get view_customer_visit_patterns {
+    return Intl.message(
+      'View customer visit patterns',
+      name: 'view_customer_visit_patterns',
+      desc: 'Label for visit patterns action',
+      args: [],
+    );
+  }
+
+  /// `Select Start Date`
+  String get select_start_date {
+    return Intl.message(
+      'Select Start Date',
+      name: 'select_start_date',
+      desc: 'Label for start date selection',
+      args: [],
+    );
+  }
+
+  /// `Select End Date`
+  String get select_end_date {
+    return Intl.message(
+      'Select End Date',
+      name: 'select_end_date',
+      desc: 'Label for end date selection',
+      args: [],
     );
   }
 
@@ -1082,6 +1512,346 @@ class S {
       'This field is required',
       name: 'field_required',
       desc: 'Validation message shown when a field is required',
+      args: [],
+    );
+  }
+
+  /// `Cash`
+  String get cash {
+    return Intl.message(
+      'Cash',
+      name: 'cash',
+      desc: 'Label for cash payment method',
+      args: [],
+    );
+  }
+
+  /// `Card`
+  String get card {
+    return Intl.message(
+      'Card',
+      name: 'card',
+      desc: 'Label for card payment method',
+      args: [],
+    );
+  }
+
+  /// `Payment Method`
+  String get payment_method {
+    return Intl.message(
+      'Payment Method',
+      name: 'payment_method',
+      desc: 'Label for payment method selection',
+      args: [],
+    );
+  }
+
+  /// `Please select a payment method`
+  String get please_select_payment_method {
+    return Intl.message(
+      'Please select a payment method',
+      name: 'please_select_payment_method',
+      desc: 'Message asking user to select payment method',
+      args: [],
+    );
+  }
+
+  /// `Pay All`
+  String get pay_all {
+    return Intl.message(
+      'Pay All',
+      name: 'pay_all',
+      desc: 'Label for paying full amount',
+      args: [],
+    );
+  }
+
+  /// `INVOICE DATE`
+  String get invoice_date {
+    return Intl.message(
+      'INVOICE DATE',
+      name: 'invoice_date',
+      desc: 'Label for invoice date',
+      args: [],
+    );
+  }
+
+  /// `DUE DATE`
+  String get due_date {
+    return Intl.message(
+      'DUE DATE',
+      name: 'due_date',
+      desc: 'Label for due date',
+      args: [],
+    );
+  }
+
+  /// `PENDING`
+  String get pending {
+    return Intl.message(
+      'PENDING',
+      name: 'pending',
+      desc: 'Status label for pending payments',
+      args: [],
+    );
+  }
+
+  /// `Payment amount`
+  String get payment_amount {
+    return Intl.message(
+      'Payment amount',
+      name: 'payment_amount',
+      desc: 'Label for payment amount field',
+      args: [],
+    );
+  }
+
+  /// `Max`
+  String get max {
+    return Intl.message(
+      'Max',
+      name: 'max',
+      desc: 'Label for maximum amount',
+      args: [],
+    );
+  }
+
+  /// `Due Now`
+  String get due_now {
+    return Intl.message(
+      'Due Now',
+      name: 'due_now',
+      desc: 'Label for amount due immediately',
+      args: [],
+    );
+  }
+
+  /// `Due Later`
+  String get due_later {
+    return Intl.message(
+      'Due Later',
+      name: 'due_later',
+      desc: 'Label for amount due in future',
+      args: [],
+    );
+  }
+
+  /// `An error occurred`
+  String get an_error_occurred {
+    return Intl.message(
+      'An error occurred',
+      name: 'an_error_occurred',
+      desc: 'Generic error description',
+      args: [],
+    );
+  }
+
+  /// `Authentication token not found`
+  String get auth_token_not_found {
+    return Intl.message(
+      'Authentication token not found',
+      name: 'auth_token_not_found',
+      desc: 'Error message for missing authentication',
+      args: [],
+    );
+  }
+
+  /// `Please enter valid amounts for at least one invoice`
+  String get please_enter_valid_amounts {
+    return Intl.message(
+      'Please enter valid amounts for at least one invoice',
+      name: 'please_enter_valid_amounts',
+      desc: 'Validation message for invoice amounts',
+      args: [],
+    );
+  }
+
+  /// `Payment for`
+  String get payment_for {
+    return Intl.message(
+      'Payment for',
+      name: 'payment_for',
+      desc: 'Label for payment description',
+      args: [],
+    );
+  }
+
+  /// `invoices`
+  String get invoices {
+    return Intl.message(
+      'invoices',
+      name: 'invoices',
+      desc: 'Label for invoice items',
+      args: [],
+    );
+  }
+
+  /// `Payment failed`
+  String get payment_failed {
+    return Intl.message(
+      'Payment failed',
+      name: 'payment_failed',
+      desc: 'Error message for failed payments',
+      args: [],
+    );
+  }
+
+  /// `Location updated successfully`
+  String get location_updated_successfully {
+    return Intl.message(
+      'Location updated successfully',
+      name: 'location_updated_successfully',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Partner Visits`
+  String get partner_visits {
+    return Intl.message(
+      'Partner Visits',
+      name: 'partner_visits',
+      desc: 'Label for partner visits section',
+      args: [],
+    );
+  }
+
+  /// `Failed to load visits`
+  String get failed_to_load_visits {
+    return Intl.message(
+      'Failed to load visits',
+      name: 'failed_to_load_visits',
+      desc: 'Error message when visits cannot be loaded',
+      args: [],
+    );
+  }
+
+  /// `Error fetching visits`
+  String get error_fetching_visits {
+    return Intl.message(
+      'Error fetching visits',
+      name: 'error_fetching_visits',
+      desc: 'Error message when fetching visits fails',
+      args: [],
+    );
+  }
+
+  /// `Partner Details`
+  String get partner_details {
+    return Intl.message(
+      'Partner Details',
+      name: 'partner_details',
+      desc: 'Label for partner details section',
+      args: [],
+    );
+  }
+
+  /// `Refresh`
+  String get refresh {
+    return Intl.message(
+      'Refresh',
+      name: 'refresh',
+      desc: 'Label for refresh action',
+      args: [],
+    );
+  }
+
+  /// `Schedule Visit`
+  String get schedule_visit {
+    return Intl.message(
+      'Schedule Visit',
+      name: 'schedule_visit',
+      desc: 'Label for scheduling visit action',
+      args: [],
+    );
+  }
+
+  /// `Visits History`
+  String get visits_history {
+    return Intl.message(
+      'Visits History',
+      name: 'visits_history',
+      desc: 'Label for visits history section',
+      args: [],
+    );
+  }
+
+  /// `Newest First`
+  String get newest_first {
+    return Intl.message(
+      'Newest First',
+      name: 'newest_first',
+      desc: 'Label for newest first sort option',
+      args: [],
+    );
+  }
+
+  /// `Oldest First`
+  String get oldest_first {
+    return Intl.message(
+      'Oldest First',
+      name: 'oldest_first',
+      desc: 'Label for oldest first sort option',
+      args: [],
+    );
+  }
+
+  /// `Filter by Date`
+  String get filter_by_date {
+    return Intl.message(
+      'Filter by Date',
+      name: 'filter_by_date',
+      desc: 'Label for date filter option',
+      args: [],
+    );
+  }
+
+  /// `Filtered by`
+  String get filtered_by {
+    return Intl.message(
+      'Filtered by',
+      name: 'filtered_by',
+      desc: 'Label showing current filter',
+      args: [],
+    );
+  }
+
+  /// `Select Date`
+  String get select_date {
+    return Intl.message(
+      'Select Date',
+      name: 'select_date',
+      desc: 'Label for date selection',
+      args: [],
+    );
+  }
+
+  /// `No visits available`
+  String get no_visits_available {
+    return Intl.message(
+      'No visits available',
+      name: 'no_visits_available',
+      desc: 'Message when no visits are available',
+      args: [],
+    );
+  }
+
+  /// `No notes`
+  String get no_notes {
+    return Intl.message(
+      'No notes',
+      name: 'no_notes',
+      desc: 'Message when no notes are available',
+      args: [],
+    );
+  }
+
+  /// `Switch Language`
+  String get switch_language {
+    return Intl.message(
+      'Switch Language',
+      name: 'switch_language',
+      desc: '',
       args: [],
     );
   }

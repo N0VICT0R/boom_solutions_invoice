@@ -8,7 +8,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:boom_solutions_invoice/generated/l10n.dart';
 
-class CustomerController extends GetxController {
+
+
+// Make sure to add a unique name to avoid conflicts
+class addCustomerController extends GetxController {
   var name = ''.obs;
   var address = ''.obs;
   var city = ''.obs;
@@ -80,7 +83,7 @@ class CustomerController extends GetxController {
       'phone': phone.value,
       'mobile': mobile.value,
       'payment_terms': int.tryParse(paymentTerms.value.toString()) ?? 1,
-      'created_at': DateTime.now().toUtc().toIso8601String(), // Add UTC timestamp
+      'created_at': DateTime.now().toUtc().toIso8601String(),
     };
 
     try {
@@ -88,7 +91,7 @@ class CustomerController extends GetxController {
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken', // Move api_token to headers
+          'Authorization': 'Bearer $apiToken',
         },
         body: jsonEncode(body),
       );
@@ -147,7 +150,6 @@ class CustomerController extends GetxController {
   }
 }
 
-
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
   final scaleFactor = screenWidth / 400;
@@ -156,7 +158,7 @@ double getResponsiveFontSize(BuildContext context, double baseFontSize) {
 
 class CustomerAddPage extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final CustomerController controller = Get.put(CustomerController());
+  final addCustomerController controller = Get.find<addCustomerController>();
   final LocationTrackerController locationController = Get.find<LocationTrackerController>();
 
   CustomerAddPage({super.key});
@@ -171,57 +173,56 @@ class CustomerAddPage extends StatelessWidget {
     bool isNumeric = false,
   }) {
     String translatedLabel = _translateLabel(context, labelKey);
-    return Obx(() => TextFormField(
-          initialValue: fieldValue.value,
-          onChanged: (value) {
-            fieldValue.value = value;
-            if (onChanged != null) {
-              onChanged(value);
-            }
-          },
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return S.of(context).field_required; // Replace with the correct property or method from S
-            }
-            if (isNumeric && int.tryParse(value) == null) {
-              return S.of(context).invalid_number.toString(); // Convert to String explicitly
-            }
-            return validator?.call(value);
-          },
-          keyboardType: isNumeric ? TextInputType.number : keyboardType,
-          decoration: InputDecoration(
-            labelText: translatedLabel,
-            labelStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w400,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Color(0xFFB0B0B0)
-                  : Color(0xFF757575),
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30.0),
-              borderSide: BorderSide(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Color(0xFF4FC3F7)
-                    : Color(0xFF1976D2),
-                width: 2.0,
-              ),
-            ),
-            filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark
-                ? Color(0xFF1A1A1A)
-                : Colors.white,
-          ),
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w500,
+    // Remove Obx here; it will be handled by the parent Obx
+    return TextFormField(
+      initialValue: fieldValue.value,
+      onChanged: (value) {
+        fieldValue.value = value;
+        if (onChanged != null) {
+          onChanged(value);
+        }
+      },
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return S.of(context).field_required;
+        }
+        if (isNumeric && int.tryParse(value) == null) {
+          return S.of(context).invalid_number.toString();
+        }
+        return validator?.call(value);
+      },
+      keyboardType: isNumeric ? TextInputType.number : keyboardType,
+      decoration: InputDecoration(
+        labelText: translatedLabel,
+        labelStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w400,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Color(0xFFB0B0B0)
+              : Color(0xFF757575),
+        ),
+        contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30.0),
+          borderSide: BorderSide(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : Color(0xFF212121),
+                ? Color(0xFF4FC3F7)
+                : Color(0xFF1976D2),
+            width: 2.0,
           ),
-        ));
+        ),
+        filled: true,
+        fillColor: Theme.of(context).brightness == Brightness.dark
+            ? Color(0xFF1A1A1A)
+            : Colors.white,
+      ),
+      style: GoogleFonts.poppins(
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Color(0xFF212121),
+      ),
+    );
   }
 
   String _translateLabel(BuildContext context, String labelKey) {
@@ -277,14 +278,14 @@ class CustomerAddPage extends StatelessWidget {
             ),
             SizedBox(width: 8.0),
             Expanded(
-              child: Obx(() => Text(
-                    '',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w500,
-                      color: primaryTextColor,
-                      fontSize: getResponsiveFontSize(context, 14),
-                    ),
-                  )),
+              child: Text(
+                'Location Status', // Replace empty string with meaningful text or observable
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                  color: primaryTextColor,
+                  fontSize: getResponsiveFontSize(context, 14),
+                ),
+              ),
             ),
           ],
         ),
@@ -320,8 +321,8 @@ class CustomerAddPage extends StatelessWidget {
             icon: Icon(Icons.language),
             onPressed: () {
               Get.updateLocale(Get.locale?.languageCode == 'ar'
-                  ? Locale('en', 'US')
-                  : Locale('ar', 'EG'));
+                  ? const Locale('en', 'US')
+                  : const Locale('ar', 'EG'));
             },
           ),
         ],
@@ -352,105 +353,108 @@ class CustomerAddPage extends StatelessWidget {
                     padding: EdgeInsets.all(16.0),
                     child: Form(
                       key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'name',
-                            fieldValue: controller.name,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'address',
-                            fieldValue: controller.address,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Obx(() => Column(
+                            // Wrap the entire Column with a single Obx
                             children: [
                               _buildTextFormField(
                                 context: context,
-                                labelKey: 'city',
-                                fieldValue: controller.city,
-                                onChanged: (value) =>
-                                    controller.filterCitySuggestions(value),
+                                labelKey: 'name',
+                                fieldValue: controller.name,
                                 validator: null,
                               ),
-                              Obx(() => controller.filteredCitySuggestions.isNotEmpty
-                                  ? Container(
-                                      constraints: BoxConstraints(maxHeight: 150),
-                                      decoration: BoxDecoration(
-                                        color: cardBackground,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: cardBorder),
-                                      ),
-                                      child: ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount:
-                                            controller.filteredCitySuggestions.length,
-                                        itemBuilder: (context, index) {
-                                          final suggestion =
-                                              controller.filteredCitySuggestions[index];
-                                          return ListTile(
-                                            title: Text(
-                                              suggestion,
-                                              style: GoogleFonts.poppins(
-                                                color: primaryTextColor,
-                                              ),
-                                            ),
-                                            onTap: () {
-                                              controller.city.value = suggestion;
-                                              controller.filteredCitySuggestions
-                                                  .clear();
-                                              FocusScope.of(context).unfocus();
+                              SizedBox(height: 16.0),
+                              _buildTextFormField(
+                                context: context,
+                                labelKey: 'address',
+                                fieldValue: controller.address,
+                                validator: null,
+                              ),
+                              SizedBox(height: 16.0),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildTextFormField(
+                                    context: context,
+                                    labelKey: 'city',
+                                    fieldValue: controller.city,
+                                    onChanged: (value) =>
+                                        controller.filterCitySuggestions(value),
+                                    validator: null,
+                                  ),
+                                  controller.filteredCitySuggestions.isNotEmpty
+                                      ? Container(
+                                          constraints: BoxConstraints(maxHeight: 150),
+                                          decoration: BoxDecoration(
+                                            color: cardBackground,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: cardBorder),
+                                          ),
+                                          child: ListView.builder(
+                                            shrinkWrap: true,
+                                            itemCount:
+                                                controller.filteredCitySuggestions.length,
+                                            itemBuilder: (context, index) {
+                                              final suggestion = controller
+                                                  .filteredCitySuggestions[index];
+                                              return ListTile(
+                                                title: Text(
+                                                  suggestion,
+                                                  style: GoogleFonts.poppins(
+                                                    color: primaryTextColor,
+                                                  ),
+                                                ),
+                                                onTap: () {
+                                                  controller.city.value = suggestion;
+                                                  controller
+                                                      .filteredCitySuggestions
+                                                      .clear();
+                                                  FocusScope.of(context).unfocus();
+                                                },
+                                              );
                                             },
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : SizedBox.shrink()),
-                            ],
-                          ),
-                          SizedBox(height: 16.0),
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'state',
-                            fieldValue: controller.state,
-                            isNumeric: true,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'country',
-                            fieldValue: controller.country,
-                            isNumeric: true,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'phone',
-                            fieldValue: controller.phone,
-                            keyboardType: TextInputType.phone,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          _buildTextFormField(
-                            context: context,
-                            labelKey: 'mobile',
-                            fieldValue: controller.mobile,
-                            keyboardType: TextInputType.phone,
-                            validator: null,
-                          ),
-                          SizedBox(height: 16.0),
-                          Obx(() => TextFormField(
+                                          ),
+                                        )
+                                      : SizedBox.shrink(),
+                                ],
+                              ),
+                              SizedBox(height: 16.0),
+                              _buildTextFormField(
+                                context: context,
+                                labelKey: 'state',
+                                fieldValue: controller.state,
+                                isNumeric: true,
+                                validator: null,
+                              ),
+                              SizedBox(height: 16.0),
+                              _buildTextFormField(
+                                context: context,
+                                labelKey: 'country',
+                                fieldValue: controller.country,
+                                isNumeric: true,
+                                validator: null,
+                              ),
+                              SizedBox(height: 16.0),
+                              _buildTextFormField(
+                                context: context,
+                                labelKey: 'phone',
+                                fieldValue: controller.phone,
+                                keyboardType: TextInputType.phone,
+                                validator: null,
+                              ),
+                              SizedBox(height: 16.0),
+                              _buildTextFormField(
+                                context: context,
+                                labelKey: 'mobile',
+                                fieldValue: controller.mobile,
+                                keyboardType: TextInputType.phone,
+                                validator: null,
+                              ),
+                              SizedBox(height: 16.0),
+                              TextFormField(
                                 initialValue: controller.paymentTerms.value.toString(),
                                 onChanged: (value) {
-                                  controller.paymentTerms.value = int.tryParse(value) ?? 0;
+                                  controller.paymentTerms.value =
+                                      int.tryParse(value) ?? 0;
                                 },
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
@@ -470,14 +474,16 @@ class CustomerAddPage extends StatelessWidget {
                                         ? Color(0xFFB0B0B0)
                                         : Color(0xFF757575),
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 20.0),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),
                                     borderSide: BorderSide(
-                                      color: Theme.of(context).brightness == Brightness.dark
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
                                           ? Color(0xFF4FC3F7)
                                           : Color(0xFF1976D2),
                                       width: 2.0,
@@ -494,12 +500,12 @@ class CustomerAddPage extends StatelessWidget {
                                       ? Colors.white
                                       : Color(0xFF212121),
                                 ),
-                              )),
-                          SizedBox(height: 20.0),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Obx(() => ElevatedButton(
+                              ),
+                              SizedBox(height: 20.0),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
                                       onPressed: controller.isLoading.value
                                           ? null
                                           : () async {
@@ -539,13 +545,13 @@ class CustomerAddPage extends StatelessWidget {
                                                 fontSize: getResponsiveFontSize(context, 14),
                                               ),
                                             ),
-                                    )),
-                              ),
-                              SizedBox(width: 10.0),
-                              Expanded(
-                                child: Obx(() => ElevatedButton(
+                                    ),
+                                  ),
+                                  SizedBox(width: 10.0),
+                                  Expanded(
+                                    child: ElevatedButton(
                                       onPressed: controller.isLoading.value
-                                          ? null // Disable during loading
+                                          ? null
                                           : () {
                                               _formKey.currentState?.reset();
                                               controller.name.value = '';
@@ -558,7 +564,8 @@ class CustomerAddPage extends StatelessWidget {
                                               controller.paymentTerms.value = 0;
                                             },
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isDark ? Color(0xFF2A2A2A) : Colors.grey[300],
+                                        backgroundColor:
+                                            isDark ? Color(0xFF2A2A2A) : Colors.grey[300],
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(30.0),
                                         ),
@@ -572,12 +579,12 @@ class CustomerAddPage extends StatelessWidget {
                                           fontSize: getResponsiveFontSize(context, 14),
                                         ),
                                       ),
-                                    )),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                        ],
-                      ),
+                          )),
                     ),
                   ),
                 ),

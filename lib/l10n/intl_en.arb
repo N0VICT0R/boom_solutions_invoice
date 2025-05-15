@@ -207,8 +207,17 @@
       "description": "Suffix for trillion"
     },
     "notes": "Notes",
+    "@notes": {
+      "description": "Label for notes section"
+    },
     "noNotesYet": "No notes yet",
+    "@noNotesYet": {
+      "description": "Message shown when there are no notes"
+    },
     "inspirationalQuotes": "Success is not the absence of obstacles, but the courage to push through them.",
+    "@inspirationalQuotes": {
+      "description": "Motivational message shown in the app"
+    },
     "customersTitle": "Customers",
     "@customersTitle": {
       "description": "Title for the customers list screen in the app bar"
@@ -413,10 +422,7 @@
       "@customer_added": {
         "description": "Message shown when a customer is added successfully"
       },
-      "error": "Error",
-      "@error": {
-        "description": "Title for error dialogs or snackbars"
-      },
+      
       "required_field": "{field} is required",
       "@required_field": {
         "description": "Validation message for required fields",
@@ -435,8 +441,8 @@
       "@please_fill_fields": {
         "description": "Message prompting user to fill all required fields"
       },
-      "no_token": "No API token found. Please log in.",
-      "@no_token": {
+      "token_missing": "No API token found. Please log in.",
+      "@token_missing": {
         "description": "Error message when API token is missing"
       },
       "api_error": "Failed to add customer: {message}",
@@ -450,10 +456,330 @@
       "@connection_error": {
         "description": "Error message for connection errors",
         "placeholders": {
-          "error": {}
+          "error": {
+            "type": "String"
+          }
         }
       },
-      "field_required": "This field is required",
-      "@field_required": {
-        "description": "Validation message shown when a field is required"
-      }}
+          
+          "customer": "Customer",
+          "@customer": {
+      "description": "Label for customer"
+          },
+          "location_services_disabled": "Location services are disabled. Please enable them in settings.",
+          "@location_services_disabled": {
+      "description": "Message shown when location services are disabled"
+          },
+          "location_permissions_denied": "Location permissions denied. Please allow location access in settings.",
+          "@location_permissions_denied": {
+      "description": "Message shown when location permissions are denied"
+          }, 
+          "location_permissions_denied_forever": "Location permissions are permanently denied. Please enable them in settings.",
+          "@location_permissions_denied_forever": {
+      "description": "Message shown when location permissions are permanently denied"
+          },
+          "error": "Error",
+          "@error": {
+      "description": "Generic error message"
+          },
+          "error_getting_location": "Error getting current location",
+          "@error_getting_location": {
+      "description": "Error message when unable to get location"
+          },
+          "error_updating_location": "Error updating location",
+          "@error_updating_location": {
+      "description": "Error message when unable to update location"
+          },
+          "no_token": "API token is missing. Please log in again.",
+          "@no_token": {
+      "description": "Error message when API token is missing"
+          },
+          "auth_failed": "Authentication failed: Invalid or expired token. Please log in again.",
+          "@auth_failed": {
+      "description": "Error message for authentication failure"
+          },
+          "too_many_requests": "Too many requests: Please wait before trying again.",
+          "@too_many_requests": {
+      "description": "Error message for rate limiting"
+          },
+          "failed_to_update_location": "Failed to update location",
+          "@failed_to_update_location": {
+      "description": "Error message when location update fails"
+          },
+          "partner_not_found": "Partner with ID",
+          "@partner_not_found": {
+      "description": "Error message when partner is not found"
+          },
+          "no_valid_coordinates": "No valid coordinates for partner ID",
+          "@no_valid_coordinates": {
+      "description": "Error message when coordinates are invalid"
+          },
+          "no_partners_found": "No partners found",
+          "@no_partners_found": {
+      "description": "Message shown when no partners are found"
+          },
+          "failed_to_fetch_partner_data": "Failed to fetch partner data",
+          "@failed_to_fetch_partner_data": {
+      "description": "Error message when partner data fetch fails"
+          },
+          "unnamed_product": "Unnamed Product",
+          "@unnamed_product": {
+      "description": "Default name for products without names"
+          },
+          "no_valid_partner_id": "No valid partnerId provided",
+          "@no_valid_partner_id": {
+      "description": "Error message for invalid partner ID"
+          },
+          "invalid_partner_id": "Error: Invalid partner ID",
+          "@invalid_partner_id": {
+      "description": "Error message for invalid partner ID format"
+          },
+          "wait_30_seconds": "Please wait 30 seconds before updating again",
+          "@wait_30_seconds": {
+      "description": "Message for rate limiting cooldown"
+          },
+          "no_data_available": "No data available",
+          "@no_data_available": {
+      "description": "Message shown when no data is available"
+          },
+          "notes": "Notes",
+          "@notes": {
+      "description": "Label for notes section"
+          },
+          "make_payment": "Make Payment",
+          "@make_payment": {
+      "description": "Label for payment action"
+          },
+          "product_distribution": "Product Distribution",
+          "@product_distribution": {
+      "description": "Label for product distribution section"
+          },
+          "top_product": "Top Product",
+          "@top_product": {
+      "description": "Label for top product"
+          },
+          "na": "N/A",
+          "@na": {
+      "description": "Abbreviation for not applicable"
+          },
+          "total": "Total",
+          "@total": {
+      "description": "Label for total values"
+          },
+          "percentage": "Percentage",
+          "@percentage": {
+      "description": "Label for percentage values"
+          },
+          "amount": "Amount",
+          "@amount": {
+      "description": "Label for monetary amounts"
+          },
+          "share_of_total": "Share of Total",
+          "@share_of_total": {
+      "description": "Label for share of total values"
+          },
+          "no_data": "No Data",
+          "@no_data": {
+      "description": "Message when no data is present"
+          },
+          "balance": "Balance",
+          "@balance": {
+      "description": "Label for balance amounts"
+          },
+          "dues": "Dues",
+          "@dues": {
+      "description": "Label for due amounts"
+          },
+          "aov": "AOV",
+          "@aov": {
+      "description": "Label for Average Order Value"
+          },
+          "oct": "OCT",
+          "@oct": {
+      "description": "Label for October"
+          },
+          "oldest_due": "Oldest Due",
+          "@oldest_due": {
+      "description": "Label for oldest due amount"
+          },
+          "last_purchase": "Last Purchase",
+          "@last_purchase": {
+      "description": "Label for last purchase date"
+          },
+          "days": "days",
+          "@days": {
+      "description": "Label for number of days"
+          },
+          "details": "Details",
+          "@details": {
+      "description": "Label for details section"
+          },
+          "statement_of_account": "Statement of Account",
+          "@statement_of_account": {
+      "description": "Label for account statement"
+          },
+          "view_transaction_history": "View transaction history",
+          "@view_transaction_history": {
+      "description": "Label for transaction history action"
+          },
+          "visit_information": "Visit Information",
+          "@visit_information": {
+      "description": "Label for visit information section"
+          },
+          "view_customer_visit_patterns": "View customer visit patterns",
+          "@view_customer_visit_patterns": {
+      "description": "Label for visit patterns action"
+          },
+          "select_start_date": "Select Start Date",
+          "@select_start_date": {
+      "description": "Label for start date selection"
+          },
+          "select_end_date": "Select End Date",
+          "@select_end_date": {
+      "description": "Label for end date selection"
+            },
+            "field_required": "This field is required",
+            "@field_required": {
+          "description": "Validation message shown when a field is required"
+          },
+            "cash": "Cash",
+            "@cash": {
+          "description": "Label for cash payment method"
+            },
+            "card": "Card", 
+            "@card": {
+          "description": "Label for card payment method"
+            },
+            "payment_method": "Payment Method",
+            "@payment_method": {
+          "description": "Label for payment method selection"
+            },
+            "please_select_payment_method": "Please select a payment method",
+            "@please_select_payment_method": {
+          "description": "Message asking user to select payment method"
+            },
+            "total": "Total",
+            "@total": {
+          "description": "Label for total amount"
+            },
+            "pay_all": "Pay All",
+            "@pay_all": {
+          "description": "Label for paying full amount"
+            },
+            "invoice_date": "INVOICE DATE",
+            "@invoice_date": {
+          "description": "Label for invoice date"
+            },
+            "due_date": "DUE DATE",
+            "@due_date": {
+          "description": "Label for due date"
+            },
+            "pending": "PENDING",
+            "@pending": {
+          "description": "Status label for pending payments"
+            },
+            "payment_amount": "Payment amount",
+            "@payment_amount": {
+          "description": "Label for payment amount field"
+            },
+            "max": "Max",
+            "@max": {
+          "description": "Label for maximum amount"
+            },
+            "due_now": "Due Now",
+            "@due_now": {
+          "description": "Label for amount due immediately"
+            },
+            "due_later": "Due Later",
+            "@due_later": {
+          "description": "Label for amount due in future"
+            },
+            "error": "Error",
+            "@error": {
+          "description": "Generic error message"
+            },
+            "an_error_occurred": "An error occurred",
+            "@an_error_occurred": {
+          "description": "Generic error description"
+            },
+            "auth_token_not_found": "Authentication token not found",
+            "@auth_token_not_found": {
+          "description": "Error message for missing authentication"
+            },
+            "please_enter_valid_amounts": "Please enter valid amounts for at least one invoice",
+            "@please_enter_valid_amounts": {
+          "description": "Validation message for invoice amounts"
+            },
+            "payment_for": "Payment for",
+            "@payment_for": {
+          "description": "Label for payment description"
+            },
+            "invoices": "invoices",
+            "@invoices": {
+          "description": "Label for invoice items"
+                },
+                "payment_failed": "Payment failed",
+                "@payment_failed": {
+                "description": "Error message for failed payments"
+                },
+                "location_updated_successfully": "Location updated successfully",
+                "partner_visits": "Partner Visits",
+                "@partner_visits": {
+                "description": "Label for partner visits section"
+                },
+                "failed_to_load_visits": "Failed to load visits", 
+                "@failed_to_load_visits": {
+                "description": "Error message when visits cannot be loaded"
+                },
+                "error_fetching_visits": "Error fetching visits",
+                "@error_fetching_visits": {
+                "description": "Error message when fetching visits fails"
+                },
+                "partner_details": "Partner Details",
+                "@partner_details": {
+                "description": "Label for partner details section"
+                },
+                "refresh": "Refresh",
+                "@refresh": {
+                "description": "Label for refresh action"
+                },
+                "schedule_visit": "Schedule Visit",
+                "@schedule_visit": {
+                "description": "Label for scheduling visit action"
+                },
+                "visits_history": "Visits History",
+                "@visits_history": {
+                "description": "Label for visits history section"
+                },
+                "newest_first": "Newest First",
+                "@newest_first": {
+                "description": "Label for newest first sort option"
+                },
+                "oldest_first": "Oldest First",
+                "@oldest_first": {
+                "description": "Label for oldest first sort option"
+                },
+                "filter_by_date": "Filter by Date",
+                "@filter_by_date": {
+                "description": "Label for date filter option"
+                },
+                "filtered_by": "Filtered by",
+                "@filtered_by": {
+                "description": "Label showing current filter"
+                },
+                "select_date": "Select Date",
+                "@select_date": {
+                "description": "Label for date selection"
+                },
+                "no_visits_available": "No visits available",
+                "@no_visits_available": {
+                "description": "Message when no visits are available"
+                },
+                "no_notes": "No notes",
+                "@no_notes": {
+                "description": "Message when no notes are available"
+
+            },
+            "switch_language": "Switch Language"
+          
+          }

@@ -1,9 +1,12 @@
 import 'package:boom_solutions_invoice/screens/visitsScreens/CheckInScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection; // Hide TextDirection from intl to avoid conflict
+import 'package:boom_solutions_invoice/generated/l10n.dart';
+import 'dart:ui' as ui; // Import dart:ui to explicitly use ui.TextDirection
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Partner Visits',
+      title: S.of(context).partner_visits,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF121212),
@@ -25,6 +28,13 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: S.delegate.supportedLocales,
       home: const VisitsScreen(),
     );
   }
@@ -42,8 +52,16 @@ class _VisitsScreenState extends State<VisitsScreen> {
   Map<String, dynamic> visitData = {};
   String errorMessage = '';
   List<dynamic> filteredVisits = [];
-  String sortOrder = 'Newest First'; // Default sort order
+  String sortOrder = '';
   DateTime? selectedDate;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (sortOrder.isEmpty) {
+      sortOrder = S.of(context).newest_first;
+    }
+  }
 
   @override
   void initState() {
@@ -54,12 +72,12 @@ class _VisitsScreenState extends State<VisitsScreen> {
   Future<void> fetchVisits() async {
     setState(() {
       isLoading = true;
+      errorMessage = '';
     });
-          
+
     const String baseUrl = 'https://onix.boom-solutions.co/';
     const String apiToken = 'gln5EU3jkGwBy7GZWnSpm9N7EffslYS5';
-    final int partnerId = Get.arguments['partnerId']; // Retrieve partner ID from arguments
-    print("partnerId");
+    final int partnerId = Get.arguments['partnerId'];
     final String endpoint = '/api/v1/partners/$partnerId/visits';
 
     try {
@@ -78,13 +96,13 @@ class _VisitsScreenState extends State<VisitsScreen> {
         });
       } else {
         setState(() {
-          errorMessage = 'Failed to load visits: ${response.statusCode}';
+          errorMessage = '${S.of(context).failed_to_load_visits}: ${response.statusCode}';
           isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Error fetching visits: $e';
+        errorMessage = '${S.of(context).error_fetching_visits}: $e';
         isLoading = false;
       });
     }
@@ -92,13 +110,12 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
   String formatDate(String dateString) {
     final date = DateTime.parse(dateString);
-    return DateFormat('MMM d, yyyy HH:mm').format(date);
+    return DateFormat('MMM d, yyyy HH:mm').format(DateTime.now());
   }
 
   void sortAndFilterVisits() {
     List<dynamic> tempVisits = List.from(visitData['visits'] ?? []);
 
-    // Filter by selected date
     if (selectedDate != null) {
       tempVisits = tempVisits.where((visit) {
         final visitDate = DateTime.parse(visit['visit_date']);
@@ -108,11 +125,10 @@ class _VisitsScreenState extends State<VisitsScreen> {
       }).toList();
     }
 
-    // Sort based on sortOrder
     tempVisits.sort((a, b) {
       final dateA = DateTime.parse(a['visit_date']);
       final dateB = DateTime.parse(b['visit_date']);
-      return sortOrder == 'Newest First'
+      return sortOrder == S.of(context).newest_first
           ? dateB.compareTo(dateA)
           : dateA.compareTo(dateB);
     });
@@ -128,6 +144,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      helpText: S.of(context).select_date,
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -139,50 +156,71 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
         title: Text(visitData.containsKey('partner')
             ? visitData['partner']['name']
-            : 'Partner Details'),
+            : S.of(context).partner_details),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: fetchVisits,
+            tooltip: S.of(context).refresh,
+          ),
+          IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: () {
+              Get.updateLocale(Get.locale?.languageCode == 'ar'
+                  ? const Locale('en', 'US')
+                  : const Locale('ar', 'EG'));
+            },
+            tooltip: S.of(context).switch_language,
           ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
+              ? Center(child: Text(errorMessage, style: const TextStyle(fontSize: 16)))
               : SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Make Payment Button
+                        // Schedule Visit Button
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: InkWell(
                             onTap: () {
-                              // Handle schedule visit
-                               Get.to(() =>  CheckInScreen(), arguments: {'partnerId': Get.arguments['partnerId']});
+                              Get.to(() => const CheckInScreen(),
+                                  arguments: {'partnerId': Get.arguments['partnerId']});
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: const [
-                                  Text('Schedule Visit',
-                                      style: TextStyle(fontSize: 16)),
-                                  Icon(Icons.chevron_right),
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    S.of(context).schedule_visit,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                  ),
+                                  const Icon(Icons.chevron_right),
                                 ],
                               ),
                             ),
@@ -191,45 +229,54 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Notes Section (Updated with Connected Line, Sort, and Search)
+                        // Visits History Section
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(16.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Header with sort and search
+                                // Header with sort and date filter
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Row(
+                                    Row(
                                       children: [
-                                        Icon(Icons.notes, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Visits History',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w500)),
+                                        const Icon(Icons.notes, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          S.of(context).visits_history,
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                        ),
                                       ],
                                     ),
                                     Row(
                                       children: [
                                         // Sort Dropdown
                                         DropdownButton<String>(
-                                          value: sortOrder,
+                                          value: sortOrder.isEmpty ? S.of(context).newest_first : sortOrder,
                                           items: <String>[
-                                            'Newest First',
-                                            'Oldest First'
+                                            S.of(context).newest_first,
+                                            S.of(context).oldest_first
                                           ].map((String value) {
                                             return DropdownMenuItem<String>(
                                               value: value,
-                                              child: Text(value,
-                                                  style: const TextStyle(
-                                                      fontSize: 14)),
+                                              child: Text(
+                                                value,
+                                                style: const TextStyle(fontSize: 14),
+                                              ),
                                             );
                                           }).toList(),
                                           onChanged: (String? newValue) {
@@ -240,12 +287,11 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                           },
                                         ),
                                         const SizedBox(width: 8),
-                                        // Date Search Button
+                                        // Date Filter Button
                                         IconButton(
-                                          icon:
-                                              const Icon(Icons.calendar_today),
+                                          icon: const Icon(Icons.calendar_today),
                                           onPressed: () => _selectDate(context),
-                                          tooltip: 'Filter by Date',
+                                          tooltip: S.of(context).filter_by_date,
                                         ),
                                       ],
                                     ),
@@ -257,7 +303,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                     child: Row(
                                       children: [
                                         Text(
-                                          'Filtered by: ${DateFormat('MMM d, yyyy').format(selectedDate!)}',
+                                          '${S.of(context).filtered_by}: ${DateFormat('MMM d, yyyy', Get.locale?.languageCode).format(selectedDate!)}',
                                           style: const TextStyle(fontSize: 14),
                                         ),
                                         const SizedBox(width: 8),
@@ -268,8 +314,11 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                               sortAndFilterVisits();
                                             });
                                           },
-                                          child: const Icon(Icons.clear,
-                                              size: 16, color: Colors.red),
+                                          child: const Icon(
+                                            Icons.clear,
+                                            size: 16,
+                                            color: Colors.red,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -277,109 +326,110 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                 const SizedBox(height: 12),
                                 filteredVisits.isNotEmpty
                                     ? Stack(
-                                      children: [
-                                        // Continuous vertical line
-                                        Positioned(
-                                        left: MediaQuery.of(context).size.width * 0.06,
-                                        top: 0,
-                                        bottom: 0,
-                                        child: CustomPaint(
-                                          size: Size(
-                                            MediaQuery.of(context).size.width * 0.01,
-                                            double.infinity), // Width of line
-                                          painter: ContinuousLinePainter(
-                                          itemCount: filteredVisits.length,
-                                          itemHeight: MediaQuery.of(context).size.height * 0.12,
+                                        children: [
+                                          // Continuous vertical line
+                                          Positioned(
+                                            left: isRtl ? null : 30,
+                                            right: isRtl ? 30 : null,
+                                            top: 0,
+                                            bottom: 0,
+                                            child: CustomPaint(
+                                              size: const Size(2, double.infinity),
+                                              painter: ContinuousLinePainter(
+                                                itemCount: filteredVisits.length,
+                                                itemHeight: 80,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        ),
-                                        // Visit entries
-                                        Column(
-                                        children: List.generate(
-                                          filteredVisits.length,
-                                          (index) {
-                                          final visit = filteredVisits[index];
-                                          return SizedBox(
-                                            height: MediaQuery.of(context).size.height * 0.12,
-                                            child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              // Dot for each visit
-                                              Padding(
-                                              padding: EdgeInsets.only(
-                                                left: MediaQuery.of(context).size.width * 0.05,
-                                              ),
-                                              child: Center(
-                                                child: Container(
-                                                width: MediaQuery.of(context).size.width * 0.04,
-                                                height: MediaQuery.of(context).size.width * 0.04,
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.blue,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                ),
-                                              ),
-                                              ),
-                                              // Visit details
-                                              Expanded(
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                horizontal: MediaQuery.of(context).size.width * 0.04,
-                                                ),
-                                                child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Row(
+                                          // Visit entries
+                                          Column(
+                                            children: List.generate(
+                                              filteredVisits.length,
+                                              (index) {
+                                                final visit = filteredVisits[index];
+                                                return Container(
+                                                  height: 80,
+                                                  margin: const EdgeInsets.only(bottom: 8),
+                                                  child: Row(
+                                                    textDirection: isRtl ? ui.TextDirection.rtl : ui.TextDirection.ltr,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
                                                     children: [
-                                                      Icon(
-                                                      Icons.calendar_today,
-                                                      size: MediaQuery.of(context).size.width * 0.05,
+                                                      // Dot for each visit
+                                                      Padding(
+                                                        padding: EdgeInsets.only(
+                                                          left: isRtl ? 0 : 24,
+                                                          right: isRtl ? 24 : 0,
+                                                        ),
+                                                        child: Center(
+                                                          child: Container(
+                                                            width: 12,
+                                                            height: 12,
+                                                            decoration: const BoxDecoration(
+                                                              color: Colors.blue,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
-                                                      SizedBox(
-                                                      width: MediaQuery.of(context).size.width * 0.02,
-                                                      ),
-                                                      Text(
-                                                      formatDate(visit['visit_date']),
-                                                      style: TextStyle(
-                                                        fontSize: MediaQuery.of(context).size.width * 0.04,
-                                                      ),
+                                                      // Visit details
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                          child: Column(
+                                                            crossAxisAlignment: isRtl
+                                                                ? CrossAxisAlignment.end
+                                                                : CrossAxisAlignment.start,
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Row(
+                                                                    children: [
+                                                                      const Icon(
+                                                                        Icons.calendar_today,
+                                                                        size: 16,
+                                                                      ),
+                                                                      const SizedBox(width: 8),
+                                                                      Text(
+                                                                        formatDate(visit['visit_date']),
+                                                                        style: const TextStyle(fontSize: 14),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  Text(
+                                                                    visit['user_name'],
+                                                                    style: const TextStyle(fontSize: 12),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(height: 4),
+                                                              Text(
+                                                                visit['notes'] ?? S.of(context).no_notes,
+                                                                style: const TextStyle(fontSize: 12),
+                                                                maxLines: 2,
+                                                                overflow: TextOverflow.ellipsis,
+                                                                textAlign: isRtl ? TextAlign.end : TextAlign.start,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
                                                     ],
-                                                    ),
-                                                    Text(
-                                                    visit['user_name'],
-                                                    style: TextStyle(
-                                                      fontSize: MediaQuery.of(context).size.width * 0.035,
-                                                    ),
-                                                    ),
-                                                  ],
                                                   ),
-                                                  SizedBox(
-                                                  height: MediaQuery.of(context).size.height * 0.01,
-                                                  ),
-                                                  Text(
-                                                  visit['notes'],
-                                                  style: TextStyle(
-                                                    fontSize: MediaQuery.of(context).size.width * 0.035,
-                                                  ),
-                                                  ),
-                                                ],
-                                                ),
-                                              ),
-                                              ),
-                                            ],
+                                                );
+                                              },
                                             ),
-                                          );
-                                          },
-                                        ),
-                                        ),
-                                      ],
+                                          ),
+                                        ],
                                       )
-                                    : const Text('No visits available'),
+                                    : Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        child: Text(
+                                          S.of(context).no_visits_available,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
                               ],
                             ),
                           ),
@@ -408,10 +458,9 @@ class ContinuousLinePainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
-    // Draw a single continuous line
     canvas.drawLine(
-      Offset(size.width / 3, 0),
-      Offset(size.width / 2, itemHeight * itemCount),
+      Offset(size.width / 2, 0),
+      Offset(size.width / 2, itemHeight * itemCount + (itemCount - 1) * 8),
       linePaint,
     );
   }
