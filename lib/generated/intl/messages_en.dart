@@ -24,26 +24,47 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m1(error) => "Connection error: ${error}";
 
-  static String m2(field) => "${field} must be a valid number";
+  static String m15(partnerId) => "Customer with ID ${partnerId} not found.";
 
-  static String m3(error) => "Network error: ${error}";
+  static String m2(distance) => "${distance} km";
 
-  static String m4(percentage) => "${percentage}% of target";
+  static String m3(message) => "Error: ${message}";
 
-  static String m5(count) => "${count} partners";
+  static String m4(status) =>
+      "Failed to load inventory data. Status: ${status}";
 
-  static String m6(field) => "${field} is required";
+  static String m5(message) => "Error getting location: ${message}";
 
-  static String m7(period) => "Selected: ${period}";
+  static String m6(field) => "${field} must be a valid number";
 
-  static String m8(statusCode) => "Server error: HTTP ${statusCode}";
+  static String m7(error) => "Network error: ${error}";
 
-  static String m9(sign, diff) => "vs Average: ${sign}${diff}%";
+  static String m16(message) => "Network error: ${message}";
+
+  static String m8(percentage) => "${percentage}% of target";
+
+  static String m9(count) => "${count} partners";
+
+  static String m10(field) => "${field} is required";
+
+  static String m11(period) => "Selected: ${period}";
+
+  static String m12(name) => "Selected: ${name}";
+
+  static String m13(statusCode) => "Server error: HTTP ${statusCode}";
+
+  static String m17(message) => "Error: ${message}";
+
+  static String m14(sign, diff) => "vs Average: ${sign}${diff}%";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "addCustomer": MessageLookupByLibrary.simpleMessage("Add customer"),
+    "addNotes": MessageLookupByLibrary.simpleMessage("Add notes..."),
     "add_customer": MessageLookupByLibrary.simpleMessage("Add Customer"),
+    "add_visit_notes": MessageLookupByLibrary.simpleMessage(
+      "Add visit notes...",
+    ),
     "address": MessageLookupByLibrary.simpleMessage("Address"),
     "addressLabel": MessageLookupByLibrary.simpleMessage("Address"),
     "amount": MessageLookupByLibrary.simpleMessage("Amount"),
@@ -53,6 +74,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "aov": MessageLookupByLibrary.simpleMessage("AOV"),
     "apiToken": MessageLookupByLibrary.simpleMessage("API Token"),
     "api_error": m0,
+    "appTitle": MessageLookupByLibrary.simpleMessage("Partners Map"),
+    "app_title": MessageLookupByLibrary.simpleMessage("Customer Check-in"),
     "auth_failed": MessageLookupByLibrary.simpleMessage(
       "Authentication failed: Invalid or expired token. Please log in again.",
     ),
@@ -62,8 +85,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "authenticationError": MessageLookupByLibrary.simpleMessage(
       "Authentication error.",
     ),
-    "balance": MessageLookupByLibrary.simpleMessage("Balance"),
+    "available": MessageLookupByLibrary.simpleMessage("AVAILABLE"),
+    "balance": MessageLookupByLibrary.simpleMessage("BALANCE"),
     "billion": MessageLookupByLibrary.simpleMessage("B"),
+    "calculating_distance": MessageLookupByLibrary.simpleMessage(
+      "Calculating distance...",
+    ),
     "cancel": MessageLookupByLibrary.simpleMessage("Cancel"),
     "cancelButton": MessageLookupByLibrary.simpleMessage("Cancel"),
     "card": MessageLookupByLibrary.simpleMessage("Card"),
@@ -71,11 +98,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkConnection": MessageLookupByLibrary.simpleMessage(
       "Check your internet connection or try again later.",
     ),
+    "checkIn": MessageLookupByLibrary.simpleMessage("Check In"),
     "checkInternetConnection": MessageLookupByLibrary.simpleMessage(
       "Check your internet connection or try again later.",
     ),
+    "check_in": MessageLookupByLibrary.simpleMessage("CHECK IN"),
     "city": MessageLookupByLibrary.simpleMessage("City"),
     "cityLabel": MessageLookupByLibrary.simpleMessage("City"),
+    "close": MessageLookupByLibrary.simpleMessage("Close"),
     "collections": MessageLookupByLibrary.simpleMessage("Collections"),
     "completedToday": MessageLookupByLibrary.simpleMessage("Completed today"),
     "connection_error": m1,
@@ -84,39 +114,79 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "country": MessageLookupByLibrary.simpleMessage("Country"),
     "countryLabel": MessageLookupByLibrary.simpleMessage("Country"),
+    "credit": MessageLookupByLibrary.simpleMessage("CREDIT"),
+    "currency": MessageLookupByLibrary.simpleMessage("Currency"),
     "customer": MessageLookupByLibrary.simpleMessage("Customer"),
+    "customerNotFound": MessageLookupByLibrary.simpleMessage(
+      "Customer not found.",
+    ),
     "customer_added": MessageLookupByLibrary.simpleMessage(
       "Customer added successfully!",
     ),
+    "customer_check_in": MessageLookupByLibrary.simpleMessage(
+      "Customer Check-in",
+    ),
+    "customer_location_invalid": MessageLookupByLibrary.simpleMessage(
+      "Customer location data is invalid.",
+    ),
+    "customer_location_not_available": MessageLookupByLibrary.simpleMessage(
+      "Customer location not available in the response.",
+    ),
+    "customer_not_found": m15,
     "customers": MessageLookupByLibrary.simpleMessage("Customers"),
     "customersTitle": MessageLookupByLibrary.simpleMessage("Customers"),
     "darkModeTitle": MessageLookupByLibrary.simpleMessage("Dark Mode"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
+    "date": MessageLookupByLibrary.simpleMessage("DATE"),
+    "dateRange": MessageLookupByLibrary.simpleMessage("Date Range"),
     "day": MessageLookupByLibrary.simpleMessage("Day"),
     "days": MessageLookupByLibrary.simpleMessage("days"),
+    "debit": MessageLookupByLibrary.simpleMessage("DEBIT"),
     "defaultUserEmail": MessageLookupByLibrary.simpleMessage("No email"),
     "defaultUserInitial": MessageLookupByLibrary.simpleMessage("U"),
     "defaultUserName": MessageLookupByLibrary.simpleMessage("User"),
     "details": MessageLookupByLibrary.simpleMessage("Details"),
+    "distanceValue": m2,
+    "distanceWarning": MessageLookupByLibrary.simpleMessage("Distance Warning"),
+    "distanceWarningMessage": MessageLookupByLibrary.simpleMessage(
+      "You are more than 10 km away. Proceed with check-in?",
+    ),
+    "distance_exceeded": MessageLookupByLibrary.simpleMessage(
+      "You need to be closer to the customer (within 10 km) to check in.",
+    ),
     "due_date": MessageLookupByLibrary.simpleMessage("DUE DATE"),
     "due_later": MessageLookupByLibrary.simpleMessage("Due Later"),
     "due_now": MessageLookupByLibrary.simpleMessage("Due Now"),
     "dues": MessageLookupByLibrary.simpleMessage("Dues"),
     "editProfileTitle": MessageLookupByLibrary.simpleMessage("Edit Profile"),
     "emailLabel": MessageLookupByLibrary.simpleMessage("Email"),
+    "endingBalance": MessageLookupByLibrary.simpleMessage("Ending Balance"),
     "enterYourEmail": MessageLookupByLibrary.simpleMessage("Enter your email"),
     "error": MessageLookupByLibrary.simpleMessage("Error"),
+    "errorGeneric": m3,
+    "errorLoadingData": m4,
+    "errorLoadingDataTitle": MessageLookupByLibrary.simpleMessage(
+      "Error Loading Data",
+    ),
+    "error_fetch_customer": MessageLookupByLibrary.simpleMessage(
+      "Error fetching customer location.",
+    ),
     "error_fetching_visits": MessageLookupByLibrary.simpleMessage(
       "Error fetching visits",
     ),
-    "error_getting_location": MessageLookupByLibrary.simpleMessage(
-      "Error getting current location",
-    ),
+    "error_getting_location": m5,
     "error_updating_location": MessageLookupByLibrary.simpleMessage(
       "Error updating location",
     ),
+    "failed": MessageLookupByLibrary.simpleMessage("Failed"),
+    "failedToFetchCustomerLocation": MessageLookupByLibrary.simpleMessage(
+      "Failed to fetch customer location",
+    ),
     "failedToLoadCustomers": MessageLookupByLibrary.simpleMessage(
       "Failed to load customers",
+    ),
+    "failedToLoadPdf": MessageLookupByLibrary.simpleMessage(
+      "Failed to load PDF",
     ),
     "failed_to_fetch_partner_data": MessageLookupByLibrary.simpleMessage(
       "Failed to fetch partner data",
@@ -126,6 +196,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "failed_to_update_location": MessageLookupByLibrary.simpleMessage(
       "Failed to update location",
+    ),
+    "fetch_customer_error": MessageLookupByLibrary.simpleMessage(
+      "Failed to fetch customer location.",
     ),
     "field_required": MessageLookupByLibrary.simpleMessage(
       "This field is required",
@@ -138,13 +211,43 @@ class MessageLookup extends MessageLookupByLibrary {
     "inspirationalQuotes": MessageLookupByLibrary.simpleMessage(
       "Success is not the absence of obstacles, but the courage to push through them.",
     ),
-    "invalid_number": m2,
+    "invalidOrEmptyFile": MessageLookupByLibrary.simpleMessage(
+      "Invalid or empty file",
+    ),
+    "invalid_number": m6,
     "invalid_partner_id": MessageLookupByLibrary.simpleMessage(
       "Error: Invalid partner ID",
     ),
+    "inventory": MessageLookupByLibrary.simpleMessage("Inventory"),
     "invoice_date": MessageLookupByLibrary.simpleMessage("INVOICE DATE"),
     "invoices": MessageLookupByLibrary.simpleMessage("invoices"),
+    "items": MessageLookupByLibrary.simpleMessage("Items"),
+    "languageTitle": MessageLookupByLibrary.simpleMessage("Change Language To"),
     "last_purchase": MessageLookupByLibrary.simpleMessage("Last Purchase"),
+    "location": MessageLookupByLibrary.simpleMessage("Location"),
+    "locationNotAvailable": MessageLookupByLibrary.simpleMessage(
+      "Location not available.",
+    ),
+    "locationPermissionDenied": MessageLookupByLibrary.simpleMessage(
+      "Location permission denied.",
+    ),
+    "locationPermissionsPermanentlyDenied":
+        MessageLookupByLibrary.simpleMessage(
+          "Location permissions permanently denied.",
+        ),
+    "locationServicesDisabled": MessageLookupByLibrary.simpleMessage(
+      "Location services are disabled.",
+    ),
+    "location_not_available": MessageLookupByLibrary.simpleMessage(
+      "Location not available. Please try again.",
+    ),
+    "location_permission_denied": MessageLookupByLibrary.simpleMessage(
+      "Location permission denied.",
+    ),
+    "location_permission_permanent_denied":
+        MessageLookupByLibrary.simpleMessage(
+          "Location permissions permanently denied. Please enable in settings.",
+        ),
     "location_permissions_denied": MessageLookupByLibrary.simpleMessage(
       "Location permissions denied. Please allow location access in settings.",
     ),
@@ -152,7 +255,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Location permissions are permanently denied. Please enable them in settings.",
     ),
     "location_services_disabled": MessageLookupByLibrary.simpleMessage(
-      "Location services are disabled. Please enable them in settings.",
+      "Location services are disabled. Please enable them.",
     ),
     "location_updated_successfully": MessageLookupByLibrary.simpleMessage(
       "Location updated successfully",
@@ -181,7 +284,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "na": MessageLookupByLibrary.simpleMessage("N/A"),
     "name": MessageLookupByLibrary.simpleMessage("Name"),
     "nearbyCustomers": MessageLookupByLibrary.simpleMessage("Nearby Customers"),
-    "networkError": m3,
+    "networkError": m7,
+    "network_error": m16,
     "newCustomers": MessageLookupByLibrary.simpleMessage("New Customers"),
     "newest_first": MessageLookupByLibrary.simpleMessage("Newest First"),
     "noCustomersFound": MessageLookupByLibrary.simpleMessage(
@@ -190,13 +294,31 @@ class MessageLookup extends MessageLookupByLibrary {
     "noDataAvailable": MessageLookupByLibrary.simpleMessage(
       "No data available",
     ),
+    "noInventoryItems": MessageLookupByLibrary.simpleMessage(
+      "No inventory items found",
+    ),
+    "noMatchingItems": MessageLookupByLibrary.simpleMessage(
+      "No matching items found",
+    ),
+    "noMessageProvided": MessageLookupByLibrary.simpleMessage(
+      "No message provided",
+    ),
     "noNotesYet": MessageLookupByLibrary.simpleMessage("No notes yet"),
+    "noPartnersFound": MessageLookupByLibrary.simpleMessage(
+      "No partners found.",
+    ),
+    "noSalesInThisTime": MessageLookupByLibrary.simpleMessage(
+      "You haven\'t sold anything yet.",
+    ),
     "noUserData": MessageLookupByLibrary.simpleMessage(
       "No user data available",
     ),
     "no_data": MessageLookupByLibrary.simpleMessage("No Data"),
     "no_data_available": MessageLookupByLibrary.simpleMessage(
       "No data available",
+    ),
+    "no_message_provided": MessageLookupByLibrary.simpleMessage(
+      "No message provided",
     ),
     "no_notes": MessageLookupByLibrary.simpleMessage("No notes"),
     "no_partners_found": MessageLookupByLibrary.simpleMessage(
@@ -214,26 +336,40 @@ class MessageLookup extends MessageLookupByLibrary {
     "no_visits_available": MessageLookupByLibrary.simpleMessage(
       "No visits available",
     ),
+    "notAvailable": MessageLookupByLibrary.simpleMessage("N/A"),
     "notes": MessageLookupByLibrary.simpleMessage("Notes"),
     "notificationsTitle": MessageLookupByLibrary.simpleMessage("Notifications"),
     "oct": MessageLookupByLibrary.simpleMessage("OCT"),
     "odoo": MessageLookupByLibrary.simpleMessage("Odoo"),
-    "ofTarget": m4,
+    "ofTarget": m8,
+    "ok": MessageLookupByLibrary.simpleMessage("OK"),
     "oldest_due": MessageLookupByLibrary.simpleMessage("Oldest Due"),
     "oldest_first": MessageLookupByLibrary.simpleMessage("Oldest First"),
+    "out_of_range": MessageLookupByLibrary.simpleMessage(
+      "You need to be within 10 km of the customer",
+    ),
+    "partner": MessageLookupByLibrary.simpleMessage("Partner"),
     "partnerIdLabel": MessageLookupByLibrary.simpleMessage("Partner ID"),
     "partner_details": MessageLookupByLibrary.simpleMessage("Partner Details"),
     "partner_not_found": MessageLookupByLibrary.simpleMessage(
       "Partner with ID",
     ),
     "partner_visits": MessageLookupByLibrary.simpleMessage("Partner Visits"),
-    "partners": m5,
+    "partners": m9,
+    "partnersMap": MessageLookupByLibrary.simpleMessage("Partners Map"),
     "pay_all": MessageLookupByLibrary.simpleMessage("Pay All"),
     "payment_amount": MessageLookupByLibrary.simpleMessage("Payment amount"),
     "payment_failed": MessageLookupByLibrary.simpleMessage("Payment failed"),
     "payment_for": MessageLookupByLibrary.simpleMessage("Payment for"),
     "payment_method": MessageLookupByLibrary.simpleMessage("Payment Method"),
     "payment_terms": MessageLookupByLibrary.simpleMessage("Payment Terms"),
+    "pdfFileNotFound": MessageLookupByLibrary.simpleMessage(
+      "PDF file does not exist.",
+    ),
+    "pdfFileTooSmall": MessageLookupByLibrary.simpleMessage(
+      "PDF file is too small or corrupted.",
+    ),
+    "pdfViewerTitle": MessageLookupByLibrary.simpleMessage("PDF Viewer"),
     "pending": MessageLookupByLibrary.simpleMessage("PENDING"),
     "percentage": MessageLookupByLibrary.simpleMessage("Percentage"),
     "phone": MessageLookupByLibrary.simpleMessage("Phone"),
@@ -250,14 +386,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "please_select_payment_method": MessageLookupByLibrary.simpleMessage(
       "Please select a payment method",
     ),
+    "price": MessageLookupByLibrary.simpleMessage("PRICE"),
+    "proceed": MessageLookupByLibrary.simpleMessage("Proceed"),
+    "processing_check_in": MessageLookupByLibrary.simpleMessage(
+      "Processing check-in...",
+    ),
+    "product": MessageLookupByLibrary.simpleMessage("PRODUCT"),
     "product_distribution": MessageLookupByLibrary.simpleMessage(
       "Product Distribution",
     ),
     "profileTitle": MessageLookupByLibrary.simpleMessage("Profile"),
+    "quantity": MessageLookupByLibrary.simpleMessage("QTY"),
     "quarter": MessageLookupByLibrary.simpleMessage("Quarter"),
     "quickActions": MessageLookupByLibrary.simpleMessage("Quick Actions"),
+    "reference": MessageLookupByLibrary.simpleMessage("Reference"),
     "refresh": MessageLookupByLibrary.simpleMessage("Refresh"),
-    "required_field": m6,
+    "required_field": m10,
     "retry": MessageLookupByLibrary.simpleMessage("Retry"),
     "retryButton": MessageLookupByLibrary.simpleMessage("Retry"),
     "salesOverview": MessageLookupByLibrary.simpleMessage("Sales Overview"),
@@ -267,14 +411,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "searchCustomersHint": MessageLookupByLibrary.simpleMessage(
       "Search customers...",
     ),
+    "searchInventory": MessageLookupByLibrary.simpleMessage(
+      "Search inventory...",
+    ),
     "securityTitle": MessageLookupByLibrary.simpleMessage("Security"),
     "select_date": MessageLookupByLibrary.simpleMessage("Select Date"),
     "select_end_date": MessageLookupByLibrary.simpleMessage("Select End Date"),
     "select_start_date": MessageLookupByLibrary.simpleMessage(
       "Select Start Date",
     ),
-    "selected": m7,
-    "serverError": m8,
+    "selected": m11,
+    "selectedProduct": m12,
+    "serverError": m13,
     "sessionExpired": MessageLookupByLibrary.simpleMessage(
       "Session expired. Please log in again.",
     ),
@@ -285,12 +433,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "sortByName": MessageLookupByLibrary.simpleMessage("Sort by name"),
     "state": MessageLookupByLibrary.simpleMessage("State"),
     "stateLabel": MessageLookupByLibrary.simpleMessage("State"),
+    "statementSummary": MessageLookupByLibrary.simpleMessage(
+      "Statement Summary",
+    ),
     "statement_of_account": MessageLookupByLibrary.simpleMessage(
       "Statement of Account",
     ),
     "stock": MessageLookupByLibrary.simpleMessage("Stock"),
     "storeIdLabel": MessageLookupByLibrary.simpleMessage("Store ID"),
     "storeLabel": MessageLookupByLibrary.simpleMessage("Store"),
+    "submit_error": m17,
     "success": MessageLookupByLibrary.simpleMessage("Success"),
     "switch_language": MessageLookupByLibrary.simpleMessage("Switch Language"),
     "thisMonth": MessageLookupByLibrary.simpleMessage("This month"),
@@ -299,29 +451,39 @@ class MessageLookup extends MessageLookupByLibrary {
     "token_missing": MessageLookupByLibrary.simpleMessage(
       "No API token found. Please log in.",
     ),
+    "too_far_away": MessageLookupByLibrary.simpleMessage("Too Far Away"),
     "too_many_requests": MessageLookupByLibrary.simpleMessage(
       "Too many requests: Please wait before trying again.",
     ),
     "top_product": MessageLookupByLibrary.simpleMessage("Top Product"),
     "total": MessageLookupByLibrary.simpleMessage("Total"),
+    "transactions": MessageLookupByLibrary.simpleMessage("Transactions"),
     "trillion": MessageLookupByLibrary.simpleMessage("T"),
+    "unknownCustomer": MessageLookupByLibrary.simpleMessage("Unknown Customer"),
     "unnamed_product": MessageLookupByLibrary.simpleMessage("Unnamed Product"),
+    "user": MessageLookupByLibrary.simpleMessage("User"),
     "view_customer_visit_patterns": MessageLookupByLibrary.simpleMessage(
       "View customer visit patterns",
     ),
     "view_transaction_history": MessageLookupByLibrary.simpleMessage(
       "View transaction history",
     ),
+    "visitDetails": MessageLookupByLibrary.simpleMessage("Visit Details:"),
+    "visitNote": MessageLookupByLibrary.simpleMessage("Visit Note"),
+    "visit_details": MessageLookupByLibrary.simpleMessage("Visit Details"),
     "visit_information": MessageLookupByLibrary.simpleMessage(
       "Visit Information",
     ),
     "visits": MessageLookupByLibrary.simpleMessage("Visits"),
     "visits_history": MessageLookupByLibrary.simpleMessage("Visits History"),
-    "vsAverage": m9,
+    "vsAverage": m14,
     "wait_30_seconds": MessageLookupByLibrary.simpleMessage(
       "Please wait 30 seconds before updating again",
     ),
     "welcomeBack": MessageLookupByLibrary.simpleMessage("Welcome Back"),
+    "within_range": MessageLookupByLibrary.simpleMessage(
+      "You are within range to check in",
+    ),
     "year": MessageLookupByLibrary.simpleMessage("Year"),
     "youAreOffline": MessageLookupByLibrary.simpleMessage("You Are Offline"),
   };

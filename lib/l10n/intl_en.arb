@@ -780,6 +780,197 @@
                 "description": "Message when no notes are available"
 
             },
-            "switch_language": "Switch Language"
-          
+    
+            "app_title": "Customer Check-in",
+            "customer_check_in": "Customer Check-in",
+            "add_visit_notes": "Add visit notes...",
+            "check_in": "CHECK IN",
+            "location_not_available": "Location not available. Please try again.",
+            "too_far_away": "Too Far Away",
+            "distance_exceeded": "You need to be closer to the customer (within 10 km) to check in.",
+            "ok": "OK",
+            "close": "Close",
+            "success": "Success",
+            "failed": "Failed",
+            "no_message_provided": "No message provided",
+            "visit_details": "Visit Details",
+            "processing_check_in": "Processing check-in...",
+            "calculating_distance": "Calculating distance...",
+            "within_range": "You are within range to check in",
+            "out_of_range": "You need to be within 10 km of the customer",
+            "customer": "Customer",
+            "location_services_disabled": "Location services are disabled. Please enable them.",
+            "location_permission_denied": "Location permission denied.",
+            "location_permission_permanent_denied": "Location permissions permanently denied. Please enable in settings.",
+            "error_getting_location": "Error getting location: {message}",
+            "customer_location_not_available": "Customer location not available in the response.",
+            "customer_not_found": "Customer with ID {partnerId} not found.",
+            "customer_location_invalid": "Customer location data is invalid.",
+            "fetch_customer_error": "Failed to fetch customer location.",
+            "error_fetch_customer": "Error fetching customer location.",
+            "submit_error": "Error: {message}",
+            "network_error": "Network error: {message}",
+              "locationServicesDisabled": "Location services are disabled.",
+              "@locationServicesDisabled": {
+                "description": "Error message when location services are turned off"
+              },
+              "locationPermissionDenied": "Location permission denied.",
+              "@locationPermissionDenied": {
+                "description": "Error message when location permission is denied"
+              },
+              "locationPermissionsPermanentlyDenied": "Location permissions permanently denied.",
+              "@locationPermissionsPermanentlyDenied": {
+                "description": "Error message when location permissions are permanently denied"
+              },
+              "locationNotAvailable": "Location not available.",
+              "@locationNotAvailable": {
+                "description": "Error message when location is not available"
+              },
+              "customerNotFound": "Customer not found.",
+              "@customerNotFound": {
+                "description": "Error message when customer is not found"
+              },
+              "unknownCustomer": "Unknown Customer",
+              "@unknownCustomer": {
+                "description": "Label for unknown customer"
+              },
+              "failedToFetchCustomerLocation": "Failed to fetch customer location",
+              "@failedToFetchCustomerLocation": {
+                "description": "Error message when unable to fetch customer location"
+              },
+              "visitNote": "Visit Note",
+              "@visitNote": {
+                "description": "Header title for visit note screen"
+              },
+              "distanceValue": "{distance} km",
+              "@distanceValue": {
+                "description": "Distance value with km unit",
+                "placeholders": {
+                  "distance": {
+                    "type": "String",
+                    "example": "5.25"
+                  }
+                }
+              },
+              "notAvailable": "N/A",
+              "@notAvailable": {
+                "description": "Text shown when data is not available"
+              },
+              "addNotes": "Add notes...",
+              "@addNotes": {
+                "description": "Hint text for notes input field"
+              },
+              "checkIn": "Check In",
+              "@checkIn": {
+                "description": "Label for check-in button"
+              },
+              "distanceWarning": "Distance Warning",
+              "@distanceWarning": {
+                "description": "Title for distance warning dialog"
+              },
+              "distanceWarningMessage": "You are more than 10 km away. Proceed with check-in?",
+              "@distanceWarningMessage": {
+                "description": "Warning message when user is far from customer location"
+              },
+              "cancel": "Cancel",
+              "@cancel": {
+                "description": "Label for cancel button"
+              },
+              "proceed": "Proceed",
+              "@proceed": {
+                "description": "Label for proceed button"
+              },
+              "success": "Success",
+              "@success": {
+                "description": "Success status text"
+              },
+              "failed": "Failed",
+              "@failed": {
+                "description": "Failed status text"
+              },
+              "noMessageProvided": "No message provided",
+              "@noMessageProvided": {
+                "description": "Text shown when no message is provided"
+              },
+              "visitDetails": "Visit Details:",
+              "@visitDetails": {
+                "description": "Header for visit details section"
+              },
+              "partner": "Partner",
+              "@partner": {
+                "description": "Label for partner field"
+              },
+              "date": "Date",
+              "@date": {
+                "description": "Label for date field"
+              },
+              "user": "User",
+              "@user": {
+                "description": "Label for user field"
+              },
+              "ok": "OK",
+              "@ok": {
+                "description": "Label for OK button"
+              },
+              "error": "Error",
+              "@error": {
+                "description": "General error text"
+              },
+              "switch_language":"Switch Language",
+              "languageTitle":"Change Language To",
+              "searchInventory": "Search inventory...",
+  "inventory": "Inventory",
+  "location": "Location",
+  "user": "User",
+  "items": "Items",
+  "product": "PRODUCT",
+  "quantity": "QTY",
+  "available": "AVAILABLE",
+  "price": "PRICE",
+  "noInventoryItems": "No inventory items found",
+  "noMatchingItems": "No matching items found",
+  "errorLoadingDataTitle": "Error Loading Data",
+  "errorLoadingData": "Failed to load inventory data. Status: {status}",
+  "errorGeneric": "Error: {message}",
+  "retry": "Retry",
+  "selectedProduct": "Selected: {name}",
+  "@selectedProduct": {
+    "description": "Message shown when a product is selected",
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@errorLoadingData": {
+    "description": "Error message for failed data loading with status code",
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "@errorGeneric": {
+    "description": "Generic error message with error details",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "appTitle": "Partners Map",
+  "noPartnersFound": "No partners found.",
+  "refresh": "Refresh",
+  "statementSummary": "Statement Summary",
+  "transactions": "Transactions",
+  "dateRange": "Date Range",
+  "currency": "Currency",
+  "endingBalance": "Ending Balance",
+  "date": "DATE",
+  "debit": "DEBIT",
+  "credit": "CREDIT",
+  "balance": "BALANCE",
+  "partnersMap": "Partners Map",
+  "reference":"Reference",
+  "noSalesInThisTime": "You haven't sold anything yet.",
+  "pdfViewerTitle": "PDF Viewer",
+  "failedToLoadPdf": "Failed to load PDF",
+  "error": "Error",
+  "invalidOrEmptyFile": "Invalid or empty file",
+  "pdfFileTooSmall": "PDF file is too small or corrupted.",
+  "pdfFileNotFound": "PDF file does not exist."
           }

@@ -129,12 +129,14 @@ class SalesChartController extends GetxController {
     try {
       final apiUrl = GetStorage().read("apiUrl") ?? "";
       final refreshToken = GetStorage().read('refresh_token') ?? '';
+      print('Refreshing token with: $refreshToken');
       final url = Uri.parse('$apiUrl/api/v1/refresh-token');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh_token': refreshToken}),
       );
+      print('Refresh token response: ${response.statusCode}, ${response.body}');
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         GetStorage().write('token', jsonData['access_token']);
@@ -143,14 +145,16 @@ class SalesChartController extends GetxController {
       }
       return false;
     } catch (e) {
-      
+      print('Refresh token error: $e');
       return false;
     }
   }
 
   Future<void> fetchData({int retryCount = 0, int maxRetries = 2}) async {
     final l10n = Get.context != null ? S.of(Get.context!) : null;
+    print('fetchData called, retryCount: $retryCount, user_id: ${GetStorage().read('user_id')}, token: $token, apiUrl: $apiurl');
     if (GetStorage().read('user_id') == null || token.isEmpty) {
+      print('Missing user_id or token');
       errorMessage.value = l10n?.pleaseLoginAgain ?? 'Please log in again.';
       isLoading(false);
       return;
@@ -167,36 +171,42 @@ class SalesChartController extends GetxController {
       );
       print('Fetching sales data from: $uri');
       final response = await http.get(uri).timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 15),
         onTimeout: () {
-          if (retryCount < maxRetries) {
-            print('Timeout, retrying fetchData, attempt ${retryCount + 1}');
-            return http.Response('{"error": "Request timed out"}', 408);
-          }
-          throw Exception("Request timed out.");
+          print('Request timed out');
+          return http.Response('{"error": "Request timed out"}', 408);
         },
       );
       print('Sales API response: ${response.statusCode}, ${response.body}');
+      List<Map<String, dynamic>> dataList = [];
       if (response.statusCode == 408 && retryCount < maxRetries) {
+        print('Timeout, retrying fetchData, attempt ${retryCount + 1}');
         return fetchData(retryCount: retryCount + 1);
       }
-      List<Map<String, dynamic>> dataList = [];
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['data'] != null && data['data'] is List) {
+        print('Parsed API data: $data');
+        if (data['data'] != null && data['data'] is List && data['data'].isNotEmpty) {
           dataList = List<Map<String, dynamic>>.from(data['data']);
           dataList.sort((a, b) => a['date'].compareTo(b['date']));
         } else {
-          errorMessage.value = l10n?.noDataAvailable ?? "No sales data available.";
+          print('No sales data available for this period');
+          errorMessage.value = l10n?.noSalesInThisTime ?? "No sales in this time.";
         }
       } else if (response.statusCode == 401) {
-        errorMessage.value = l10n?.sessionExpired ?? "Session expired. Please log in again.";
-      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+        print('401 Unauthorized, attempting token refresh');
         if (await refreshToken()) {
           return fetchData(retryCount: retryCount);
         }
-        errorMessage.value = l10n?.authenticationError ?? "Authentication error.";
+        errorMessage.value = l10n?.sessionExpired ?? "Session expired. Please log in again.";
+      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+        print('400 Invalid CSRF token, attempting token refresh');
+        if (await refreshToken()) {
+          return fetchData(retryCount: retryCount);
+        }
+        errorMessage.value = l10n?.authenticationError ?? "Authentication error. Please log in again.";
       } else {
+        print('Server error: ${response.statusCode}, ${response.body}');
         errorMessage.value = l10n?.serverError(response.statusCode.toString()) ??
             "Server error: HTTP ${response.statusCode}";
       }
@@ -239,22 +249,27 @@ class SalesChartController extends GetxController {
         }
       }
 
+      print('Padded data: $paddedData');
       processData(paddedData);
     } catch (e) {
-      errorMessage.value = l10n?.networkError(e.toString()) ?? "Network error.";
-     
+      print('FetchData error: $e');
+      errorMessage.value = l10n?.networkError(e.toString()) ?? "Network error. Please try again.";
     } finally {
       isLoading(false);
     }
   }
 
   void processData(List<Map<String, dynamic>> rawData) {
+    print('Processing raw data: $rawData');
     List<SalesData> newData = [];
     String groupBy = selectedRange.value.toLowerCase();
 
     for (var item in rawData) {
       String? period = item['date']?.toString();
-      if (period == null) continue;
+      if (period == null) {
+        print('Skipping item with null date: $item');
+        continue;
+      }
 
       if (groupBy == 'day') {
         DateTime date = dateFormatter.parse(period);
@@ -277,6 +292,7 @@ class SalesChartController extends GetxController {
       ));
     }
 
+    print('Processed salesData: $newData');
     salesData.assignAll(newData);
   }
 
@@ -312,6 +328,7 @@ class SalesChartController extends GetxController {
   void onInit() {
     super.onInit();
     print('Controller initialized, setting initial range to Day');
+    print('user_id: ${GetStorage().read('user_id')}, token: $token, apiUrl: $apiurl');
     setTimeRange('Day');
   }
 }
@@ -323,22 +340,20 @@ class SalesChartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context); // Access localized strings
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            _buildChart(context),
-            _buildSelectedBarInfo(context),
-            const SizedBox(height: 12),
-            _buildTimeSelector(context),
-          ],
-        ),
+    final l10n = S.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 16),
+          _buildChart(context),
+          _buildSelectedBarInfo(context),
+          const SizedBox(height: 12),
+          _buildTimeSelector(context),
+        ],
       ),
     );
   }
@@ -351,7 +366,7 @@ class SalesChartView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          l10n.salesOverview, // Localized string
+          l10n.salesOverview,
           style: theme.textTheme.titleLarge?.copyWith(
             color: theme.colorScheme.primary,
           ),
@@ -360,19 +375,32 @@ class SalesChartView extends StatelessWidget {
           if (controller.salesData.isEmpty) {
             return const SizedBox.shrink();
           }
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              controller.formatValue(controller.totalSales),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
+          return Row(
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  // backgroundColor: Colors.transparent,
+                  iconColor: theme.colorScheme.primary,
+                ),
+                onPressed: () => controller.fetchData(),
+                child: Icon(Icons.refresh),
               ),
-            ),
+                
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  controller.formatValue(controller.totalSales),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           );
         }),
       ],
@@ -384,14 +412,28 @@ class SalesChartView extends StatelessWidget {
     final l10n = S.of(context);
 
     return Obx(() {
+      if (controller.isLoading.value) {
+        return const SizedBox(
+          height: 180,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
       if (controller.errorMessage.value.isNotEmpty) {
         return SizedBox(
           height: 180,
           child: Center(
-            child: Text(
-              controller.errorMessage.value,
-              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
-              textAlign: TextAlign.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  controller.errorMessage.value,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+              
+              ],
             ),
           ),
         );
@@ -400,7 +442,7 @@ class SalesChartView extends StatelessWidget {
       if (controller.salesData.isEmpty) {
         return SizedBox(
           height: 180,
-          child: Center(child: Text(l10n.noDataAvailable)), // Localized string
+          child: Center(child: Text(l10n.noSalesInThisTime)),
         );
       }
 
@@ -486,8 +528,7 @@ class SalesChartView extends StatelessWidget {
                       toY: item.value,
                       color: barColor,
                       width: MediaQuery.of(context).size.width / (controller.salesData.length * 3),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3
-)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
                       backDrawRodData: isSelected
                           ? BackgroundBarChartRodData(
                               show: true,
@@ -534,7 +575,7 @@ class SalesChartView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  l10n.selected(selectedData.period), // Localized string
+                  l10n.selected(selectedData.period),
                   style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                 ),
                 Text(
@@ -548,7 +589,7 @@ class SalesChartView extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.vsAverage(diffSign, diff), // Localized string
+              l10n.vsAverage(diffSign, diff),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: controller.selectedDiffFromAvg >= 0 ? Colors.green : Colors.redAccent,
               ),

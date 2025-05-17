@@ -425,6 +425,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                     children: [
                       TextField(
                         controller: textController,
+                        
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         inputFormatters: [
@@ -434,6 +435,10 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               maxValue: invoice.pendingAmount),
                         ],
                         decoration: InputDecoration(
+                          
+              fillColor:  theme.colorScheme.primaryContainer,
+              filled: true,
+                          focusColor: theme.colorScheme.primary,
                           labelText: S.of(context).payment_amount, // Localized
                           hintText:
                               "${S.of(context).max} ${invoice.pendingAmount.toStringAsFixed(2)}",
@@ -441,8 +446,8 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.dividerColor),
                           ),
-                          filled: true,
-                          fillColor: theme.cardTheme.color,
+                          // filled: true,
+                          // fillColor: theme.canvasColor.withOpacity(0.2),
                         ),
                       ),
                       const SizedBox(height: 12),

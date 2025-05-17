@@ -46,6 +46,8 @@ dependencies:
   flutter_foreground_task: ^9.1.0
   location: ^8.0.0
   intl_utils: ^2.8.10
+  path_provider: ^2.1.5
+  http: ^1.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

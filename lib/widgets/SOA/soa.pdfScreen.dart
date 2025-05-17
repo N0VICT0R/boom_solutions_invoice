@@ -1,6 +1,8 @@
-import 'dart:io';
+import 'dart:io' show File;
+
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 
 class PdfViewerScreen extends StatelessWidget {
   final String path;
@@ -13,20 +15,20 @@ class PdfViewerScreen extends StatelessWidget {
       if (await file.exists()) {
         final length = await file.length();
         if (length > 100) return true;
-        throw Exception("PDF file is too small or corrupted.");
+        throw Exception(S.current.pdfFileTooSmall);
       } else {
-        throw Exception("PDF file does not exist.");
+        throw Exception(S.current.pdfFileNotFound);
       }
     } catch (e) {
-     
       return Future.error(e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text("PDF Viewer")),
+      appBar: AppBar(title: Text(l10n.pdfViewerTitle)),
       body: FutureBuilder<bool>(
         future: _validatePdfFile(path),
         builder: (context, snapshot) {
@@ -40,8 +42,11 @@ class PdfViewerScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.error, color: Colors.red, size: 50),
                   const SizedBox(height: 10),
-                  const Text("Failed to load PDF"),
-                  Text("Error: ${snapshot.error ?? 'Invalid or empty file'}"),
+                  Text(l10n.failedToLoadPdf),
+                  Text(
+                    "${l10n.error}: ${snapshot.error ?? l10n.invalidOrEmptyFile}",
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             );

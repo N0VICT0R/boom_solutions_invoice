@@ -1,4 +1,5 @@
 
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,124 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
+// class PartnerController extends GetxController {
+//   var partners = <Partner>[].obs;
+//   var isLoading = true.obs;
+//   var selectedPartner = Rx<Partner?>(null);
+//   var statementData = Rx<Map<String, dynamic>?>(null);
+//   var isLoadingStatement = false.obs;
+
+//   // final String baseUrl = 'http://137.184.205.67:2710';
+//   final apiToken = GetStorage().read('token') ?? "";
+//   final String baseUrl = GetStorage().read('apiUrl') ?? "";
+
+//   @override
+//   void onInit() {
+//     super.onInit();
+//     fetchPartners();
+//     setupContinuousFetching();
+//   }
+
+//   void setupContinuousFetching() {
+//     fetchPartnersContinuously();
+//   }
+
+//   Future<void> fetchPartners() async {
+//     try {
+//       isLoading.value = true;
+//       final url = Uri.parse('$baseUrl/api/v1/partners/map').replace(
+//         queryParameters: {'api_token': apiToken},
+//       );
+//       final response = await http.get(url).timeout(const Duration(seconds: 15));
+
+//       if (response.statusCode == 200) {
+//         final jsonData = json.decode(response.body);
+//         final List<dynamic> partnerList = jsonData['partners'];
+//         partners.value = partnerList.map((e) => Partner.fromJson(e)).toList();
+//       } else {
+//         throw Exception("Failed to load partners: ${response.statusCode}");
+//       }
+//     } catch (e) {
+//       print("Error fetching partners: $e");
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+
+//   void fetchPartnersContinuously() {
+//     Future.delayed(const Duration(minutes: 10), () async {
+//       await fetchPartners();
+//       fetchPartnersContinuously();
+//     });
+//   }
+
+//   Future<bool> fetchPartnerStatement(Partner partner) async {
+//     int retries = 3;
+//     while (retries > 0) {
+//       try {
+//         isLoadingStatement.value = true;
+//         final url = Uri.parse('$baseUrl/api/v1/partners/${partner.id}/statement').replace(
+//           queryParameters: {'api_token': apiToken},
+//         );
+//         final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+//         if (response.statusCode == 200) {
+//           final data = json.decode(response.body);
+//           if (data['success']) {
+//             statementData.value = data;
+//             return true;
+//           }
+//         }
+//         retries--;
+//         await Future.delayed(const Duration(seconds: 1));
+//       } catch (e) {
+//         print("Error fetching statement: $e");
+//         retries--;
+//         await Future.delayed(const Duration(seconds: 1));
+//       } finally {
+//         isLoadingStatement.value = false;
+//       }
+//     }
+//     return false;
+//   }
+
+//   void selectPartner(Partner partner) {
+//     selectedPartner.value = partner;
+//     statementData.value = null; // Clear previous data
+//     fetchPartnerStatement(partner);
+//   }
+
+//   void clearSelection() {
+//     selectedPartner.value = null;
+//     statementData.value = null;
+//   }
+// }
+
+// class Partner {
+//   final int id;
+//   final String name;
+//   final double latitude;
+//   final double longitude;
+
+//   Partner({
+//     required this.id,
+//     required this.name,
+//     required this.latitude,
+//     required this.longitude,
+//   });
+
+//   factory Partner.fromJson(Map<String, dynamic> json) {
+//     return Partner(
+//       id: json['id'],
+//       name: json['name'],
+//       latitude: json['latitude']?.toDouble() ?? 0.0,
+//       longitude: json['longitude']?.toDouble() ?? 0.0,
+//     );
+//   }
+// }
+
+// Import generated localization class
+
 class PartnerController extends GetxController {
   var partners = <Partner>[].obs;
   var isLoading = true.obs;
@@ -14,8 +133,8 @@ class PartnerController extends GetxController {
   var statementData = Rx<Map<String, dynamic>?>(null);
   var isLoadingStatement = false.obs;
 
-  final String baseUrl = 'http://137.184.205.67:2710';
   final apiToken = GetStorage().read('token') ?? "";
+  final String baseUrl = GetStorage().read('apiUrl') ?? "";
 
   @override
   void onInit() {
@@ -89,7 +208,7 @@ class PartnerController extends GetxController {
 
   void selectPartner(Partner partner) {
     selectedPartner.value = partner;
-    statementData.value = null; // Clear previous data
+    statementData.value = null;
     fetchPartnerStatement(partner);
   }
 
@@ -124,20 +243,21 @@ class Partner {
 
 class MapScreen extends StatelessWidget {
   MapScreen({super.key});
-  
+
   final controller = Get.put(PartnerController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Partners Map"),
+        title: Text(S.of(context).partnersMap),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
               controller.fetchPartners();
             },
+            tooltip: S.of(context)!.refresh,
           ),
         ],
       ),
@@ -149,7 +269,7 @@ class MapScreen extends StatelessWidget {
             }
 
             if (controller.partners.isEmpty) {
-              return const Center(child: Text("No partners found."));
+              return Center(child: Text(S.of(context)!.noPartnersFound));
             }
 
             return FlutterMap(
@@ -195,7 +315,7 @@ class MapScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     );
@@ -204,12 +324,12 @@ class MapScreen extends StatelessWidget {
               ],
             );
           }),
-          
           Obx(() {
-            if (controller.selectedPartner.value != null && 
+            if (controller.selectedPartner.value != null &&
                 MediaQuery.of(context).size.width > 800) {
               return Positioned(
-                right: 16,
+                right: Directionality.of(context) == TextDirection.rtl ? null : 16,
+                left: Directionality.of(context) == TextDirection.rtl ? 16 : null,
                 top: 16,
                 width: 350,
                 child: Card(
@@ -233,7 +353,6 @@ class MapScreen extends StatelessWidget {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        // backgroundColor: Colors.transparent,
         builder: (context) {
           return DraggableScrollableSheet(
             initialChildSize: 0.6,
@@ -243,7 +362,6 @@ class MapScreen extends StatelessWidget {
             builder: (context, scrollController) {
               return Container(
                 decoration: const BoxDecoration(
-                  // color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
@@ -287,7 +405,6 @@ class MapScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
             Row(
               children: [
                 const Icon(Icons.business, size: 28, color: Colors.indigo),
@@ -306,28 +423,12 @@ class MapScreen extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
+                    tooltip: S.of(context)!.close,
                   ),
               ],
             ),
-            
             const Divider(height: 24),
-            
-            // _buildInfoCard(
-            //   title: "Partner Details",
-            //   icon: Icons.info_outline,
-            //   color: Colors.blue,
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       _buildInfoRow("ID", "${partner.id}"),
-            //       _buildInfoRow("Location", 
-            //         "${partner.latitude.toStringAsFixed(6)}, ${partner.longitude.toStringAsFixed(6)}"),
-            //     ],
-            //   ),
-            // ),
-            
             const SizedBox(height: 16),
-            
             if (controller.isLoadingStatement.value)
               const Center(
                 child: Padding(
@@ -336,40 +437,41 @@ class MapScreen extends StatelessWidget {
                 ),
               )
             else if (controller.statementData.value != null)
-              _buildStatementSection(controller.statementData.value!),
+              _buildStatementSection(context, controller.statementData.value!),
           ],
         ),
       );
     });
   }
-  
-  Widget _buildStatementSection(Map<String, dynamic> data) {
+
+  Widget _buildStatementSection(BuildContext context, Map<String, dynamic> data) {
     final statement = data['statement'];
     final transactions = statement['transactions'] as List<dynamic>;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildInfoCard(
-          title: "Statement Summary",
+          title: S.of(context)!.statementSummary,
           icon: Icons.receipt_long,
           color: Colors.green,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow("Date Range  ", "${statement['date_from']} — ${statement['date_to']}"),
-              _buildInfoRow("Currency  ", statement['currency']),
-                _buildInfoRow("Ending Balance  ", 
-                  "  ${statement['ending_balance'].toStringAsFixed(2)}", 
-                  valueStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              _buildInfoRow(S.of(context)!.dateRange,
+                  "${statement['date_from']} — ${statement['date_to']}"),
+              _buildInfoRow(S.of(context)!.currency, statement['currency']),
+              _buildInfoRow(
+                S.of(context)!.endingBalance,
+                "${statement['ending_balance'].toStringAsFixed(2)}",
+                valueStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ],
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         _buildInfoCard(
-          title: "Transactions",
+          title: S.of(context)!.transactions,
           icon: Icons.sync_alt,
           color: Colors.deepOrange,
           child: Column(
@@ -382,22 +484,20 @@ class MapScreen extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        "DATE",
+                        S.of(context)!.date,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          // color: Colors.grey[600],
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 1,
                       child: Text(
-                        "DEBIT",
+                        S.of(context)!.debit,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -405,11 +505,10 @@ class MapScreen extends StatelessWidget {
                     Expanded(
                       flex: 1,
                       child: Text(
-                        "CREDIT",
+                        S.of(context)!.credit,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -417,11 +516,10 @@ class MapScreen extends StatelessWidget {
                     Expanded(
                       flex: 1,
                       child: Text(
-                        "BALANCE",
+                        S.of(context)!.balance,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          // color: Colors.grey[600],
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -451,19 +549,17 @@ class MapScreen extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   transaction['description'],
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 12,
-                                    // color: Colors.grey[600],
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 2,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  "Ref: ${transaction['reference']}",
-                                  style: TextStyle(
+                                  "${S.of(context).reference}: ${transaction['reference']}",
+                                  style: const TextStyle(
                                     fontSize: 11,
-                                    // color: Colors.grey[500],
                                   ),
                                 ),
                               ],
@@ -515,7 +611,6 @@ class MapScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        // color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -533,7 +628,6 @@ class MapScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              // color: color.withOpacity(0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -551,7 +645,6 @@ class MapScreen extends StatelessWidget {
               ],
             ),
           ),
-          
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: child,

@@ -328,11 +328,11 @@
   "@storeLabel": {
     "description": "Label for store name in profile details"
   },
-  "storeIdLabel": "معرف المتجر",
+  "storeIdLabel": "رقم المتجر",
   "@storeIdLabel": {
     "description": "Label for store ID in profile details"
   },
-  "partnerIdLabel": "معرف الشريك",
+  "partnerIdLabel": "رقم الشريك",
   "@partnerIdLabel": {
     "description": "Label for partner ID in profile details"
   },
@@ -364,7 +364,6 @@
     }
   },
   "please_fill_fields": "يرجى ملء جميع الحقول المطلوبة",
-  "no_token": "لم يتم العثور على رمز API. يرجى تسجيل الدخول.",
   "api_error": "فشل إضافة العميل: {message}",
   "@api_error": {
     "description": "Error message for API error when adding customer",
@@ -401,8 +400,6 @@
     "wait_30_seconds": "يرجى الانتظار 30 ثانية قبل التحديث مرة أخرى",
     "location_updated_successfully": "تم تحديث الموقع بنجاح",
     "no_data_available": "لا توجد بيانات متاحة",
-    "retry": "إعادة المحاولة",
-    "notes": "ملاحظات",
     "make_payment": "إجراء دفعة",
     "product_distribution": "توزيع المنتج",
     "top_product": "أفضل منتج",
@@ -430,7 +427,6 @@
     "card": "بطاقة",
     "payment_method": "طريقة الدفع",
     "please_select_payment_method": "يرجى اختيار طريقة دفع",
-    "total": "الإجمالي",
     "pay_all": "ادفع الكل",
     "invoice_date": "تاريخ الفاتورة",
     "due_date": "تاريخ الاستحقاق",
@@ -439,7 +435,6 @@
     "max": "الحد الأقصى",
     "due_now": "المدفوع الآن",
     "due_later": "المدفوع لاحقًا",
-    "error": "خطأ",
     "an_error_occurred": "حدث خطأ",
     "auth_token_not_found": "لم يتم العثور على رمز المصادقة",
     "please_enter_valid_amounts": "يرجى إدخال مبالغ صالحة لفاتورة واحدة على الأقل",
@@ -460,5 +455,186 @@
     "select_date": "اختر التاريخ",
     "no_visits_available": "لا توجد زيارات متاحة",
     "no_notes": "لا توجد ملاحظات",
-    "switch_language": "تبديل اللغة"
+    "switch_language": "تبديل اللغة",
+    "app_title": "تسجيل دخول العميل",  
+    "customer_check_in": "تسجيل دخول العميل",  
+    "add_visit_notes": "أضف ملاحظات الزيارة...",  
+    "check_in": "تسجيل الدخول",  
+    "location_not_available": "الموقع غير متوفر. يرجى المحاولة مرة أخرى.",  
+    "too_far_away": "بعيد جدًا",  
+    "distance_exceeded": "يجب أن تكون أقرب إلى العميل (ضمن 10 كم) لتسجيل الدخول.",  
+    "ok": "موافق",  
+    "close": "إغلاق",  
+    "failed": "فشل",  
+    "no_message_provided": "لم يتم تقديم رسالة",  
+    "visit_details": "تفاصيل الزيارة",  
+    "processing_check_in": "جارٍ معالجة تسجيل الدخول...",  
+    "calculating_distance": "جارٍ حساب المسافة...",  
+    "within_range": "أنت ضمن النطاق لتسجيل الدخول",  
+    "out_of_range": "يجب أن تكون ضمن 10 كم من العميل",  
+    "location_permission_denied": "تم رفض إذن الموقع.",  
+    "location_permission_permanent_denied": "تم رفض إذن الموقع بشكل دائم. يرجى التمكين في الإعدادات.",  
+    "customer_location_not_available": "موقع العميل غير متوفر في الرد.",  
+    "customer_location_invalid": "بيانات موقع العميل غير صالحة.",  
+    "fetch_customer_error": "فشل في جلب موقع العميل.",  
+    "error_fetch_customer": "خطأ في جلب موقع العميل.",  
+     "visit_note": "ملاحظة الزيارة",
+  "distance_warning": "تحذير المسافة",
+  "proceed_with_checkin": "أنت على بعد أكثر من 10 كم. هل تريد المتابعة؟",
+  "proceed": "متابعة",
+  "partner": "العميل",
+  "date": "التاريخ",
+  "user": "المستخدم",
+  "locationServicesDisabled": "خدمات الموقع معطلة.",
+"@locationServicesDisabled": {
+"description": "Error message when location services are turned off"
+},
+"locationPermissionDenied": "تم رفض إذن الموقع.",
+"@locationPermissionDenied": {
+"description": "Error message when location permission is denied"
+},
+"locationPermissionsPermanentlyDenied": "تم رفض أذونات الموقع بشكل دائم.",
+"@locationPermissionsPermanentlyDenied": {
+"description": "Error message when location permissions are permanently denied"
+},
+"locationNotAvailable": "الموقع غير متاح.",
+"@locationNotAvailable": {
+"description": "Error message when location is not available"
+},
+"customerNotFound": "العميل غير موجود.",
+"@customerNotFound": {
+"description": "Error message when customer is not found"
+},
+"unknownCustomer": "عميل غير معروف",
+"@unknownCustomer": {
+"description": "Label for unknown customer"
+},
+"failedToFetchCustomerLocation": "فشل في جلب موقع العميل",
+"@failedToFetchCustomerLocation": {
+"description": "Error message when unable to fetch customer location"
+},
+"visitNote": "ملاحظة الزيارة",
+"@visitNote": {
+"description": "Header title for visit note screen"
+},
+"distanceValue": "{distance} كم",
+"@distanceValue": {
+"description": "Distance value with km unit",
+"placeholders": {
+"distance": {
+"type": "String",
+"example": "5.25"
+}
+}
+},
+"notAvailable": "غير متاح",
+"@notAvailable": {
+"description": "Text shown when data is not available"
+},
+"addNotes": "أضف ملاحظات...",
+"@addNotes": {
+"description": "Hint text for notes input field"
+},
+"checkIn": "تسجيل الحضور",
+"@checkIn": {
+"description": "Label for check-in button"
+},
+"distanceWarning": "تحذير المسافة",
+"@distanceWarning": {
+"description": "Title for distance warning dialog"
+},
+"distanceWarningMessage": "أنت على بعد أكثر من 10 كم. هل تريد متابعة تسجيل الحضور؟",
+"@distanceWarningMessage": {
+"description": "Warning message when user is far from customer location"
+},
+"@cancel": {
+"description": "Label for cancel button"
+},
+"@proceed": {
+"description": "Label for proceed button"
+},
+"@success": {
+"description": "Success status text"
+},
+"@failed": {
+"description": "Failed status text"
+},
+"noMessageProvided": "لم يتم تقديم رسالة",
+"@noMessageProvided": {
+"description": "Text shown when no message is provided"
+},
+"visitDetails": "تفاصيل الزيارة:",
+"@visitDetails": {
+"description": "Header for visit details section"
+},
+"@partner": {
+"description": "Label for partner field"
+},
+"@date": {
+"description": "Label for date field"
+},
+"@user": {
+"description": "Label for user field"
+},
+"@ok": {
+"description": "Label for OK button"
+},
+"@error": {
+"description": "General error text"
+},
+
+        
+          
+                          "languageTitle":"اختر اللغة",
+                          "searchInventory": "البحث في المخزون...",
+  "inventory": "المخزون",
+  "location": "الموقع",
+  "items": "العناصر",
+  "product": "المنتج",
+  "quantity": "الكمية",
+  "available": "متوفر",
+  "price": "السعر",
+  "noInventoryItems": "لم يتم العثور على عناصر المخزون",
+  "noMatchingItems": "لم يتم العثور على عناصر مطابقة",
+  "errorLoadingDataTitle": "خطأ في تحميل البيانات",
+  "errorLoadingData": "فشل في تحميل بيانات المخزون. الحالة: {status}",
+  "errorGeneric": "خطأ: {message}",
+  "retry": "إعادة المحاولة",
+  "selectedProduct": "تم التحديد: {name}",
+  "@selectedProduct": {
+    "description": "رسالة تظهر عند اختيار منتج",
+    "placeholders": {
+      "name": {}
     }
+  },
+  "@errorLoadingData": {
+    "description": "رسالة خطأ لفشل تحميل البيانات مع رمز الحالة",
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "@errorGeneric": {
+    "description": "رسالة خطأ عامة مع تفاصيل الخطأ",
+    "placeholders": {
+      "message": {}
+    }
+  },
+    "pdfViewerTitle": "كشف الحساب",
+  "failedToLoadPdf": "فشل في تحميل PDF",
+  "invalidOrEmptyFile": "ملف غير صالح أو فارغ",
+  "pdfFileTooSmall": "ملف PDF صغير جدًا أو تالف.",
+  "pdfFileNotFound": "ملف PDF غير موجود.",
+  "appTitle": "خريطة الشركاء",
+  "noPartnersFound": "لم يتم العثور على شركاء.",
+  "statementSummary": "ملخص الكشف",
+  "transactions": "المعاملات",
+  "dateRange": "النطاق الزمني",
+  "currency": "العملة",
+  "endingBalance": "الرصيد النهائي",
+  "debit": "مدين",
+  "credit": "دائن",
+  "partnersMap": "خريطة الشركاء",
+  "reference":"المرجع",
+    "noSalesInThisTime": ".انت لم تبيع شيء الى الان"
+    }
+

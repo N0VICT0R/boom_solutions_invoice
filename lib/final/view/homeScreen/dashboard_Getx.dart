@@ -20,14 +20,12 @@ import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-// Utility for responsive font sizes
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
   final scaleFactor = screenWidth / 400;
   return (baseFontSize * scaleFactor).clamp(baseFontSize * 0.8, baseFontSize * 1.2);
 }
 
-// Utility for formatting numbers with Arabic suffixes
 String formatNumber(double value, {bool isCurrency = true}) {
   final bool isArabic = Get.locale?.languageCode == 'ar';
 
@@ -38,7 +36,6 @@ String formatNumber(double value, {bool isCurrency = true}) {
     return value.toStringAsFixed(0);
   }
 
-  // Arabic suffixes
   if (isArabic) {
     const suffixes = [' ألف', ' مليون', ' مليار', ' تريليون'];
     int suffixIndex = -1;
@@ -54,7 +51,6 @@ String formatNumber(double value, {bool isCurrency = true}) {
     return '$formatted${suffixes[suffixIndex]}';
   }
 
-  // English suffixes
   const suffixes = ['k', 'M', 'B', 'T'];
   int suffixIndex = -1;
   double scaledValue = value;
@@ -97,6 +93,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   DateTime _currentDateTime = DateTime.now();
   Timer? _clockTimer;
+  String? _csrfToken;
 
   @override
   void initState() {
@@ -110,13 +107,12 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _filterDataByTimeRange('7d');
-    _fetchAllData().then((_) {
+    _fetchCsrfToken().then((_) => _fetchAllData()).then((_) {
       _animationController.forward();
     }).catchError((_) {});
     _startPolling();
     _startClock();
 
-    // Initialize connectivity monitoring
     _checkConnectivity();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       bool wasOffline = isOffline;
@@ -124,14 +120,13 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         isOffline = results.every((result) => result == ConnectivityResult.none);
       });
       if (wasOffline && !isOffline) {
-        _fetchAllData();
+        _fetchCsrfToken().then((_) => _fetchAllData());
       } else if (isOffline && _selectedIndex != 2) {
         _onItemTapped(2);
       }
     });
   }
 
-  // Start a timer to update the clock every second if real-time is enabled
   void _startClock() {
     if (isRealTimeEnabled) {
       _clockTimer?.cancel();
@@ -143,7 +138,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     }
   }
 
-  // Format the date and time based on locale
   String _formatDateTime(DateTime dateTime, bool isArabic) {
     final dateFormat = isArabic
         ? intl.DateFormat('dd MMMM yyyy', 'ar')
@@ -162,6 +156,23 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     }
   }
 
+  Future<void> _fetchCsrfToken() async {
+    try {
+      final apiUrl = GetStorage().read("apiUrl") ?? "";
+      if (apiUrl.isEmpty) return;
+      final url = Uri.parse('$apiUrl/api/v1/csrf-token');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        setState(() {
+          _csrfToken = jsonData['csrf_token'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch CSRF token: $e');
+    }
+  }
+
   Future<bool> _refreshToken() async {
     try {
       final authController = Get.find<AuthController>();
@@ -171,18 +182,22 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       final url = Uri.parse('$apiUrl/api/v1/users/$userId/refresh-token');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
+        },
         body: jsonEncode({}),
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final newToken = jsonData['token'];
         GetStorage().write('token', newToken);
+        await _fetchCsrfToken();
         return true;
       }
       return false;
     } catch (e) {
-      print('Token refresh failed: $e');
+      debugPrint('Token refresh failed: $e');
       return false;
     }
   }
@@ -237,7 +252,10 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       final url = Uri.parse('$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
       final response = await http.get(
         url,
-        headers: {'Authorization': 'Bearer $token'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
+        },
       );
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -319,6 +337,11 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   }
 
   void _onItemTapped(int index) {
+    debugPrint('Navigation tapped: index $index');
+    if (isOffline && index != 2) {
+      debugPrint('Offline mode: cannot navigate to index $index');
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -337,9 +360,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     final authController = Get.find<AuthController>();
     final l10n = S.of(context);
     final bool isRTL = Get.locale?.languageCode == 'ar';
-    final bool isArabic = isRTL ?? false;
+    final bool isArabic = isRTL;
 
-    // Minimalist color palette
     final Color bgColor = isDark ? Color(0xFF121212) : Color(0xFFFAFAFA);
     final Color cardBackground = isDark ? Color(0xFF1A1A1A) : Colors.white;
     final Color cardBorder = isDark ? Color(0xFF2A2A2A) : Color(0xFFE0E0E0);
@@ -350,7 +372,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     final Color shimmerHighlightColor = isDark ? Color(0xFF303030) : Colors.grey[100]!;
 
     final List<Widget> pages = [
-      // Dashboard Page
       isOffline
           ? SafeArea(
               child: Padding(
@@ -362,7 +383,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               child: RefreshIndicator(
                 onRefresh: _fetchAllData,
                 color: accentColor,
-                backgroundColor: cardBackground,
+                // backgroundColor: cardBackground,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
                   child: SingleChildScrollView(
@@ -373,7 +394,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header
                           FadeInDown(
                             duration: Duration(milliseconds: 400),
                             child: Row(
@@ -414,8 +434,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             ),
                           ),
                           SizedBox(height: 20),
-
-                          // Sales Chart
                           FadeInUp(
                             duration: Duration(milliseconds: 500),
                             from: 30,
@@ -438,8 +456,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             ),
                           ),
                           SizedBox(height: 20),
-
-                          // Loading or Error State
                           isLoading
                               ? _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet)
                               : errorMessage != null
@@ -450,8 +466,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                       child: Column(
                                         children: [
                                           SizedBox(height: 12),
-
-                                          // Metric Cards - Grid Layout
                                           GridView.builder(
                                             shrinkWrap: true,
                                             physics: NeverScrollableScrollPhysics(),
@@ -474,16 +488,23 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                     l10n.newCustomers,
                                                   ][index],
                                                   value: [
-                                                    homeData?.monthlySales.metrics.totalAmount != null && homeData?.monthlySales.metrics.monthTarget != null
-                                                        ? '${formatNumber(homeData!.monthlySales.metrics.totalAmount)}/${formatNumber(homeData!.monthlySales.metrics.monthTarget)}'
+                                                    homeData?.monthlySales?.metrics?.totalAmount != null &&
+                                                            homeData?.monthlySales?.metrics?.monthTarget != null
+                                                        ? '${formatNumber(homeData!.monthlySales!.metrics!.totalAmount!)}/${formatNumber(homeData!.monthlySales!.metrics!.monthTarget!)}'
                                                         : 'N/A',
-                                                    homeData?.receivables.amountDueToday != null ? formatNumber(homeData!.receivables.amountDueToday) : 'N/A',
-                                                    homeData?.additionalMetrics.todayVisits != null ? '${homeData!.additionalMetrics.todayVisits}' : 'N/A',
-                                                    homeData?.additionalMetrics.newCustomersThisMonth != null ? '${homeData!.additionalMetrics.newCustomersThisMonth}' : 'N/A',
+                                                    homeData?.receivables?.amountDueToday != null
+                                                        ? formatNumber(homeData!.receivables!.amountDueToday!)
+                                                        : 'N/A',
+                                                    homeData?.additionalMetrics?.todayVisits != null
+                                                        ? '${homeData!.additionalMetrics!.todayVisits}'
+                                                        : 'N/A',
+                                                    homeData?.additionalMetrics?.newCustomersThisMonth != null
+                                                        ? '${homeData!.additionalMetrics!.newCustomersThisMonth}'
+                                                        : 'N/A',
                                                   ][index],
                                                   subtitle: [
-                                                    l10n.ofTarget(homeData?.monthlySales.metrics.achievementPercentage ?? 0),
-                                                    l10n.partners(homeData?.receivables.partnerCount ?? 0),
+                                                    l10n.ofTarget(homeData?.monthlySales?.metrics?.achievementPercentage ?? 0),
+                                                    l10n.partners(homeData?.receivables?.partnerCount ?? 0),
                                                     l10n.completedToday,
                                                     l10n.thisMonth,
                                                   ][index],
@@ -494,7 +515,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                     Icons.person_add_alt,
                                                   ][index],
                                                   iconColor: [
-                                                    (homeData?.monthlySales.metrics.achievementPercentage ?? 0) >= 80
+                                                    (homeData?.monthlySales?.metrics?.achievementPercentage ?? 0) >= 80
                                                         ? Colors.green[400]!
                                                         : Colors.orange[400]!,
                                                     Colors.amber[400]!,
@@ -511,8 +532,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                       ),
                                     ),
                           SizedBox(height: 20),
-
-                          // Quick Actions
                           FadeInUp(
                             duration: Duration(milliseconds: 700),
                             from: 30,
@@ -534,7 +553,17 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                       child: _ActionButton(
                                         icon: Icons.place,
                                         label: l10n.nearbyCustomers,
-                                        onTap: () => Get.toNamed('/NearByCustomer'),
+                                        onTap: () {
+                                          debugPrint('Tapped Nearby Customers');
+                                          if (Get.isRegistered<DashboardController>()) {
+                                            Get.toNamed('/nearbycustomer');
+                                          } else {
+                                            debugPrint('DashboardController not found');
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Navigation error: Controller not found')),
+                                            );
+                                          }
+                                        },
                                         isDark: isDark,
                                         accentColor: accentColor,
                                       ),
@@ -545,8 +574,23 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                         icon: Icons.inventory_2,
                                         label: l10n.stock,
                                         onTap: () {
-                                          Get.find<DashboardController>().createNewDeal();
-                                          Get.toNamed('/Stock');
+                                          debugPrint('Tapped Stock');
+                                          if (Get.isRegistered<DashboardController>()) {
+                                            try {
+                                              Get.find<DashboardController>().createNewDeal();
+                                              Get.toNamed('/stock');
+                                            } catch (e) {
+                                              debugPrint('Error in Stock tap: $e');
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Navigation error: $e')),
+                                              );
+                                            }
+                                          } else {
+                                            debugPrint('DashboardController not found');
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Navigation error: Controller not found')),
+                                            );
+                                          }
                                         },
                                         isDark: isDark,
                                         accentColor: accentColor,
@@ -558,8 +602,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             ),
                           ),
                           SizedBox(height: 20),
-
-                          // Notes Section
                           FadeInUp(
                             duration: Duration(milliseconds: 800),
                             from: 30,
@@ -603,7 +645,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                 ),
               ),
             ),
-      // Customers Page
       isOffline
           ? SafeArea(
               child: Padding(
@@ -612,9 +653,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               ),
             )
           : Center(child: CustomersListScreen()),
-      // Odoo Page
-      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'http://137.184.205.67:2710/web/login?redirect=%2Fodoo%3F')),
-      // Settings Page
+      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co//web/login?redirect=%2Fodoo%3F')),
       isOffline
           ? SafeArea(
               child: Padding(
@@ -1067,7 +1106,10 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           _ActionButton(
             icon: Icons.refresh,
             label: l10n.retry,
-            onTap: _fetchAllData,
+            onTap: () {
+              debugPrint('Tapped Retry');
+              _fetchAllData();
+            },
             isDark: isDark,
             accentColor: accentColor,
           ),

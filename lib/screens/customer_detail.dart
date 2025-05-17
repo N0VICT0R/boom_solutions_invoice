@@ -1,6 +1,6 @@
 import 'package:boom_solutions_invoice/screens/PaymentPostScreen.dart';
 import 'package:boom_solutions_invoice/screens/visitsScreens/visits_hestory_customer_Screen.dart';
-import 'package:boom_solutions_invoice/widgets/SOA/SOApdf.dart';
+import 'package:boom_solutions_invoice/widgets/SOA/soapdf.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:boom_solutions_invoice/widgets/line_syncf_chart.dart';
 import 'package:boom_solutions_invoice/generated/l10n.dart'; // Import localization
 
 //=======================
@@ -359,7 +358,7 @@ class PartnerController extends GetxController {
         return;
       }
 
-      final url = 'http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token';
+      final url = 'https://onix.boom-solutions.co/api/v1/partners/8/balance?api_token=$token';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -1058,7 +1057,7 @@ class MetricsGrid extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+            Icon(icon, size: 20, ),
             const SizedBox(height: 8),
             Text(
               value,
@@ -1092,7 +1091,7 @@ class MetricsGrid extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
+        leading: Icon(icon,  size: 20),
         title: Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(

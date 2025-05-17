@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:boom_solutions_invoice/widgets/SOA/SOApdfScreen.dart';
+import 'package:boom_solutions_invoice/widgets/SOA/soa.pdfScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -27,7 +27,7 @@ class PdfController extends GetxController {
       final url = '$apiurl/api/v1/partners/$partnerId/statement/pdf'
           '?api_token=$apiToken&date_from=$dateFrom&date_to=$dateTo';
       // print("Downloading from: $url");
-        print("$partnerId");
+        // print("$partnerId");
       // Get directory to save the PDF file
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/statement.pdf';
@@ -38,7 +38,7 @@ class PdfController extends GetxController {
         filePath,
         options: Options(responseType: ResponseType.bytes),
       );
-      print("Status: ${response.statusCode}, saved at $filePath");
+      // print("Status: ${response.statusCode}, saved at $filePath");
 
       final file = File(filePath);
       // Validate the file (must exist and be larger than an arbitrary 100 bytes)

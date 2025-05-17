@@ -991,7 +991,7 @@ class S {
     return Intl.message(
       'Cancel',
       name: 'cancel',
-      desc: 'Button text to cancel action',
+      desc: 'Label for cancel button',
       args: [],
     );
   }
@@ -1001,7 +1001,7 @@ class S {
     return Intl.message(
       'Success',
       name: 'success',
-      desc: 'Title for success dialogs or snackbars',
+      desc: 'Success status text',
       args: [],
     );
   }
@@ -1086,10 +1086,10 @@ class S {
     );
   }
 
-  /// `Location services are disabled. Please enable them in settings.`
+  /// `Location services are disabled. Please enable them.`
   String get location_services_disabled {
     return Intl.message(
-      'Location services are disabled. Please enable them in settings.',
+      'Location services are disabled. Please enable them.',
       name: 'location_services_disabled',
       desc: 'Message shown when location services are disabled',
       args: [],
@@ -1121,18 +1121,18 @@ class S {
     return Intl.message(
       'Error',
       name: 'error',
-      desc: 'Generic error message',
+      desc: 'General error text',
       args: [],
     );
   }
 
-  /// `Error getting current location`
-  String get error_getting_location {
+  /// `Error getting location: {message}`
+  String error_getting_location(Object message) {
     return Intl.message(
-      'Error getting current location',
+      'Error getting location: $message',
       name: 'error_getting_location',
       desc: 'Error message when unable to get location',
-      args: [],
+      args: [message],
     );
   }
 
@@ -1366,10 +1366,10 @@ class S {
     );
   }
 
-  /// `Balance`
+  /// `BALANCE`
   String get balance {
     return Intl.message(
-      'Balance',
+      'BALANCE',
       name: 'balance',
       desc: 'Label for balance amounts',
       args: [],
@@ -1846,11 +1846,706 @@ class S {
     );
   }
 
+  /// `Customer Check-in`
+  String get app_title {
+    return Intl.message(
+      'Customer Check-in',
+      name: 'app_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Customer Check-in`
+  String get customer_check_in {
+    return Intl.message(
+      'Customer Check-in',
+      name: 'customer_check_in',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add visit notes...`
+  String get add_visit_notes {
+    return Intl.message(
+      'Add visit notes...',
+      name: 'add_visit_notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `CHECK IN`
+  String get check_in {
+    return Intl.message('CHECK IN', name: 'check_in', desc: '', args: []);
+  }
+
+  /// `Location not available. Please try again.`
+  String get location_not_available {
+    return Intl.message(
+      'Location not available. Please try again.',
+      name: 'location_not_available',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Too Far Away`
+  String get too_far_away {
+    return Intl.message(
+      'Too Far Away',
+      name: 'too_far_away',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You need to be closer to the customer (within 10 km) to check in.`
+  String get distance_exceeded {
+    return Intl.message(
+      'You need to be closer to the customer (within 10 km) to check in.',
+      name: 'distance_exceeded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `OK`
+  String get ok {
+    return Intl.message(
+      'OK',
+      name: 'ok',
+      desc: 'Label for OK button',
+      args: [],
+    );
+  }
+
+  /// `Close`
+  String get close {
+    return Intl.message('Close', name: 'close', desc: '', args: []);
+  }
+
+  /// `Failed`
+  String get failed {
+    return Intl.message(
+      'Failed',
+      name: 'failed',
+      desc: 'Failed status text',
+      args: [],
+    );
+  }
+
+  /// `No message provided`
+  String get no_message_provided {
+    return Intl.message(
+      'No message provided',
+      name: 'no_message_provided',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Visit Details`
+  String get visit_details {
+    return Intl.message(
+      'Visit Details',
+      name: 'visit_details',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Processing check-in...`
+  String get processing_check_in {
+    return Intl.message(
+      'Processing check-in...',
+      name: 'processing_check_in',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Calculating distance...`
+  String get calculating_distance {
+    return Intl.message(
+      'Calculating distance...',
+      name: 'calculating_distance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You are within range to check in`
+  String get within_range {
+    return Intl.message(
+      'You are within range to check in',
+      name: 'within_range',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You need to be within 10 km of the customer`
+  String get out_of_range {
+    return Intl.message(
+      'You need to be within 10 km of the customer',
+      name: 'out_of_range',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permission denied.`
+  String get location_permission_denied {
+    return Intl.message(
+      'Location permission denied.',
+      name: 'location_permission_denied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permissions permanently denied. Please enable in settings.`
+  String get location_permission_permanent_denied {
+    return Intl.message(
+      'Location permissions permanently denied. Please enable in settings.',
+      name: 'location_permission_permanent_denied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Customer location not available in the response.`
+  String get customer_location_not_available {
+    return Intl.message(
+      'Customer location not available in the response.',
+      name: 'customer_location_not_available',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Customer with ID {partnerId} not found.`
+  String customer_not_found(Object partnerId) {
+    return Intl.message(
+      'Customer with ID $partnerId not found.',
+      name: 'customer_not_found',
+      desc: '',
+      args: [partnerId],
+    );
+  }
+
+  /// `Customer location data is invalid.`
+  String get customer_location_invalid {
+    return Intl.message(
+      'Customer location data is invalid.',
+      name: 'customer_location_invalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to fetch customer location.`
+  String get fetch_customer_error {
+    return Intl.message(
+      'Failed to fetch customer location.',
+      name: 'fetch_customer_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error fetching customer location.`
+  String get error_fetch_customer {
+    return Intl.message(
+      'Error fetching customer location.',
+      name: 'error_fetch_customer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error: {message}`
+  String submit_error(Object message) {
+    return Intl.message(
+      'Error: $message',
+      name: 'submit_error',
+      desc: '',
+      args: [message],
+    );
+  }
+
+  /// `Network error: {message}`
+  String network_error(Object message) {
+    return Intl.message(
+      'Network error: $message',
+      name: 'network_error',
+      desc: '',
+      args: [message],
+    );
+  }
+
+  /// `Location services are disabled.`
+  String get locationServicesDisabled {
+    return Intl.message(
+      'Location services are disabled.',
+      name: 'locationServicesDisabled',
+      desc: 'Error message when location services are turned off',
+      args: [],
+    );
+  }
+
+  /// `Location permission denied.`
+  String get locationPermissionDenied {
+    return Intl.message(
+      'Location permission denied.',
+      name: 'locationPermissionDenied',
+      desc: 'Error message when location permission is denied',
+      args: [],
+    );
+  }
+
+  /// `Location permissions permanently denied.`
+  String get locationPermissionsPermanentlyDenied {
+    return Intl.message(
+      'Location permissions permanently denied.',
+      name: 'locationPermissionsPermanentlyDenied',
+      desc: 'Error message when location permissions are permanently denied',
+      args: [],
+    );
+  }
+
+  /// `Location not available.`
+  String get locationNotAvailable {
+    return Intl.message(
+      'Location not available.',
+      name: 'locationNotAvailable',
+      desc: 'Error message when location is not available',
+      args: [],
+    );
+  }
+
+  /// `Customer not found.`
+  String get customerNotFound {
+    return Intl.message(
+      'Customer not found.',
+      name: 'customerNotFound',
+      desc: 'Error message when customer is not found',
+      args: [],
+    );
+  }
+
+  /// `Unknown Customer`
+  String get unknownCustomer {
+    return Intl.message(
+      'Unknown Customer',
+      name: 'unknownCustomer',
+      desc: 'Label for unknown customer',
+      args: [],
+    );
+  }
+
+  /// `Failed to fetch customer location`
+  String get failedToFetchCustomerLocation {
+    return Intl.message(
+      'Failed to fetch customer location',
+      name: 'failedToFetchCustomerLocation',
+      desc: 'Error message when unable to fetch customer location',
+      args: [],
+    );
+  }
+
+  /// `Visit Note`
+  String get visitNote {
+    return Intl.message(
+      'Visit Note',
+      name: 'visitNote',
+      desc: 'Header title for visit note screen',
+      args: [],
+    );
+  }
+
+  /// `{distance} km`
+  String distanceValue(String distance) {
+    return Intl.message(
+      '$distance km',
+      name: 'distanceValue',
+      desc: 'Distance value with km unit',
+      args: [distance],
+    );
+  }
+
+  /// `N/A`
+  String get notAvailable {
+    return Intl.message(
+      'N/A',
+      name: 'notAvailable',
+      desc: 'Text shown when data is not available',
+      args: [],
+    );
+  }
+
+  /// `Add notes...`
+  String get addNotes {
+    return Intl.message(
+      'Add notes...',
+      name: 'addNotes',
+      desc: 'Hint text for notes input field',
+      args: [],
+    );
+  }
+
+  /// `Check In`
+  String get checkIn {
+    return Intl.message(
+      'Check In',
+      name: 'checkIn',
+      desc: 'Label for check-in button',
+      args: [],
+    );
+  }
+
+  /// `Distance Warning`
+  String get distanceWarning {
+    return Intl.message(
+      'Distance Warning',
+      name: 'distanceWarning',
+      desc: 'Title for distance warning dialog',
+      args: [],
+    );
+  }
+
+  /// `You are more than 10 km away. Proceed with check-in?`
+  String get distanceWarningMessage {
+    return Intl.message(
+      'You are more than 10 km away. Proceed with check-in?',
+      name: 'distanceWarningMessage',
+      desc: 'Warning message when user is far from customer location',
+      args: [],
+    );
+  }
+
+  /// `Proceed`
+  String get proceed {
+    return Intl.message(
+      'Proceed',
+      name: 'proceed',
+      desc: 'Label for proceed button',
+      args: [],
+    );
+  }
+
+  /// `No message provided`
+  String get noMessageProvided {
+    return Intl.message(
+      'No message provided',
+      name: 'noMessageProvided',
+      desc: 'Text shown when no message is provided',
+      args: [],
+    );
+  }
+
+  /// `Visit Details:`
+  String get visitDetails {
+    return Intl.message(
+      'Visit Details:',
+      name: 'visitDetails',
+      desc: 'Header for visit details section',
+      args: [],
+    );
+  }
+
+  /// `Partner`
+  String get partner {
+    return Intl.message(
+      'Partner',
+      name: 'partner',
+      desc: 'Label for partner field',
+      args: [],
+    );
+  }
+
+  /// `DATE`
+  String get date {
+    return Intl.message(
+      'DATE',
+      name: 'date',
+      desc: 'Label for date field',
+      args: [],
+    );
+  }
+
+  /// `User`
+  String get user {
+    return Intl.message(
+      'User',
+      name: 'user',
+      desc: 'Label for user field',
+      args: [],
+    );
+  }
+
   /// `Switch Language`
   String get switch_language {
     return Intl.message(
       'Switch Language',
       name: 'switch_language',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change Language To`
+  String get languageTitle {
+    return Intl.message(
+      'Change Language To',
+      name: 'languageTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Search inventory...`
+  String get searchInventory {
+    return Intl.message(
+      'Search inventory...',
+      name: 'searchInventory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Inventory`
+  String get inventory {
+    return Intl.message('Inventory', name: 'inventory', desc: '', args: []);
+  }
+
+  /// `Location`
+  String get location {
+    return Intl.message('Location', name: 'location', desc: '', args: []);
+  }
+
+  /// `Items`
+  String get items {
+    return Intl.message('Items', name: 'items', desc: '', args: []);
+  }
+
+  /// `PRODUCT`
+  String get product {
+    return Intl.message('PRODUCT', name: 'product', desc: '', args: []);
+  }
+
+  /// `QTY`
+  String get quantity {
+    return Intl.message('QTY', name: 'quantity', desc: '', args: []);
+  }
+
+  /// `AVAILABLE`
+  String get available {
+    return Intl.message('AVAILABLE', name: 'available', desc: '', args: []);
+  }
+
+  /// `PRICE`
+  String get price {
+    return Intl.message('PRICE', name: 'price', desc: '', args: []);
+  }
+
+  /// `No inventory items found`
+  String get noInventoryItems {
+    return Intl.message(
+      'No inventory items found',
+      name: 'noInventoryItems',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No matching items found`
+  String get noMatchingItems {
+    return Intl.message(
+      'No matching items found',
+      name: 'noMatchingItems',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error Loading Data`
+  String get errorLoadingDataTitle {
+    return Intl.message(
+      'Error Loading Data',
+      name: 'errorLoadingDataTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load inventory data. Status: {status}`
+  String errorLoadingData(Object status) {
+    return Intl.message(
+      'Failed to load inventory data. Status: $status',
+      name: 'errorLoadingData',
+      desc: 'Error message for failed data loading with status code',
+      args: [status],
+    );
+  }
+
+  /// `Error: {message}`
+  String errorGeneric(Object message) {
+    return Intl.message(
+      'Error: $message',
+      name: 'errorGeneric',
+      desc: 'Generic error message with error details',
+      args: [message],
+    );
+  }
+
+  /// `Selected: {name}`
+  String selectedProduct(Object name) {
+    return Intl.message(
+      'Selected: $name',
+      name: 'selectedProduct',
+      desc: 'Message shown when a product is selected',
+      args: [name],
+    );
+  }
+
+  /// `Partners Map`
+  String get appTitle {
+    return Intl.message('Partners Map', name: 'appTitle', desc: '', args: []);
+  }
+
+  /// `No partners found.`
+  String get noPartnersFound {
+    return Intl.message(
+      'No partners found.',
+      name: 'noPartnersFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Statement Summary`
+  String get statementSummary {
+    return Intl.message(
+      'Statement Summary',
+      name: 'statementSummary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Transactions`
+  String get transactions {
+    return Intl.message(
+      'Transactions',
+      name: 'transactions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Date Range`
+  String get dateRange {
+    return Intl.message('Date Range', name: 'dateRange', desc: '', args: []);
+  }
+
+  /// `Currency`
+  String get currency {
+    return Intl.message('Currency', name: 'currency', desc: '', args: []);
+  }
+
+  /// `Ending Balance`
+  String get endingBalance {
+    return Intl.message(
+      'Ending Balance',
+      name: 'endingBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `DEBIT`
+  String get debit {
+    return Intl.message('DEBIT', name: 'debit', desc: '', args: []);
+  }
+
+  /// `CREDIT`
+  String get credit {
+    return Intl.message('CREDIT', name: 'credit', desc: '', args: []);
+  }
+
+  /// `Partners Map`
+  String get partnersMap {
+    return Intl.message(
+      'Partners Map',
+      name: 'partnersMap',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reference`
+  String get reference {
+    return Intl.message('Reference', name: 'reference', desc: '', args: []);
+  }
+
+  /// `You haven't sold anything yet.`
+  String get noSalesInThisTime {
+    return Intl.message(
+      'You haven\'t sold anything yet.',
+      name: 'noSalesInThisTime',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `PDF Viewer`
+  String get pdfViewerTitle {
+    return Intl.message(
+      'PDF Viewer',
+      name: 'pdfViewerTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load PDF`
+  String get failedToLoadPdf {
+    return Intl.message(
+      'Failed to load PDF',
+      name: 'failedToLoadPdf',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid or empty file`
+  String get invalidOrEmptyFile {
+    return Intl.message(
+      'Invalid or empty file',
+      name: 'invalidOrEmptyFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `PDF file is too small or corrupted.`
+  String get pdfFileTooSmall {
+    return Intl.message(
+      'PDF file is too small or corrupted.',
+      name: 'pdfFileTooSmall',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `PDF file does not exist.`
+  String get pdfFileNotFound {
+    return Intl.message(
+      'PDF file does not exist.',
+      name: 'pdfFileNotFound',
       desc: '',
       args: [],
     );

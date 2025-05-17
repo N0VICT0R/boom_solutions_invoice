@@ -110,12 +110,11 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
   String formatDate(String dateString) {
     final date = DateTime.parse(dateString);
-    return DateFormat('MMM d, yyyy HH:mm').format(DateTime.now());
+    return DateFormat('MMM d, yyyy HH:mm').format(date);
   }
-
   void sortAndFilterVisits() {
     List<dynamic> tempVisits = List.from(visitData['visits'] ?? []);
-
+    // Filter by selected date
     if (selectedDate != null) {
       tempVisits = tempVisits.where((visit) {
         final visitDate = DateTime.parse(visit['visit_date']);
@@ -124,15 +123,14 @@ class _VisitsScreenState extends State<VisitsScreen> {
             visitDate.day == selectedDate!.day;
       }).toList();
     }
-
+    // Sort based on sortOrder
     tempVisits.sort((a, b) {
       final dateA = DateTime.parse(a['visit_date']);
       final dateB = DateTime.parse(b['visit_date']);
-      return sortOrder == S.of(context).newest_first
+      return sortOrder == 'Newest First'
           ? dateB.compareTo(dateA)
           : dateA.compareTo(dateB);
     });
-
     setState(() {
       filteredVisits = tempVisits;
     });
@@ -170,15 +168,15 @@ class _VisitsScreenState extends State<VisitsScreen> {
             onPressed: fetchVisits,
             tooltip: S.of(context).refresh,
           ),
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () {
-              Get.updateLocale(Get.locale?.languageCode == 'ar'
-                  ? const Locale('en', 'US')
-                  : const Locale('ar', 'EG'));
-            },
-            tooltip: S.of(context).switch_language,
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.language),
+          //   onPressed: () {
+          //     Get.updateLocale(Get.locale?.languageCode == 'ar'
+          //         ? const Locale('en', 'US')
+          //         : const Locale('ar', 'EG'));
+          //   },
+          //   tooltip: S.of(context).switch_language,
+          // ),
         ],
       ),
       body: isLoading
@@ -303,7 +301,9 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                     child: Row(
                                       children: [
                                         Text(
-                                          '${S.of(context).filtered_by}: ${DateFormat('MMM d, yyyy', Get.locale?.languageCode).format(selectedDate!)}',
+                                          selectedDate != null
+                                              ? '${S.of(context).filtered_by}:  ${formatDate(selectedDate.toString())}'
+                                              : '',
                                           style: const TextStyle(fontSize: 14),
                                         ),
                                         const SizedBox(width: 8),

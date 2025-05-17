@@ -4,6 +4,7 @@ import 'package:boom_solutions_invoice/final/view/auth_Getx.dart';
 import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -87,10 +88,11 @@ class SettingsScreen extends StatelessWidget {
             // Theme Settings Card
             _buildThemeSettingsCard(themeController, l10n),
 
+            _buildLanguageSettingsCard    (l10n),
             SizedBox(height: 16),
 
             // Account Settings Card
-            _buildAccountSettingsCard(l10n),
+            _buildAccountSettingsCard(l10n),  
 
             SizedBox(height: 16),
 
@@ -162,33 +164,48 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+Widget _buildLanguageSettingsCard(S l10n) {
+  final box = GetStorage();
+  String currentLocale = Get.locale?.languageCode ?? 'en';
 
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: ListTile(
+      leading: Icon(Icons.language),
+      title: Text(l10n.languageTitle),
+      trailing: Text(currentLocale == 'ar' ? 'English' : 'العربية',style: TextStyle(fontSize: 16,)),
+      onTap: () {
+        String newLocale = currentLocale == 'ar' ? 'en' : 'ar';
+        Get.updateLocale(Locale(newLocale));
+        box.write('locale', newLocale);
+      },
+    ),
+  );
+}
   Widget _buildThemeSettingsCard(ThemeController themeController, S l10n) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.darkModeTitle,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Obx(
-              () => Switch(
-                value: themeController.isDarkMode,
-                onChanged: (value) => themeController.toggleTheme(),
-                activeColor: Colors.blue,
-              ),
-            ),
-          ],
+      child: ListTile(
+        leading: Icon(Icons.dark_mode),
+        title: Text(
+          l10n.darkModeTitle,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Obx(
+          () => Switch(
+            value: themeController.isDarkMode,
+            onChanged: (value) => themeController.toggleTheme(),
+            activeColor: Colors.blue,
+          ),
         ),
       ),
     );
