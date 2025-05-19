@@ -358,7 +358,8 @@ class PartnerController extends GetxController {
         return;
       }
 
-      final url = 'https://onix.boom-solutions.co/api/v1/partners/8/balance?api_token=$token';
+      final apiurl = GetStorage().read("apiUrl") ?? 'http://137.184.205.67:2710';
+      final url = '$apiurl/api/v1/partners/$partnerId/balance?api_token=$token';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -408,6 +409,7 @@ class CustomerDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('Building CustomerDetailScreen for partnerId: ${Get.arguments['partnerId']}');
     return Obx(() => Scaffold(
           appBar: _buildAppBar(context),
           body: _buildBody(context),
@@ -422,57 +424,115 @@ class CustomerDetailScreen extends StatelessWidget {
           )),
       elevation: 0,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.add_location_alt_outlined, size: 20),
-          onPressed: () async {
-            final partnerId = Get.arguments['partnerId'] ?? 0;
-            print('Attempting to update location for Partner ID: $partnerId');
-            if (partnerId == 0) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(S.of(context).invalid_partner_id)),
-              );
-              return;
-            }
+       IconButton(
+  icon: const Icon(Icons.add_location_alt_outlined, size: 20),
+  onPressed: () async {
+    final partnerId = Get.arguments['partnerId'] ?? 0;
+    print('Attempting to update location for Partner ID: $partnerId');
+    if (partnerId == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context).invalid_partner_id)),
+      );
+      return;
+    }
 
-            if (lastUpdateTime != null &&
-                DateTime.now().difference(lastUpdateTime!).inSeconds < 30) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(S.of(context).wait_30_seconds)),
-              );
-              return;
-            }
+    if (lastUpdateTime != null &&
+        DateTime.now().difference(lastUpdateTime!).inSeconds < 30) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context).wait_30_seconds)),
+      );
+      return;
+    }
 
-            try {
-              Get.dialog(
-                const Center(child: CircularProgressIndicator()),
-                barrierDismissible: false,
-              );
+    try {
+      // Check if partner already has a valid location
+      final String baseUrl = 'http://137.184.205.67:2710/';
+      final String token = GetStorage().read('token') ?? '';
+      if (token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).no_token)),
+        );
+        return;
+      }
 
-              final (success, errorMessage) = await locationService.updatePartnerLocation(partnerId);
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/v1/partners/map?api_token=$token'),
+      );
 
-              Get.back();
+      bool hasValidLocation = false;
+      _Partner? partner;
 
-              if (success) {
-                lastUpdateTime = DateTime.now();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(S.of(context).location_updated_successfully)),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(errorMessage ?? S.of(context).failed_to_update_location)),
-                );
-              }
-            } catch (e) {
-              if (Get.isDialogOpen ?? false) {
-                Get.back();
-              }
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] && data['partners'] != null && data['partners'].isNotEmpty) {
+          final partnerJson = (data['partners'] as List).firstWhere(
+            (p) => p['id'] == partnerId,
+            orElse: () => null,
+          );
+          if (partnerJson != null) {
+            partner = _Partner.fromJson(partnerJson);
+            // Consider location valid if latitude and longitude are not 0.0
+            hasValidLocation = partner.latitude != 0.0 && partner.longitude != 0.0;
+          }
+        }
+      }
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${S.of(context).error}: ${e.toString()}')),
-              );
-            }
-          },
-        ),
+      // If a valid location exists, show alert dialog
+      if (hasValidLocation) {
+        final shouldUpdate = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(S.of(context).location_exists),
+            content: Text(S.of(context).location_already_set),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(S.of(context).cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(S.of(context).update),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldUpdate != true) {
+          return; // User chose not to update
+        }
+      }
+
+      // Proceed with location update
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      final (success, errorMessage) = await locationService.updatePartnerLocation(partnerId);
+
+      Get.back(); // Dismiss the progress indicator
+
+      if (success) {
+        lastUpdateTime = DateTime.now();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).location_updated_successfully)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage ?? S.of(context).failed_to_update_location)),
+        );
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) {
+        Get.back(); // Ensure progress indicator is dismissed
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${S.of(context).error}: ${e.toString()}')),
+      );
+    }
+  },
+),
         IconButton(
           icon: const Icon(Icons.navigation, size: 20),
           onPressed: () {
@@ -615,41 +675,94 @@ class Payment extends GetView<CustomerController> {
 
       return InkWell(
         onTap: () async {
-          final partnerId = Get.arguments['partnerId'];
+          final partnerId = Get.arguments['partnerId'] ?? 0;
+          if (partnerId == 0) {
+            print('Invalid partnerId: $partnerId');
+            Get.snackbar(
+              S.of(context).error,
+              S.of(context).invalid_partner_id,
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+            return;
+          }
+
+          print('Navigating to InvoicePaymentPage with partnerId: $partnerId');
           final result = await Get.to<bool>(
             () => InvoicePaymentPage(partnerId: partnerId),
             arguments: {'partnerId': partnerId},
           );
 
+          print('Payment result: $result');
           if (result == true) {
-            await Get.find<CustomerController>().fetchSalesData(partnerId);
-            await Get.find<PartnerController>().fetchPartnerDetails(partnerId);
+            print('Payment successful, refreshing data for partnerId: $partnerId');
+            try {
+              await Get.find<CustomerController>().fetchSalesData(partnerId);
+              await Get.find<PartnerController>().fetchPartnerDetails(partnerId);
+            } catch (e) {
+              print('Error refreshing data: $e');
+              Get.snackbar(
+                S.of(context).error,
+                'Failed to refresh data: $e',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+              );
+            }
           }
         },
-        child: Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  S.of(context).make_payment,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-              ],
+        child: _buildCard(
+          height: MediaQuery.of(context).size.height * 0.10,
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              S.of(context).make_payment,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
             ),
           ),
         ),
       );
     });
   }
+
+  Widget _buildCard({required double height, required Widget child}) {
+    return Card(
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
+
+  Widget _buildCard({required double height, required Widget child}) {
+    return Card(
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+
 
 class SalesChart extends GetView<CustomerController> {
   final List<Color> chartColors;

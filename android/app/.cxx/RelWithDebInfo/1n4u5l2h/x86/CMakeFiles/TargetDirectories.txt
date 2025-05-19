@@ -1,0 +1,2 @@
+C:/Users/PC/Desktop/boomSolutions/boom_solutions_invoice/android/app/.cxx/RelWithDebInfo/1n4u5l2h/x86/CMakeFiles/edit_cache.dir
+C:/Users/PC/Desktop/boomSolutions/boom_solutions_invoice/android/app/.cxx/RelWithDebInfo/1n4u5l2h/x86/CMakeFiles/rebuild_cache.dir

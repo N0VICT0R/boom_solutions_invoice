@@ -2096,10 +2096,10 @@ class S {
     );
   }
 
-  /// `Location permission denied.`
+  /// `Location permission denied. Please enable it in settings.`
   String get locationPermissionDenied {
     return Intl.message(
-      'Location permission denied.',
+      'Location permission denied. Please enable it in settings.',
       name: 'locationPermissionDenied',
       desc: 'Error message when location permission is denied',
       args: [],
@@ -2546,6 +2546,81 @@ class S {
     return Intl.message(
       'PDF file does not exist.',
       name: 'pdfFileNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permission permanently denied. Please enable it in device settings.`
+  String get locationPermissionDeniedForever {
+    return Intl.message(
+      'Location permission permanently denied. Please enable it in device settings.',
+      name: 'locationPermissionDeniedForever',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to get location. Please try again.`
+  String get locationError {
+    return Intl.message(
+      'Failed to get location. Please try again.',
+      name: 'locationError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Toggle Route Mode`
+  String get toggleRouteMode {
+    return Intl.message(
+      'Toggle Route Mode',
+      name: 'toggleRouteMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location Exists`
+  String get location_exists {
+    return Intl.message(
+      'Location Exists',
+      name: 'location_exists',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This partner already has a set location. Do you want to update it?`
+  String get location_already_set {
+    return Intl.message(
+      'This partner already has a set location. Do you want to update it?',
+      name: 'location_already_set',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update`
+  String get update {
+    return Intl.message('Update', name: 'update', desc: '', args: []);
+  }
+
+  /// `Payment successfully`
+  String get payment_successful {
+    return Intl.message(
+      'Payment successfully',
+      name: 'payment_successful',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notes are required`
+  String get notesRequired {
+    return Intl.message(
+      'Notes are required',
+      name: 'notesRequired',
       desc: '',
       args: [],
     );

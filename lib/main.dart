@@ -33,6 +33,9 @@ import 'screens/invoice_detail_screen.dart';
 import 'generated/l10n.dart';
 
 void main() async {
+    await GetStorage.init();
+  GetStorage().writeIfNull('apiUrl', 'https://onix.boom-solutions.co');
+  GetStorage().writeIfNull('token', 'gln5EU3jkGwBy7GZWnSpm9N7EffslYS5'); 
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await Get.putAsync(() => SharedPreferences.getInstance());
@@ -89,6 +92,7 @@ class InvoiceApp extends StatelessWidget {
       supportedLocales: S.delegate.supportedLocales,
       initialRoute: '/splash',
       getPages: [
+
         GetPage(name: '/splash', page: () => SplashScreen()),
         GetPage(name: '/auth', page: () => AuthScreen()),
         GetPage(name: '/dashboard', page: () => SalesDashboard()),

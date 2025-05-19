@@ -133,7 +133,7 @@
   "@salesTarget": {
     "description": "Title for the sales target metric card"
   },
-  "collections": "التحصيلات",
+  "collections": "  ",
   "@collections": {
     "description": "Title for the collections metric card"
   },
@@ -400,8 +400,8 @@
     "wait_30_seconds": "يرجى الانتظار 30 ثانية قبل التحديث مرة أخرى",
     "location_updated_successfully": "تم تحديث الموقع بنجاح",
     "no_data_available": "لا توجد بيانات متاحة",
-    "make_payment": "إجراء دفعة",
-    "product_distribution": "توزيع المنتج",
+    "make_payment": "تحصيل الفواتير",
+    "product_distribution": " توزيع المنتجات ",
     "top_product": "أفضل منتج",
     "na": "غير متوفر",
     "total": "الإجمالي",
@@ -535,7 +535,7 @@
 "@addNotes": {
 "description": "Hint text for notes input field"
 },
-"checkIn": "تسجيل الحضور",
+"checkIn": " ملخص الزيارة",
 "@checkIn": {
 "description": "Label for check-in button"
 },
@@ -624,7 +624,7 @@
   "invalidOrEmptyFile": "ملف غير صالح أو فارغ",
   "pdfFileTooSmall": "ملف PDF صغير جدًا أو تالف.",
   "pdfFileNotFound": "ملف PDF غير موجود.",
-  "appTitle": "خريطة الشركاء",
+  "appTitle": "العملاء",
   "noPartnersFound": "لم يتم العثور على شركاء.",
   "statementSummary": "ملخص الكشف",
   "transactions": "المعاملات",
@@ -633,8 +633,39 @@
   "endingBalance": "الرصيد النهائي",
   "debit": "مدين",
   "credit": "دائن",
-  "partnersMap": "خريطة الشركاء",
+  "partnersMap": "خريطة العملاء",
   "reference":"المرجع",
-    "noSalesInThisTime": ".انت لم تبيع شيء الى الان"
+    "noSalesInThisTime": ".انت لم تبيع شيء الى الان",
+"locationPermissionDenied": "تم رفض إذن الموقع. يرجى تمكينه في الإعدادات.",
+"locationPermissionDeniedForever": "تم رفض إذن الموقع بشكل دائم. يرجى تمكينه في إعدادات الجهاز.",
+"locationError": "فشل في الحصول على الموقع. يرجى المحاولة مرة أخرى.",
+  "toggleRouteMode": "تبديل نظام الطرق",
+  "location_exists": "الموقع موجود",
+  "@location_exists": {
+    "description": "Message shown when partner location already exists"
+  },
+  "location_already_set": "يملك هذا الشريك موقعًا محددًا مسبقًا. هل تريد تحديثه؟",
+  "@location_already_set": {
+    "description": "Message shown when partner location is already set"
+  },
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "Label for cancel button"
+  },
+  "update": "تحديث",
+  "@update": {
+    "description": "Label for update button"
+  },
+  "payment_successful": "تم الدفع بنجاح",
+  "@payment_successful": {
+    "description": "Message shown when payment is successfully posted"
+  }
+,
+"notesRequired": "ملخص الزياره مطلوب",
+"@notesRequired": {
+  "description": "Message shown when notes are required for a transaction"
+}
+
+
     }
 

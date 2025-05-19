@@ -1,11 +1,11 @@
-import 'package:boom_solutions_invoice/screens/customer_detail.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/services.dart';
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:boom_solutions_invoice/generated/l10n.dart'; // Import localization
 
 class InvoicePaymentPage extends StatefulWidget {
   final int partnerId;
@@ -17,13 +17,13 @@ class InvoicePaymentPage extends StatefulWidget {
 }
 
 class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
-  final InvoiceController controller = Get.put(InvoiceController());
+  final InvoiceController controller = Get.find<InvoiceController>();
   final token = GetStorage().read('token') ?? '';
   String? selectedPaymentMethod;
 
   final List<Map<String, dynamic>> paymentMethods = [
-    {'id': '1', 'name': S.current.cash}, // Localized
-    {'id': '2', 'name': S.current.card}, // Localized
+    {'id': '1', 'name': S.current.cash},
+    {'id': '2', 'name': S.current.card},
   ];
 
   @override
@@ -48,125 +48,133 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
-        return Container(
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: controller.invoices.length,
-                  itemBuilder: (context, index) {
-                    final invoice = controller.invoices[index];
-                    return _buildBoardingPassCard(context, invoice);
-                  },
-                ),
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: controller.invoices.length,
+                itemBuilder: (context, index) {
+                  final invoice = controller.invoices[index];
+                  return _buildBoardingPassCard(context, invoice);
+                },
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: DropdownButtonFormField<String>(
-                        value: selectedPaymentMethod,
-                        decoration: InputDecoration(
-                          labelText: S.of(context).payment_method, // Localized
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: DropdownButtonFormField<String>(
+                      value: selectedPaymentMethod,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).payment_method,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        items: paymentMethods.map((method) {
-                          return DropdownMenuItem<String>(
-                            value: method['id'],
-                            child: Text(method['name']),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedPaymentMethod = newValue;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return S.of(context).please_select_payment_method; // Localized
-                          }
-                          return null;
-                        },
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
+                      items: paymentMethods.map((method) {
+                        return DropdownMenuItem<String>(
+                          value: method['id'],
+                          child: Text(method['name']),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedPaymentMethod = newValue;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return S.of(context).please_select_payment_method;
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Obx(() => Text(
-                              "${S.of(context).total}: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (selectedPaymentMethod == null) {
-                              Get.snackbar(
-                                  S.of(context).error, // Localized
-                                  S.of(context).please_select_payment_method); // Localized
-                              return;
-                            }
-                            final paymentMethodId =
-                                int.parse(selectedPaymentMethod!);
-                            controller.payAllInvoices(
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Obx(() => Text(
+                            "${S.of(context).total}: ${controller.totalPayment.value.toStringAsFixed(2)} ${controller.currency.value}",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (selectedPaymentMethod == null) {
+                            print('No payment method selected');
+                            Get.snackbar(
+                              S.of(context).error,
+                              S.of(context).please_select_payment_method,
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              duration: const Duration(seconds: 3),
+                            );
+                            return;
+                          }
+                          try {
+                            final paymentMethodId = int.parse(selectedPaymentMethod!);
+                            print('Calling payAllInvoices with partnerId: ${widget.partnerId}');
+                            await controller.payAllInvoices(
+                              context,
                               widget.partnerId,
                               token,
                               paymentMethodId,
                             );
-                            Get.lazyPut<CustomerController>(
-                                () => CustomerController(),
-                                fenix: true);
-                            Get.lazyPut<PartnerController>(
-                                () => PartnerController());
-                            final partnerController =
-                                Get.find<PartnerController>();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 25, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            "    ${S.of(context).pay_all}    ", // Localized
-                            style: TextStyle(
-                              // color: Colors.green[600],
-                              fontWeight: FontWeight.bold,
-                            ),
+                          } catch (e, stackTrace) {
+                            print('Error in payAllInvoices: $e');
+                            print('Stack trace: $stackTrace');
+                            Get.snackbar(
+                              S.of(context).error,
+                              'Failed to process payment: $e',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              duration: const Duration(seconds: 3),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                        child: Text(
+                          "    ${S.of(context).pay_all}    ",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
       }),
     );
@@ -182,12 +190,10 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
         cardBorder = Border.all(color: theme.dividerColor, width: 1);
         break;
       case 'partial':
-        cardBorder =
-            Border.all(color: theme.dividerColor.withOpacity(0.8), width: 1);
+        cardBorder = Border.all(color: theme.dividerColor.withOpacity(0.8), width: 1);
         break;
       case 'overdue':
-        cardBorder =
-            Border.all(color: theme.dividerColor.withOpacity(0.6), width: 1);
+        cardBorder = Border.all(color: theme.dividerColor.withOpacity(0.6), width: 1);
         break;
       default:
         cardBorder = Border.all(color: theme.dividerColor, width: 1);
@@ -274,7 +280,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  S.of(context).invoice_date, // Localized
+                                  S.of(context).invoice_date,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -334,7 +340,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  S.of(context).due_date, // Localized
+                                  S.of(context).due_date,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -377,7 +383,7 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                S.of(context).pending, // Localized
+                                S.of(context).pending,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
@@ -425,29 +431,21 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                     children: [
                       TextField(
                         controller: textController,
-                        
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d{0,2}')),
-                          MaxAmountInputFormatter(
-                              maxValue: invoice.pendingAmount),
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                          MaxAmountInputFormatter(maxValue: invoice.pendingAmount),
                         ],
                         decoration: InputDecoration(
-                          
-              fillColor:  theme.colorScheme.primaryContainer,
-              filled: true,
+                          fillColor: theme.colorScheme.primaryContainer,
+                          filled: true,
                           focusColor: theme.colorScheme.primary,
-                          labelText: S.of(context).payment_amount, // Localized
-                          hintText:
-                              "${S.of(context).max} ${invoice.pendingAmount.toStringAsFixed(2)}",
+                          labelText: S.of(context).payment_amount,
+                          hintText: "${S.of(context).max} ${invoice.pendingAmount.toStringAsFixed(2)}",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.dividerColor),
                           ),
-                          // filled: true,
-                          // fillColor: theme.canvasColor.withOpacity(0.2),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -482,13 +480,27 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
   }
 }
 
+class MaxAmountInputFormatter extends TextInputFormatter {
+  final double maxValue;
+
+  MaxAmountInputFormatter({required this.maxValue});
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+    double? entered = double.tryParse(newValue.text);
+    if (entered == null) return oldValue;
+    if (entered > maxValue) return oldValue;
+    return newValue;
+  }
+}
 class InvoiceController extends GetxController {
   var isLoading = false.obs;
   var invoices = <InvoiceData>[].obs;
   var partnerName = ''.obs;
   var currency = ''.obs;
-  var totalPayment = 0.0.obs; // Made reactive
-
+  var totalPayment = 0.0.obs;
   final Map<int, TextEditingController> textControllers = {};
 
   double getTotalPayment() {
@@ -504,11 +516,16 @@ class InvoiceController extends GetxController {
   Future<void> fetchInvoices(int partnerId, String token) async {
     isLoading.value = true;
     try {
-      final apiurl = GetStorage().read("apiUrl");
-      final url = Uri.parse(
-          '$apiurl/api/v1/partners/$partnerId/invoices?api_token=$token');
-      final response =
-          await http.get(url, headers: {"Accept": "application/json"});
+      final apiurl = GetStorage().read("apiUrl") ?? 'https://onix.boom-solutions.co';
+      final url = Uri.parse('$apiurl/api/v1/partners/$partnerId/invoices?api_token=$token');
+      print('Fetching invoices for partnerId: $partnerId, token: $token');
+      final response = await http.get(
+        url,
+        headers: {"Accept": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+
+      print('Fetch invoices response: ${response.statusCode}');
+      print('Fetch invoices body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -520,7 +537,6 @@ class InvoiceController extends GetxController {
         currency.value = data['currency'] ?? '';
 
         textControllers.clear();
-
         for (var invoice in invoiceList) {
           textControllers.putIfAbsent(invoice.id, () {
             final controller = TextEditingController();
@@ -530,79 +546,155 @@ class InvoiceController extends GetxController {
             return controller;
           });
         }
-        getTotalPayment(); // Initial calculation
+        getTotalPayment();
+      } else {
+        throw Exception('Failed to fetch invoices: ${response.statusCode}');
       }
     } catch (e) {
-      Get.snackbar(S.of(Get.context!).error, S.of(Get.context!).an_error_occurred); // Localized
+      print('Error fetching invoices: $e');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.snackbar(
+          'Error',
+          'Failed to fetch invoices: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      });
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> payAllInvoices(
-      int partnerId, String token, int paymentMethodId) async {
-    if (token.isEmpty) {
-      Get.snackbar(S.of(Get.context!).error, S.of(Get.context!).auth_token_not_found); // Localized
-      return;
-    }
+Future<void> payAllInvoices(BuildContext context, int partnerId, String token, int paymentMethodId) async {
+  print('Starting payAllInvoices: partnerId=$partnerId, token=$token, paymentMethodId=$paymentMethodId');
+  if (token.isEmpty) {
+    print('Empty token detected');
+    Get.snackbar(
+      S.of(context).error,
+      S.of(context).no_token,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 3),
+    );
+    return;
+  }
 
-    List<Map<String, dynamic>> invoicePayments = [];
-    for (var invoice in invoices) {
-      final amount = double.tryParse(textControllers[invoice.id]!.text) ?? 0.0;
-      if (amount > 0) {
-        invoicePayments.add({
-          "invoice_id": invoice.number,
-          "amount": amount,
-        });
-      }
-    }
-
-    if (invoicePayments.isEmpty) {
-      Get.snackbar(
-          S.of(Get.context!).error, S.of(Get.context!).please_enter_valid_amounts); // Localized
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse(
-            'http://137.184.205.67:2710/api/v1/partners/$partnerId/payments'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode({
-          'api_token': token,
-          'amount': totalPayment.value,
-          'payment_method_id': paymentMethodId,
-          'memo': "${S.of(Get.context!).payment_for} ${invoicePayments.length} ${S.of(Get.context!).invoices}",
-          'post_immediately': true,
-          'invoices': invoicePayments,
-        }),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        for (var controller in textControllers.values) {
-          controller.clear();
-        }
-        fetchInvoices(partnerId, token);
-        await Future.delayed(const Duration(seconds: 2));
-        Get.back(result: true);
-      } else {
-        Get.snackbar(
-          S.of(Get.context!).error,
-          json.decode(response.body)['message'] ?? S.of(Get.context!).payment_failed, // Localized
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        S.of(Get.context!).error,
-        S.of(Get.context!).an_error_occurred,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+  List<Map<String, dynamic>> invoicePayments = [];
+  for (var invoice in invoices) {
+    final amount = double.tryParse(textControllers[invoice.id]!.text) ?? 0.0;
+    if (amount > 0) {
+      invoicePayments.add({
+        "invoice_id": invoice.number,
+        "amount": amount,
+      });
     }
   }
+
+  if (invoicePayments.isEmpty) {
+    print('No valid invoice payments');
+    Get.snackbar(
+      S.of(context).error,
+      S.of(context).please_enter_valid_amounts,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 3),
+    );
+    return;
+  }
+
+  try {
+    final apiurl = GetStorage().read("apiUrl") ?? 'https://onix.boom-solutions.co';
+    final url = Uri.parse('$apiurl/api/v1/partners/$partnerId/payments');
+    final requestBody = json.encode({
+      'api_token': token,
+      'amount': totalPayment.value,
+      'payment_method_id': paymentMethodId,
+      'memo': "Payment for ${invoicePayments.length} invoices",
+      'post_immediately': true,
+      'invoices': invoicePayments,
+    });
+    print('Posting payment to: $url');
+    print('Payment body: $requestBody');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: requestBody,
+    ).timeout(const Duration(seconds: 10));
+
+    print('Payment response status: ${response.statusCode}');
+    print('Payment response body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      for (var controller in textControllers.values) {
+        controller.clear();
+      }
+      await fetchInvoices(partnerId, token);
+      
+      // Solution: Use Future.delayed to ensure the navigation happens after the UI has settled
+      print('Preparing navigation with success');
+      
+      // Show a simple dialog instead of snackbar before navigation
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(S.of(context).success),
+            content: Text(S.of(context).payment_successful),
+            actions: [
+              TextButton(
+                child: Text(S.of(context).ok),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+              ),
+            ],
+          );
+        },
+      );
+      
+      // Safe navigation back after dialog is closed
+      print('Navigating back with result: true');
+      try {
+        // Use Navigator directly instead of Get.back to avoid potential conflicts
+        Navigator.of(context).pop(true);
+      } catch (e, stackTrace) {
+        print('Error during navigation: $e');
+        print('Stack trace: $stackTrace');
+      }
+    } else {
+      final errorMessage = json.decode(response.body)['message'] ?? S.of(context).payment_failed;
+      print('API error: $errorMessage');
+      Get.snackbar(
+        S.of(context).error,
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  } catch (e, stackTrace) {
+    print('Error posting payment: $e');
+    print('Stack trace: $stackTrace');
+    Get.snackbar(
+      S.of(context).error,
+      'Failed to process payment: $e',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 3),
+    );
+  }
+}
 }
 
 class InvoiceData {
@@ -643,20 +735,5 @@ class InvoiceData {
       currency: json['currency'],
       state: json['state'],
     );
-  }
-}
-
-class MaxAmountInputFormatter extends TextInputFormatter {
-  final double maxValue;
-  MaxAmountInputFormatter({required this.maxValue});
-
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) return newValue;
-    double? entered = double.tryParse(newValue.text);
-    if (entered == null) return oldValue;
-    if (entered > maxValue) return oldValue;
-    return newValue;
   }
 }

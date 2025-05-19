@@ -65,7 +65,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "aov": MessageLookupByLibrary.simpleMessage("متوسط قيمة الطلب"),
     "apiToken": MessageLookupByLibrary.simpleMessage(" أدخل الرمز الخاص بك  "),
     "api_error": m0,
-    "appTitle": MessageLookupByLibrary.simpleMessage("خريطة الشركاء"),
+    "appTitle": MessageLookupByLibrary.simpleMessage("العملاء"),
     "app_title": MessageLookupByLibrary.simpleMessage("تسجيل دخول العميل"),
     "auth_failed": MessageLookupByLibrary.simpleMessage(
       "فشل المصادقة: رمز غير صالح أو منتهي الصلاحية. يرجى تسجيل الدخول مرة أخرى.",
@@ -86,14 +86,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "cancelButton": MessageLookupByLibrary.simpleMessage("إلغاء"),
     "card": MessageLookupByLibrary.simpleMessage("بطاقة"),
     "cash": MessageLookupByLibrary.simpleMessage("نقدًا"),
-    "checkIn": MessageLookupByLibrary.simpleMessage("تسجيل الحضور"),
+    "checkIn": MessageLookupByLibrary.simpleMessage(" ملخص الزيارة"),
     "checkInternetConnection": MessageLookupByLibrary.simpleMessage(
       "تحقق من اتصالك بالإنترنت أو حاول مرة أخرى لاحقًا.",
     ),
     "check_in": MessageLookupByLibrary.simpleMessage("تسجيل الدخول"),
     "city": MessageLookupByLibrary.simpleMessage("المدينة"),
     "close": MessageLookupByLibrary.simpleMessage("إغلاق"),
-    "collections": MessageLookupByLibrary.simpleMessage("التحصيلات"),
+    "collections": MessageLookupByLibrary.simpleMessage("  "),
     "completedToday": MessageLookupByLibrary.simpleMessage("تم اليوم"),
     "connection_error": m1,
     "contactAdmin": MessageLookupByLibrary.simpleMessage(
@@ -213,17 +213,27 @@ class MessageLookup extends MessageLookupByLibrary {
     "languageTitle": MessageLookupByLibrary.simpleMessage("اختر اللغة"),
     "last_purchase": MessageLookupByLibrary.simpleMessage("آخر عملية شراء"),
     "location": MessageLookupByLibrary.simpleMessage("الموقع"),
+    "locationError": MessageLookupByLibrary.simpleMessage(
+      "فشل في الحصول على الموقع. يرجى المحاولة مرة أخرى.",
+    ),
     "locationNotAvailable": MessageLookupByLibrary.simpleMessage(
       "الموقع غير متاح.",
     ),
     "locationPermissionDenied": MessageLookupByLibrary.simpleMessage(
-      "تم رفض إذن الموقع.",
+      "تم رفض إذن الموقع. يرجى تمكينه في الإعدادات.",
+    ),
+    "locationPermissionDeniedForever": MessageLookupByLibrary.simpleMessage(
+      "تم رفض إذن الموقع بشكل دائم. يرجى تمكينه في إعدادات الجهاز.",
     ),
     "locationPermissionsPermanentlyDenied":
         MessageLookupByLibrary.simpleMessage("تم رفض أذونات الموقع بشكل دائم."),
     "locationServicesDisabled": MessageLookupByLibrary.simpleMessage(
       "خدمات الموقع معطلة.",
     ),
+    "location_already_set": MessageLookupByLibrary.simpleMessage(
+      "يملك هذا الشريك موقعًا محددًا مسبقًا. هل تريد تحديثه؟",
+    ),
+    "location_exists": MessageLookupByLibrary.simpleMessage("الموقع موجود"),
     "location_not_available": MessageLookupByLibrary.simpleMessage(
       "الموقع غير متوفر. يرجى المحاولة مرة أخرى.",
     ),
@@ -265,7 +275,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "تم تسجيل الخروج",
     ),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("تسجيل الخروج"),
-    "make_payment": MessageLookupByLibrary.simpleMessage("إجراء دفعة"),
+    "make_payment": MessageLookupByLibrary.simpleMessage("تحصيل الفواتير"),
     "max": MessageLookupByLibrary.simpleMessage("الحد الأقصى"),
     "million": MessageLookupByLibrary.simpleMessage("مليون"),
     "mobile": MessageLookupByLibrary.simpleMessage("الموبايل"),
@@ -327,6 +337,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "notAvailable": MessageLookupByLibrary.simpleMessage("غير متاح"),
     "notes": MessageLookupByLibrary.simpleMessage("ملاحظات"),
+    "notesRequired": MessageLookupByLibrary.simpleMessage("ملخص الزياره مطلوب"),
     "notificationsTitle": MessageLookupByLibrary.simpleMessage("الإشعارات"),
     "oct": MessageLookupByLibrary.simpleMessage("دورة الطلب"),
     "odoo": MessageLookupByLibrary.simpleMessage("أودو"),
@@ -345,12 +356,15 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "partner_visits": MessageLookupByLibrary.simpleMessage("زيارات الشريك"),
     "partners": m9,
-    "partnersMap": MessageLookupByLibrary.simpleMessage("خريطة الشركاء"),
+    "partnersMap": MessageLookupByLibrary.simpleMessage("خريطة العملاء"),
     "pay_all": MessageLookupByLibrary.simpleMessage("ادفع الكل"),
     "payment_amount": MessageLookupByLibrary.simpleMessage("مبلغ الدفع"),
     "payment_failed": MessageLookupByLibrary.simpleMessage("فشل الدفع"),
     "payment_for": MessageLookupByLibrary.simpleMessage("الدفع لـ"),
     "payment_method": MessageLookupByLibrary.simpleMessage("طريقة الدفع"),
+    "payment_successful": MessageLookupByLibrary.simpleMessage(
+      "تم الدفع بنجاح",
+    ),
     "payment_terms": MessageLookupByLibrary.simpleMessage("شروط الدفع"),
     "pdfFileNotFound": MessageLookupByLibrary.simpleMessage(
       "ملف PDF غير موجود.",
@@ -382,7 +396,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "product": MessageLookupByLibrary.simpleMessage("المنتج"),
     "product_distribution": MessageLookupByLibrary.simpleMessage(
-      "توزيع المنتج",
+      " توزيع المنتجات ",
     ),
     "profileTitle": MessageLookupByLibrary.simpleMessage("الملف الشخصي"),
     "quantity": MessageLookupByLibrary.simpleMessage("الكمية"),
@@ -432,6 +446,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "switch_language": MessageLookupByLibrary.simpleMessage("تبديل اللغة"),
     "thisMonth": MessageLookupByLibrary.simpleMessage("هذا الشهر"),
     "thousand": MessageLookupByLibrary.simpleMessage("ألف"),
+    "toggleRouteMode": MessageLookupByLibrary.simpleMessage("تبديل نظام الطرق"),
     "too_far_away": MessageLookupByLibrary.simpleMessage("بعيد جدًا"),
     "too_many_requests": MessageLookupByLibrary.simpleMessage(
       "طلبات كثيرة جدًا: يرجى الانتظار قبل المحاولة مرة أخرى.",
@@ -442,6 +457,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trillion": MessageLookupByLibrary.simpleMessage("تريليون"),
     "unknownCustomer": MessageLookupByLibrary.simpleMessage("عميل غير معروف"),
     "unnamed_product": MessageLookupByLibrary.simpleMessage("منتج غير مسمى"),
+    "update": MessageLookupByLibrary.simpleMessage("تحديث"),
     "user": MessageLookupByLibrary.simpleMessage("المستخدم"),
     "view_customer_visit_patterns": MessageLookupByLibrary.simpleMessage(
       "عرض أنماط زيارة العميل",

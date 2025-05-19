@@ -7,44 +7,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-
-void main() async {
-  await GetStorage.init();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Customer Check-in',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        brightness: Brightness.dark,
-        textTheme: GoogleFonts.poppinsTextTheme(
-          Theme.of(context).textTheme.apply(
-                bodyColor: Colors.white,
-                displayColor: Colors.white,
-              ),
-        ),
-      ),
-      localizationsDelegates: const [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: S.delegate.supportedLocales,
-      home: const CheckInScreen(),
-    );
-  }
-}
 
 class CheckInScreen extends StatefulWidget {
-  const CheckInScreen({super.key});
+  final VoidCallback? onSuccess; // Callback for data refresh
+  const CheckInScreen({super.key, this.onSuccess});
 
   @override
   _CheckInScreenState createState() => _CheckInScreenState();
@@ -61,11 +27,17 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
   final TextEditingController _notesController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  bool _isButtonEnabled = false;
 
   final String baseUrl = "https://onix.boom-solutions.co/";
   final String apiToken = GetStorage().read('token') ?? '';
   final LinearGradient gradient = const LinearGradient(
     colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  final LinearGradient disabledGradient = const LinearGradient(
+    colors: [Color(0xFF546E7A), Color(0xFF78909C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -80,8 +52,18 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _notesController.addListener(_updateButtonState);
     _getCurrentLocation();
     _fetchCustomerLocation();
+  }
+
+  void _updateButtonState() {
+    final bool hasText = _notesController.text.trim().isNotEmpty;
+    if (hasText != _isButtonEnabled) {
+      setState(() {
+        _isButtonEnabled = hasText;
+      });
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -191,6 +173,8 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
   }
 
   Future<void> _submitCheckIn() async {
+    if (!_isButtonEnabled) return;
+
     if (_currentPosition == null) {
       setState(() {
         _errorMessage = S.of(context).locationNotAvailable;
@@ -292,10 +276,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              response['message'] ?? S.of(context).noMessageProvided,
-              style: GoogleFonts.poppins(color: Colors.white70),
-            ),
             if (visit != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -310,7 +290,13 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+              if (isSuccess) {
+                widget.onSuccess?.call(); // Trigger data refresh
+                Navigator.pop(context); // Navigate back to previous screen
+              }
+            },
             child: Text(
               S.of(context).ok,
               style: GoogleFonts.poppins(color: const Color(0xFF42A5F5)),
@@ -361,7 +347,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           FadeInDown(
             duration: const Duration(milliseconds: 600),
             child: Row(
@@ -385,7 +370,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
             ),
           ),
           const SizedBox(height: 24),
-          // Location Visualization
           Expanded(
             child: FadeInUp(
               duration: const Duration(milliseconds: 700),
@@ -395,7 +379,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // User Location
                           ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
@@ -414,7 +397,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                               child: const Icon(Icons.delivery_dining, color: Colors.white, size: 32),
                             ),
                           ),
-                          
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -438,8 +420,8 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                                 ),
                                 child: Text(
                                   _distanceToCustomer != null
-                                    ? S.of(context).distanceValue(_distanceToCustomer!.toStringAsFixed(2))
-                                    : S.of(context).notAvailable,
+                                      ? S.of(context).distanceValue(_distanceToCustomer!.toStringAsFixed(2))
+                                      : S.of(context).notAvailable,
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -450,7 +432,6 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                             ],
                           ),
                           const SizedBox(width: 16),
-                          // Customer Location
                           ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
@@ -474,31 +455,56 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
               ),
             ),
           ),
-          // Notes
           FadeInUp(
             duration: const Duration(milliseconds: 800),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                   color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
-              ),
-              child: TextField(
-                controller: _notesController,
-                decoration: InputDecoration(
-                  hintText: S.of(context).addNotes,
-                  hintStyle: GoogleFonts.poppins(color: Colors.white38),
-                  border: InputBorder.none,
+                border: Border.all(
+                  color: _isButtonEnabled
+                      ? Colors.green.withOpacity(0.4)
+                      : Colors.orange.withOpacity(0.4),
+                  width: 1.5,
                 ),
-                style: GoogleFonts.poppins(color: Colors.white),
-                maxLines: 2,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_isButtonEnabled)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        S.of(context).notesRequired ?? "Notes required",
+                        style: GoogleFonts.poppins(
+                          color: Colors.orange.withOpacity(0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  TextField(
+                    controller: _notesController,
+                    decoration: InputDecoration(
+                      hintText: S.of(context).addNotes,
+                      hintStyle: GoogleFonts.poppins(color: Colors.white38),
+                      border: InputBorder.none,
+                      prefixIcon: !_isButtonEnabled
+                          ? Icon(Icons.edit, color: Colors.orange.withOpacity(0.8), size: 18)
+                          : Icon(Icons.check_circle, color: Colors.green.withOpacity(0.8), size: 18),
+                    ),
+                    style: GoogleFonts.poppins(color: Colors.white),
+                    maxLines: 2,
+                  ),
+                ],
               ),
             ),
           ),
@@ -514,13 +520,13 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
             ),
           ],
           const SizedBox(height: 24),
-          // Check-in Button
           FadeInUp(
             duration: const Duration(milliseconds: 1000),
             child: _ActionButton(
               label: S.of(context).checkIn,
-              onTap: _submitCheckIn,
-              gradient: gradient,
+              onTap: _isButtonEnabled ? _submitCheckIn : null,
+              gradient: _isButtonEnabled ? gradient : disabledGradient,
+              isEnabled: _isButtonEnabled,
             ),
           ),
         ],
@@ -530,6 +536,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
 
   @override
   void dispose() {
+    _notesController.removeListener(_updateButtonState);
     _notesController.dispose();
     _animationController.dispose();
     super.dispose();
@@ -568,13 +575,15 @@ class GradientDashedLinePainter extends CustomPainter {
 
 class _ActionButton extends StatefulWidget {
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final LinearGradient gradient;
+  final bool isEnabled;
 
   const _ActionButton({
     required this.label,
     required this.onTap,
     required this.gradient,
+    this.isEnabled = true,
   });
 
   @override
@@ -606,12 +615,14 @@ class __ActionButtonState extends State<_ActionButton> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
+      onTapDown: (_) => widget.isEnabled ? _controller.forward() : null,
       onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
+        if (widget.isEnabled) {
+          _controller.reverse();
+          widget.onTap?.call();
+        }
       },
-      onTapCancel: () => _controller.reverse(),
+      onTapCancel: () => widget.isEnabled ? _controller.reverse() : null,
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
@@ -621,20 +632,36 @@ class __ActionButtonState extends State<_ActionButton> with SingleTickerProvider
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1976D2).withOpacity(0.3),
+                color: widget.isEnabled
+                    ? const Color(0xFF1976D2).withOpacity(0.3)
+                    : Colors.black.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Center(
-            child: Text(
-              widget.label,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!widget.isEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(
+                      Icons.lock_outline,
+                      size: 16,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                Text(
+                  widget.label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: widget.isEnabled ? Colors.white : Colors.white.withOpacity(0.7),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

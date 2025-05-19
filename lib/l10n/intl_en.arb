@@ -972,5 +972,15 @@
   "error": "Error",
   "invalidOrEmptyFile": "Invalid or empty file",
   "pdfFileTooSmall": "PDF file is too small or corrupted.",
-  "pdfFileNotFound": "PDF file does not exist."
+  "pdfFileNotFound": "PDF file does not exist.",
+  "locationPermissionDenied": "Location permission denied. Please enable it in settings.",
+  "locationPermissionDeniedForever": "Location permission permanently denied. Please enable it in device settings.",
+  "locationError": "Failed to get location. Please try again.",
+  "toggleRouteMode": "Toggle Route Mode",
+  "location_exists": "Location Exists",
+"location_already_set": "This partner already has a set location. Do you want to update it?",
+"cancel": "Cancel",
+"update": "Update",
+"payment_successful": "Payment successfully",
+  "notesRequired": "Notes are required"
           }

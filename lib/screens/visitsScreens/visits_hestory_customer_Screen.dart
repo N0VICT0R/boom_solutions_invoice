@@ -2,11 +2,12 @@ import 'package:boom_solutions_invoice/screens/visitsScreens/CheckInScreen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart' hide TextDirection; // Hide TextDirection from intl to avoid conflict
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:boom_solutions_invoice/generated/l10n.dart';
-import 'dart:ui' as ui; // Import dart:ui to explicitly use ui.TextDirection
+import 'dart:ui' as ui;
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp( // Changed to GetMaterialApp for GetX compatibility
       title: S.of(context).partner_visits,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -75,8 +76,8 @@ class _VisitsScreenState extends State<VisitsScreen> {
       errorMessage = '';
     });
 
-    const String baseUrl = 'https://onix.boom-solutions.co/';
-    const String apiToken = 'gln5EU3jkGwBy7GZWnSpm9N7EffslYS5';
+    final baseUrl = GetStorage().read('apiUrl') ?? '';
+    final apiToken = GetStorage().read('token') ?? '';
     final int partnerId = Get.arguments['partnerId'];
     final String endpoint = '/api/v1/partners/$partnerId/visits';
 
@@ -112,9 +113,9 @@ class _VisitsScreenState extends State<VisitsScreen> {
     final date = DateTime.parse(dateString);
     return DateFormat('MMM d, yyyy HH:mm').format(date);
   }
+
   void sortAndFilterVisits() {
     List<dynamic> tempVisits = List.from(visitData['visits'] ?? []);
-    // Filter by selected date
     if (selectedDate != null) {
       tempVisits = tempVisits.where((visit) {
         final visitDate = DateTime.parse(visit['visit_date']);
@@ -123,11 +124,10 @@ class _VisitsScreenState extends State<VisitsScreen> {
             visitDate.day == selectedDate!.day;
       }).toList();
     }
-    // Sort based on sortOrder
     tempVisits.sort((a, b) {
       final dateA = DateTime.parse(a['visit_date']);
       final dateB = DateTime.parse(b['visit_date']);
-      return sortOrder == 'Newest First'
+      return sortOrder == S.of(context).newest_first
           ? dateB.compareTo(dateA)
           : dateA.compareTo(dateB);
     });
@@ -168,15 +168,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
             onPressed: fetchVisits,
             tooltip: S.of(context).refresh,
           ),
-          // IconButton(
-          //   icon: const Icon(Icons.language),
-          //   onPressed: () {
-          //     Get.updateLocale(Get.locale?.languageCode == 'ar'
-          //         ? const Locale('en', 'US')
-          //         : const Locale('ar', 'EG'));
-          //   },
-          //   tooltip: S.of(context).switch_language,
-          // ),
         ],
       ),
       body: isLoading
@@ -189,7 +180,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Schedule Visit Button
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
@@ -205,12 +195,13 @@ class _VisitsScreenState extends State<VisitsScreen> {
                           ),
                           child: InkWell(
                             onTap: () {
-                              Get.to(() => const CheckInScreen(),
-                                  arguments: {'partnerId': Get.arguments['partnerId']});
+                              Get.to(
+                                () => CheckInScreen(onSuccess: fetchVisits), // Pass fetchVisits as callback
+                                arguments: {'partnerId': Get.arguments['partnerId']},
+                              );
                             },
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -224,10 +215,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 16),
-
-                        // Visits History Section
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
@@ -246,7 +234,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Header with sort and date filter
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -262,7 +249,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                     ),
                                     Row(
                                       children: [
-                                        // Sort Dropdown
                                         DropdownButton<String>(
                                           value: sortOrder.isEmpty ? S.of(context).newest_first : sortOrder,
                                           items: <String>[
@@ -285,7 +271,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                           },
                                         ),
                                         const SizedBox(width: 8),
-                                        // Date Filter Button
                                         IconButton(
                                           icon: const Icon(Icons.calendar_today),
                                           onPressed: () => _selectDate(context),
@@ -302,7 +287,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                       children: [
                                         Text(
                                           selectedDate != null
-                                              ? '${S.of(context).filtered_by}:  ${formatDate(selectedDate.toString())}'
+                                              ? '${S.of(context).filtered_by}: ${formatDate(selectedDate.toString())}'
                                               : '',
                                           style: const TextStyle(fontSize: 14),
                                         ),
@@ -327,7 +312,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                 filteredVisits.isNotEmpty
                                     ? Stack(
                                         children: [
-                                          // Continuous vertical line
                                           Positioned(
                                             left: isRtl ? null : 30,
                                             right: isRtl ? 30 : null,
@@ -341,7 +325,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                               ),
                                             ),
                                           ),
-                                          // Visit entries
                                           Column(
                                             children: List.generate(
                                               filteredVisits.length,
@@ -354,7 +337,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                                     textDirection: isRtl ? ui.TextDirection.rtl : ui.TextDirection.ltr,
                                                     crossAxisAlignment: CrossAxisAlignment.center,
                                                     children: [
-                                                      // Dot for each visit
                                                       Padding(
                                                         padding: EdgeInsets.only(
                                                           left: isRtl ? 0 : 24,
@@ -371,7 +353,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                                           ),
                                                         ),
                                                       ),
-                                                      // Visit details
                                                       Expanded(
                                                         child: Padding(
                                                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -434,7 +415,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 16),
                       ],
                     ),
@@ -444,7 +424,6 @@ class _VisitsScreenState extends State<VisitsScreen> {
   }
 }
 
-// Custom painter for the continuous vertical line
 class ContinuousLinePainter extends CustomPainter {
   final int itemCount;
   final double itemHeight;

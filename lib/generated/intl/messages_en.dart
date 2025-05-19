@@ -225,11 +225,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "languageTitle": MessageLookupByLibrary.simpleMessage("Change Language To"),
     "last_purchase": MessageLookupByLibrary.simpleMessage("Last Purchase"),
     "location": MessageLookupByLibrary.simpleMessage("Location"),
+    "locationError": MessageLookupByLibrary.simpleMessage(
+      "Failed to get location. Please try again.",
+    ),
     "locationNotAvailable": MessageLookupByLibrary.simpleMessage(
       "Location not available.",
     ),
     "locationPermissionDenied": MessageLookupByLibrary.simpleMessage(
-      "Location permission denied.",
+      "Location permission denied. Please enable it in settings.",
+    ),
+    "locationPermissionDeniedForever": MessageLookupByLibrary.simpleMessage(
+      "Location permission permanently denied. Please enable it in device settings.",
     ),
     "locationPermissionsPermanentlyDenied":
         MessageLookupByLibrary.simpleMessage(
@@ -238,6 +244,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "locationServicesDisabled": MessageLookupByLibrary.simpleMessage(
       "Location services are disabled.",
     ),
+    "location_already_set": MessageLookupByLibrary.simpleMessage(
+      "This partner already has a set location. Do you want to update it?",
+    ),
+    "location_exists": MessageLookupByLibrary.simpleMessage("Location Exists"),
     "location_not_available": MessageLookupByLibrary.simpleMessage(
       "Location not available. Please try again.",
     ),
@@ -338,6 +348,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "notAvailable": MessageLookupByLibrary.simpleMessage("N/A"),
     "notes": MessageLookupByLibrary.simpleMessage("Notes"),
+    "notesRequired": MessageLookupByLibrary.simpleMessage("Notes are required"),
     "notificationsTitle": MessageLookupByLibrary.simpleMessage("Notifications"),
     "oct": MessageLookupByLibrary.simpleMessage("OCT"),
     "odoo": MessageLookupByLibrary.simpleMessage("Odoo"),
@@ -362,6 +373,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "payment_failed": MessageLookupByLibrary.simpleMessage("Payment failed"),
     "payment_for": MessageLookupByLibrary.simpleMessage("Payment for"),
     "payment_method": MessageLookupByLibrary.simpleMessage("Payment Method"),
+    "payment_successful": MessageLookupByLibrary.simpleMessage(
+      "Payment successfully",
+    ),
     "payment_terms": MessageLookupByLibrary.simpleMessage("Payment Terms"),
     "pdfFileNotFound": MessageLookupByLibrary.simpleMessage(
       "PDF file does not exist.",
@@ -447,6 +461,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "switch_language": MessageLookupByLibrary.simpleMessage("Switch Language"),
     "thisMonth": MessageLookupByLibrary.simpleMessage("This month"),
     "thousand": MessageLookupByLibrary.simpleMessage("k"),
+    "toggleRouteMode": MessageLookupByLibrary.simpleMessage(
+      "Toggle Route Mode",
+    ),
     "toggleTheme": MessageLookupByLibrary.simpleMessage("Toggle theme"),
     "token_missing": MessageLookupByLibrary.simpleMessage(
       "No API token found. Please log in.",
@@ -461,6 +478,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trillion": MessageLookupByLibrary.simpleMessage("T"),
     "unknownCustomer": MessageLookupByLibrary.simpleMessage("Unknown Customer"),
     "unnamed_product": MessageLookupByLibrary.simpleMessage("Unnamed Product"),
+    "update": MessageLookupByLibrary.simpleMessage("Update"),
     "user": MessageLookupByLibrary.simpleMessage("User"),
     "view_customer_visit_patterns": MessageLookupByLibrary.simpleMessage(
       "View customer visit patterns",
