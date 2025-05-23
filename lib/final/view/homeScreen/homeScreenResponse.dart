@@ -4,6 +4,7 @@ class HomeScreenResponse {
   final MonthlySales monthlySales;
   final Receivables receivables;
   final AdditionalMetrics additionalMetrics;
+  final CashJournal cashJournal;
 
   HomeScreenResponse({
     required this.success,
@@ -11,6 +12,7 @@ class HomeScreenResponse {
     required this.monthlySales,
     required this.receivables,
     required this.additionalMetrics,
+    required this.cashJournal,
   });
 
   factory HomeScreenResponse.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class HomeScreenResponse {
       receivables: Receivables.fromJson(json['receivables'] ?? {}),
       additionalMetrics:
           AdditionalMetrics.fromJson(json['additional_metrics'] ?? {}),
+      cashJournal: CashJournal.fromJson(json['cash_journal'] ?? {}),
     );
   }
 }
@@ -143,8 +146,34 @@ class AdditionalMetrics {
   factory AdditionalMetrics.fromJson(Map<String, dynamic> json) {
     return AdditionalMetrics(
       totalCustomers: json['total_customers'] ?? 0,
-      todayVisits: json['today_visits'] ,
+      todayVisits: json['today_visits'],
       newCustomersThisMonth: json['new_customers_this_month'] ?? 0,
+    );
+  }
+}
+
+class CashJournal {
+  final int journalId;
+  final String journalName;
+  final String currency;
+  final String currencySymbol;
+  final double balance;
+
+  CashJournal({
+    required this.journalId,
+    required this.journalName,
+    required this.currency,
+    required this.currencySymbol,
+    required this.balance,
+  });
+
+  factory CashJournal.fromJson(Map<String, dynamic> json) {
+    return CashJournal(
+      journalId: json['journal_id'] ?? 0,
+      journalName: json['journal_name'] ?? '',
+      currency: json['currency'] ?? '',
+      currencySymbol: json['currency_symbol'] ?? '',
+      balance: (json['balance'] ?? 0.0).toDouble(),
     );
   }
 }

@@ -23,7 +23,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
   final scaleFactor = screenWidth / 400;
-  return (baseFontSize * scaleFactor).clamp(baseFontSize * 0.8, baseFontSize * 1.2);
+  return (baseFontSize * scaleFactor)
+      .clamp(baseFontSize * 0.8, baseFontSize * 1.2);
 }
 
 String formatNumber(double value, {bool isCurrency = true}) {
@@ -72,7 +73,8 @@ class SalesDashboard extends StatefulWidget {
   State<SalesDashboard> createState() => _SalesDashboardState();
 }
 
-class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProviderStateMixin {
+class _SalesDashboardState extends State<SalesDashboard>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   String selectedRange = '7d';
@@ -114,10 +116,13 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     _startClock();
 
     _checkConnectivity();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    _connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
       bool wasOffline = isOffline;
       setState(() {
-        isOffline = results.every((result) => result == ConnectivityResult.none);
+        isOffline =
+            results.every((result) => result == ConnectivityResult.none);
       });
       if (wasOffline && !isOffline) {
         _fetchCsrfToken().then((_) => _fetchAllData());
@@ -149,7 +154,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   Future<void> _checkConnectivity() async {
     var connectivityResults = await Connectivity().checkConnectivity();
     setState(() {
-      isOffline = connectivityResults.every((result) => result == ConnectivityResult.none);
+      isOffline = connectivityResults
+          .every((result) => result == ConnectivityResult.none);
     });
     if (isOffline && _selectedIndex != 2) {
       _onItemTapped(2);
@@ -205,7 +211,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   Future<void> _fetchAllData() async {
     if (isOffline) {
       setState(() {
-        errorMessage = S.of(context)?.checkConnection ?? 'Check your connection';
+        errorMessage =
+            S.of(context)?.checkConnection ?? 'Check your connection';
         isLoading = false;
       });
       if (_selectedIndex != 2) _onItemTapped(2);
@@ -226,14 +233,16 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         isLoading = false;
       });
     } catch (e) {
-      if (e.toString().contains('400') && e.toString().contains('invalid CSRF token')) {
+      if (e.toString().contains('400') &&
+          e.toString().contains('invalid CSRF token')) {
         if (await _refreshToken()) {
           await _fetchAllData();
           return;
         }
       }
       setState(() {
-        errorMessage = S.of(context)?.checkConnection ?? 'Check your connection';
+        errorMessage =
+            S.of(context)?.checkConnection ?? 'Check your connection';
         isLoading = false;
       });
       if (_selectedIndex != 2) _onItemTapped(2);
@@ -249,7 +258,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       if (apiUrl.isEmpty || token.isEmpty || userId == null) {
         throw Exception('Missing API URL, token, or user ID');
       }
-      final url = Uri.parse('$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
+      final url = Uri.parse(
+          '$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
       final response = await http.get(
         url,
         headers: {
@@ -262,7 +272,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         setState(() {
           homeData = HomeScreenResponse.fromJson(jsonData);
         });
-      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+      } else if (response.statusCode == 400 &&
+          response.body.contains('invalid CSRF token')) {
         throw Exception('400: invalid CSRF token');
       } else {
         throw Exception('Failed to load data: ${response.statusCode}');
@@ -318,8 +329,10 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           setState(() {
             displayData = fullData.where((item) {
               final itemDate = item['date'] as DateTime;
-              return (itemDate.isAfter(startDate!) || itemDate.isAtSameMomentAs(startDate!)) &&
-                  (itemDate.isBefore(endDate!) || itemDate.isAtSameMomentAs(endDate!));
+              return (itemDate.isAfter(startDate!) ||
+                      itemDate.isAtSameMomentAs(startDate!)) &&
+                  (itemDate.isBefore(endDate!) ||
+                      itemDate.isAtSameMomentAs(endDate!));
             }).toList();
           });
           return;
@@ -331,7 +344,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     setState(() {
       displayData = fullData.where((item) {
         final itemDate = item['date'] as DateTime;
-        return itemDate.isAfter(filterDate) || itemDate.isAtSameMomentAs(filterDate);
+        return itemDate.isAfter(filterDate) ||
+            itemDate.isAtSameMomentAs(filterDate);
       }).toList();
     });
   }
@@ -366,17 +380,22 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     final Color cardBackground = isDark ? Color(0xFF1A1A1A) : Colors.white;
     final Color cardBorder = isDark ? Color(0xFF2A2A2A) : Color(0xFFE0E0E0);
     final Color primaryTextColor = isDark ? Colors.white : Color(0xFF212121);
-    final Color secondaryTextColor = isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
+    final Color secondaryTextColor =
+        isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
     final Color accentColor = isDark ? Color(0xFF4FC3F7) : Color(0xFF1976D2);
-    final Color shimmerBaseColor = isDark ? Color(0xFF262626) : Colors.grey[300]!;
-    final Color shimmerHighlightColor = isDark ? Color(0xFF303030) : Colors.grey[100]!;
+    final Color shimmerBaseColor =
+        isDark ? Color(0xFF262626) : Colors.grey[300]!;
+    final Color shimmerHighlightColor =
+        isDark ? Color(0xFF303030) : Colors.grey[100]!;
 
     final List<Widget> pages = [
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-                child: _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
+                child: _buildShimmerLoading(
+                    shimmerBaseColor, shimmerHighlightColor, isTablet),
               ),
             )
           : SafeArea(
@@ -385,7 +404,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                 color: accentColor,
                 // backgroundColor: cardBackground,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 16.0),
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -402,29 +422,78 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      l10n.welcomeBack,
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: getResponsiveFontSize(context, 13),
-                                        color: secondaryTextColor,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          l10n.welcomeBack,
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: getResponsiveFontSize(
+                                                context, 13),
+                                            color: secondaryTextColor,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width -
+                                              200, // Screen width minus fixed amount
+                                        ),
+                                        if (homeData?.cashJournal?.balance !=
+                                            null)
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  accentColor.withOpacity(0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.account_balance_wallet,
+                                                  size: 16,
+                                                  color: accentColor,
+                                                ),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  formatNumber(homeData!
+                                                      .cashJournal!.balance!),
+                                                  style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize:
+                                                        getResponsiveFontSize(
+                                                            context, 13),
+                                                    color: accentColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      authController.currentUser.value?.name ?? 'admin',
+                                      authController.currentUser.value?.name ??
+                                          'admin',
                                       style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w600,
-                                        fontSize: getResponsiveFontSize(context, 20),
+                                        fontSize:
+                                            getResponsiveFontSize(context, 20),
                                         color: primaryTextColor,
                                       ),
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      _formatDateTime(_currentDateTime, isArabic),
+                                      _formatDateTime(
+                                          _currentDateTime, isArabic),
                                       style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w400,
-                                        fontSize: getResponsiveFontSize(context, 12),
+                                        fontSize:
+                                            getResponsiveFontSize(context, 12),
                                         color: secondaryTextColor,
                                       ),
                                     ),
@@ -457,9 +526,11 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           ),
                           SizedBox(height: 20),
                           isLoading
-                              ? _buildShimmerLoading(shimmerBaseColor, shimmerHighlightColor, isTablet)
+                              ? _buildShimmerLoading(shimmerBaseColor,
+                                  shimmerHighlightColor, isTablet)
                               : errorMessage != null
-                                  ? _buildErrorView(errorMessage!, accentColor, isDark, l10n)
+                                  ? _buildErrorView(
+                                      errorMessage!, accentColor, isDark, l10n)
                                   : FadeInUp(
                                       duration: Duration(milliseconds: 600),
                                       from: 30,
@@ -468,8 +539,10 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                           SizedBox(height: 12),
                                           GridView.builder(
                                             shrinkWrap: true,
-                                            physics: NeverScrollableScrollPhysics(),
-                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                            physics:
+                                                NeverScrollableScrollPhysics(),
+                                            gridDelegate:
+                                                SliverGridDelegateWithFixedCrossAxisCount(
                                               crossAxisCount: isTablet ? 2 : 2,
                                               crossAxisSpacing: 12,
                                               mainAxisSpacing: 12,
@@ -478,7 +551,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                             itemCount: 4,
                                             itemBuilder: (context, index) {
                                               return FadeInUp(
-                                                duration: Duration(milliseconds: 600 + index * 100),
+                                                duration: Duration(
+                                                    milliseconds:
+                                                        600 + index * 100),
                                                 from: 30,
                                                 child: _MetricCard(
                                                   title: [
@@ -488,34 +563,63 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                     l10n.newCustomers,
                                                   ][index],
                                                   value: [
-                                                    homeData?.monthlySales?.metrics?.totalAmount != null &&
-                                                            homeData?.monthlySales?.metrics?.monthTarget != null
+                                                    homeData
+                                                                    ?.monthlySales
+                                                                    ?.metrics
+                                                                    ?.totalAmount !=
+                                                                null &&
+                                                            homeData
+                                                                    ?.monthlySales
+                                                                    ?.metrics
+                                                                    ?.monthTarget !=
+                                                                null
                                                         ? '${formatNumber(homeData!.monthlySales!.metrics!.totalAmount!)}/${formatNumber(homeData!.monthlySales!.metrics!.monthTarget!)}'
                                                         : 'N/A',
-                                                    homeData?.receivables?.amountDueToday != null
-                                                        ? formatNumber(homeData!.receivables!.amountDueToday!)
+                                                    homeData?.receivables
+                                                                ?.amountDueToday !=
+                                                            null
+                                                        ? formatNumber(homeData!
+                                                            .receivables!
+                                                            .amountDueToday!)
                                                         : 'N/A',
-                                                    homeData?.additionalMetrics?.todayVisits != null
+                                                    homeData?.additionalMetrics
+                                                                ?.todayVisits !=
+                                                            null
                                                         ? '${homeData!.additionalMetrics!.todayVisits}'
                                                         : 'N/A',
-                                                    homeData?.additionalMetrics?.newCustomersThisMonth != null
+                                                    homeData?.additionalMetrics
+                                                                ?.newCustomersThisMonth !=
+                                                            null
                                                         ? '${homeData!.additionalMetrics!.newCustomersThisMonth}'
                                                         : 'N/A',
                                                   ][index],
                                                   subtitle: [
-                                                    l10n.ofTarget(homeData?.monthlySales?.metrics?.achievementPercentage ?? 0),
-                                                    l10n.partners(homeData?.receivables?.partnerCount ?? 0),
+                                                    l10n.ofTarget(homeData
+                                                            ?.monthlySales
+                                                            ?.metrics
+                                                            ?.achievementPercentage ??
+                                                        0),
+                                                    l10n.partners(homeData
+                                                            ?.receivables
+                                                            ?.partnerCount ??
+                                                        0),
                                                     l10n.completedToday,
                                                     l10n.thisMonth,
                                                   ][index],
                                                   icon: [
                                                     Icons.show_chart,
-                                                    Icons.account_balance_wallet,
+                                                    Icons
+                                                        .account_balance_wallet,
                                                     Icons.check_circle_outline,
                                                     Icons.person_add_alt,
                                                   ][index],
                                                   iconColor: [
-                                                    (homeData?.monthlySales?.metrics?.achievementPercentage ?? 0) >= 80
+                                                    (homeData
+                                                                    ?.monthlySales
+                                                                    ?.metrics
+                                                                    ?.achievementPercentage ??
+                                                                0) >=
+                                                            80
                                                         ? Colors.green[400]!
                                                         : Colors.orange[400]!,
                                                     Colors.amber[400]!,
@@ -542,7 +646,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   l10n.quickActions,
                                   style: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: getResponsiveFontSize(context, 16),
+                                    fontSize:
+                                        getResponsiveFontSize(context, 16),
                                     color: primaryTextColor,
                                   ),
                                 ),
@@ -555,12 +660,17 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                         label: l10n.nearbyCustomers,
                                         onTap: () {
                                           debugPrint('Tapped Nearby Customers');
-                                          if (Get.isRegistered<DashboardController>()) {
+                                          if (Get.isRegistered<
+                                              DashboardController>()) {
                                             Get.toNamed('/nearbycustomer');
                                           } else {
-                                            debugPrint('DashboardController not found');
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Navigation error: Controller not found')),
+                                            debugPrint(
+                                                'DashboardController not found');
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Navigation error: Controller not found')),
                                             );
                                           }
                                         },
@@ -575,20 +685,30 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                         label: l10n.stock,
                                         onTap: () {
                                           debugPrint('Tapped Stock');
-                                          if (Get.isRegistered<DashboardController>()) {
+                                          if (Get.isRegistered<
+                                              DashboardController>()) {
                                             try {
-                                              Get.find<DashboardController>().createNewDeal();
+                                              Get.find<DashboardController>()
+                                                  .createNewDeal();
                                               Get.toNamed('/stock');
                                             } catch (e) {
-                                              debugPrint('Error in Stock tap: $e');
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Navigation error: $e')),
+                                              debugPrint(
+                                                  'Error in Stock tap: $e');
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Navigation error: $e')),
                                               );
                                             }
                                           } else {
-                                            debugPrint('DashboardController not found');
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Navigation error: Controller not found')),
+                                            debugPrint(
+                                                'DashboardController not found');
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Navigation error: Controller not found')),
                                             );
                                           }
                                         },
@@ -608,7 +728,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [],
                                 ),
                                 SizedBox(height: 12),
@@ -617,7 +738,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
                                     color: cardBackground,
-                                    border: Border.all(color: cardBorder, width: 1),
+                                    border:
+                                        Border.all(color: cardBorder, width: 1),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.05),
@@ -648,17 +770,24 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-                child: _buildCustomersShimmer(shimmerBaseColor, shimmerHighlightColor),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
+                child: _buildCustomersShimmer(
+                    shimmerBaseColor, shimmerHighlightColor),
               ),
             )
           : Center(child: CustomersListScreen()),
-      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co//web/login?redirect=%2Fodoo%3F')),
+      Center(
+          child: WebViewScreen(
+              url: GetStorage().read('webViewUrl') ??
+                  'https://onix.boom-solutions.co//web/login?redirect=%2Fodoo%3F')),
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-                child: _buildSettingsShimmer(shimmerBaseColor, shimmerHighlightColor),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
+                child: _buildSettingsShimmer(
+                    shimmerBaseColor, shimmerHighlightColor),
               ),
             )
           : Center(child: SettingsScreen()),
@@ -690,7 +819,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4, color: Colors.white, size: 16),
+                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4,
+                      color: Colors.white, size: 16),
                   SizedBox(width: 8),
                   Text(
                     l10n.youAreOffline,
@@ -708,7 +838,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     );
   }
 
-  Widget _buildShimmerLoading(Color baseColor, Color highlightColor, bool isTablet) {
+  Widget _buildShimmerLoading(
+      Color baseColor, Color highlightColor, bool isTablet) {
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
@@ -1087,7 +1218,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     );
   }
 
-  Widget _buildErrorView(String message, Color accentColor, bool isDark, S l10n) {
+  Widget _buildErrorView(
+      String message, Color accentColor, bool isDark, S l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1123,16 +1255,21 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, S.of(context).dashboard, accentColor, isDark),
-          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt, S.of(context).customers, accentColor, isDark),
-          _buildNavItem(2, Icons.public_outlined, Icons.public, S.of(context).odoo, accentColor, isDark),
-          _buildNavItem(3, Icons.settings_outlined, Icons.settings, S.of(context).settings, accentColor, isDark),
+          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard,
+              S.of(context).dashboard, accentColor, isDark),
+          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt,
+              S.of(context).customers, accentColor, isDark),
+          _buildNavItem(2, Icons.public_outlined, Icons.public,
+              S.of(context).odoo, accentColor, isDark),
+          _buildNavItem(3, Icons.settings_outlined, Icons.settings,
+              S.of(context).settings, accentColor, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label, Color accentColor, bool isDark) {
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon,
+      String label, Color accentColor, bool isDark) {
     bool isSelected = _selectedIndex == index;
 
     return InkWell(
@@ -1151,7 +1288,11 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
             Icon(
               isSelected ? activeIcon : icon,
               size: 22,
-              color: isSelected ? accentColor : isDark ? Color(0xFF757575) : Color(0xFFBDBDBD),
+              color: isSelected
+                  ? accentColor
+                  : isDark
+                      ? Color(0xFF757575)
+                      : Color(0xFFBDBDBD),
             ),
             SizedBox(height: 4),
             Text(
@@ -1159,7 +1300,11 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? accentColor : isDark ? Color(0xFF757575) : Color(0xFFBDBDBD),
+                color: isSelected
+                    ? accentColor
+                    : isDark
+                        ? Color(0xFF757575)
+                        : Color(0xFFBDBDBD),
               ),
             ),
           ],
