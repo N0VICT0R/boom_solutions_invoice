@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   geolocator_windows
+  local_auth_windows
   maps_launcher
   permission_handler_windows
   syncfusion_pdfviewer_windows

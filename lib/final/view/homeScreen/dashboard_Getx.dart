@@ -4,13 +4,11 @@ import 'package:animate_do/animate_do.dart';
 import 'package:boom_solutions_invoice/CustomerDetail/Screen/CustomerListScreen.dart';
 import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
-import 'package:boom_solutions_invoice/final/view/homeScreen/homeScreenResponse.dart';
 import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 import 'package:boom_solutions_invoice/widgets/notes/notes.dart';
-import 'package:boom_solutions_invoice/widgets/salesChart.dart'
-    show SalesChartView, SalesChartController;
+import 'package:boom_solutions_invoice/widgets/salesChart.dart' show SalesChartView, SalesChartController;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -28,14 +26,12 @@ double getResponsiveFontSize(BuildContext context, double baseFontSize) {
 
 String formatNumber(double value, {bool isCurrency = true}) {
   final bool isArabic = Get.locale?.languageCode == 'ar';
-
   if (value < 1000) {
     if (isCurrency) {
       return intl.NumberFormat("#,##0.00").format(value);
     }
     return value.toStringAsFixed(0);
   }
-
   if (isArabic) {
     const suffixes = [' ألف', ' مليون', ' مليار', ' تريليون'];
     int suffixIndex = -1;
@@ -50,7 +46,6 @@ String formatNumber(double value, {bool isCurrency = true}) {
     }
     return '$formatted${suffixes[suffixIndex]}';
   }
-
   const suffixes = ['k', 'M', 'B', 'T'];
   int suffixIndex = -1;
   double scaledValue = value;
@@ -67,7 +62,6 @@ String formatNumber(double value, {bool isCurrency = true}) {
 
 class SalesDashboard extends StatefulWidget {
   const SalesDashboard({super.key});
-
   @override
   State<SalesDashboard> createState() => _SalesDashboardState();
 }
@@ -94,6 +88,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   DateTime _currentDateTime = DateTime.now();
   Timer? _clockTimer;
   String? _csrfToken;
+  bool isBalanceVisible = false; // State for balance card visibility
+  int _retryCount = 0; // Track retry attempts for data fetching
 
   @override
   void initState() {
@@ -112,7 +108,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     }).catchError((_) {});
     _startPolling();
     _startClock();
-
     _checkConnectivity();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       bool wasOffline = isOffline;
@@ -161,7 +156,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       final apiUrl = GetStorage().read("apiUrl") ?? "";
       if (apiUrl.isEmpty) return;
       final url = Uri.parse('$apiUrl/api/v1/csrf-token');
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
@@ -187,7 +182,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
         },
         body: jsonEncode({}),
-      );
+      ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final newToken = jsonData['token'];
@@ -205,7 +200,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   Future<void> _fetchAllData() async {
     if (isOffline) {
       setState(() {
-        errorMessage = S.of(context)?.checkConnection ?? 'Check your connection';
+        errorMessage = S.of(context).checkConnection ?? 'Check your connection';
         isLoading = false;
       });
       if (_selectedIndex != 2) _onItemTapped(2);
@@ -224,6 +219,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       await Get.find<DashboardController>().fetchNotes();
       setState(() {
         isLoading = false;
+        _retryCount = 0; // Reset retry count on success
       });
     } catch (e) {
       if (e.toString().contains('400') && e.toString().contains('invalid CSRF token')) {
@@ -232,11 +228,18 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           return;
         }
       }
-      setState(() {
-        errorMessage = S.of(context)?.checkConnection ?? 'Check your connection';
-        isLoading = false;
-      });
-      if (_selectedIndex != 2) _onItemTapped(2);
+      if (_retryCount < 3) {
+        _retryCount++;
+        debugPrint('Retrying fetchAllData, attempt $_retryCount of 3');
+        await Future.delayed(Duration(seconds: 4));
+        await _fetchAllData();
+      } else {
+        setState(() {
+          errorMessage = S.of(context).checkConnection ?? 'Check your connection';
+          isLoading = false;
+        });
+        if (_selectedIndex != 2) _onItemTapped(2);
+      }
     }
   }
 
@@ -256,7 +259,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           'Authorization': 'Bearer $token',
           if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
         },
-      );
+      ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         setState(() {
@@ -383,7 +386,6 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               child: RefreshIndicator(
                 onRefresh: _fetchAllData,
                 color: accentColor,
-                // backgroundColor: cardBackground,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
                   child: SingleChildScrollView(
@@ -430,10 +432,143 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                     ),
                                   ],
                                 ),
+                                IconButton(
+                                  icon: Icon(
+                                    isBalanceVisible ? Icons.visibility_off : Icons.account_balance_wallet,
+                                    color: accentColor,
+                                    size: 24,
+                                  ),
+                                  tooltip: isBalanceVisible ? l10n.hideBalance : l10n.currentBalance,
+                                  onPressed: () {
+                                    setState(() {
+                                      isBalanceVisible = !isBalanceVisible;
+                                    });
+                                  },
+                                ),
                               ],
                             ),
                           ),
                           SizedBox(height: 20),
+                          // Collapsible Balance Card
+                          AnimatedCrossFade(
+                            firstChild: Container(), // Empty when hidden
+                            secondChild: FadeInDown(
+                              duration: Duration(milliseconds: 450),
+                              from: 30,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: cardBackground,
+                                  border: Border.all(color: cardBorder, width: 1),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: isLoading
+                                        ? Shimmer.fromColors(
+                                            baseColor: shimmerBaseColor,
+                                            highlightColor: shimmerHighlightColor,
+                                            child: _buildBalanceShimmer(),
+                                          )
+                                        : (homeData?.cashJournal?.balance != null && errorMessage == null)
+                                            ? Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        l10n.currentBalance,
+                                                        style: GoogleFonts.poppins(
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: getResponsiveFontSize(context, 16),
+                                                          color: primaryTextColor,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 8),
+                                                      Row(
+                                                        children: [
+                                                          Text(
+                                                            formatNumber(homeData!.cashJournal!.balance),
+                                                            style: GoogleFonts.poppins(
+                                                              fontWeight: FontWeight.w700,
+                                                              fontSize: getResponsiveFontSize(context, 20),
+                                                              color: accentColor,
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 4),
+                                                          Text(
+                                                            homeData?.cashJournal?.currencySymbol ?? 'LE',
+                                                            style: GoogleFonts.poppins(
+                                                              fontWeight: FontWeight.w500,
+                                                              fontSize: getResponsiveFontSize(context, 16),
+                                                              color: secondaryTextColor,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    padding: EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: accentColor.withOpacity(0.1),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.attach_money,
+                                                      size: 24,
+                                                      color: accentColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Column(
+                                                children: [
+                                                  Text(
+                                                    l10n.dataLoadError,
+                                                    style: GoogleFonts.poppins(
+                                                      fontWeight: FontWeight.w500,
+                                                      fontSize: getResponsiveFontSize(context, 14),
+                                                      color: Colors.red[400],
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  ElevatedButton(
+                                                    onPressed: _fetchAllData,
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: accentColor,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      l10n.retry,
+                                                      style: GoogleFonts.poppins(
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: getResponsiveFontSize(context, 12),
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            crossFadeState: isBalanceVisible ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                            duration: Duration(milliseconds: 300),
+                          ),
+                          SizedBox(height: isBalanceVisible ? 20 : 0),
                           FadeInUp(
                             duration: Duration(milliseconds: 500),
                             from: 30,
@@ -653,7 +788,7 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               ),
             )
           : Center(child: CustomersListScreen()),
-      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co//web/login?redirect=%2Fodoo%3F')),
+      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co/web/login?redirect=%2Fodoo%3F')),
       isOffline
           ? SafeArea(
               child: Padding(
@@ -705,6 +840,44 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBalanceShimmer() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 120,
+              height: 16,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            SizedBox(height: 8),
+            Container(
+              width: 100,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            shape: BoxShape.circle,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1321,6 +1494,185 @@ class _ActionButton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class HomeScreenResponse {
+  final bool success;
+  final User user;
+  final MonthlySales monthlySales;
+  final Receivables receivables;
+  final AdditionalMetrics additionalMetrics;
+  final CashJournal cashJournal;
+
+  HomeScreenResponse({
+    required this.success,
+    required this.user,
+    required this.monthlySales,
+    required this.receivables,
+    required this.additionalMetrics,
+    required this.cashJournal,
+  });
+
+  factory HomeScreenResponse.fromJson(Map<String, dynamic> json) {
+    return HomeScreenResponse(
+      success: json['success'] ?? false,
+      user: User.fromJson(json['user'] ?? {}),
+      monthlySales: MonthlySales.fromJson(json['monthly_sales'] ?? {}),
+      receivables: Receivables.fromJson(json['receivables'] ?? {}),
+      additionalMetrics: AdditionalMetrics.fromJson(json['additional_metrics'] ?? {}),
+      cashJournal: CashJournal.fromJson(json['cash_journal'] ?? {}),
+    );
+  }
+}
+
+class CashJournal {
+  final int journalId;
+  final String journalName;
+  final String currency;
+  final String currencySymbol;
+  final double balance;
+
+  CashJournal({
+    required this.journalId,
+    required this.journalName,
+    required this.currency,
+    required this.currencySymbol,
+    required this.balance,
+  });
+
+  factory CashJournal.fromJson(Map<String, dynamic> json) {
+    return CashJournal(
+      journalId: json['journal_id'] ?? 0,
+      journalName: json['journal_name'] ?? '',
+      currency: json['currency'] ?? '',
+      currencySymbol: json['currency_symbol'] ?? '',
+      balance: (json['balance'] ?? 0.0).toDouble(),
+    );
+  }
+}
+
+class User {
+  final int id;
+  final String name;
+  final int year;
+  final int month;
+
+  User({
+    required this.id,
+    required this.name,
+    required this.year,
+    required this.month,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      year: json['year'] ?? 0,
+      month: json['month'] ?? 0,
+    );
+  }
+}
+
+class MonthlySales {
+  final Metrics metrics;
+
+  MonthlySales({required this.metrics});
+
+  factory MonthlySales.fromJson(Map<String, dynamic> json) {
+    return MonthlySales(
+      metrics: Metrics.fromJson(json['metrics'] ?? {}),
+    );
+  }
+}
+
+class Metrics {
+  final int orderCount;
+  final double totalAmount;
+  final double monthTarget;
+  final double achievementPercentage;
+
+  Metrics({
+    required this.orderCount,
+    required this.totalAmount,
+    required this.monthTarget,
+    required this.achievementPercentage,
+  });
+
+  factory Metrics.fromJson(Map<String, dynamic> json) {
+    return Metrics(
+      orderCount: json['order_count'] ?? 0,
+      totalAmount: (json['total_amount'] ?? 0.0).toDouble(),
+      monthTarget: (json['month_target'] ?? 0.0).toDouble(),
+      achievementPercentage: (json['achievement_percentage'] ?? 0.0).toDouble(),
+    );
+  }
+}
+
+class Receivables {
+  final double amountDueToday;
+  final int partnerCount;
+  final int invoiceCount;
+  final List<Partner> partnersWithDues;
+
+  Receivables({
+    required this.amountDueToday,
+    required this.partnerCount,
+    required this.invoiceCount,
+    required this.partnersWithDues,
+  });
+
+  factory Receivables.fromJson(Map<String, dynamic> json) {
+    var partnersJson = json['partners_with_dues'] ?? [];
+    List<Partner> partners = List<Partner>.from(
+        partnersJson.map((partner) => Partner.fromJson(partner)));
+    return Receivables(
+      amountDueToday: (json['amount_due_today'] ?? 0.0).toDouble(),
+      partnerCount: json['partner_count'] ?? 0,
+      invoiceCount: json['invoice_count'] ?? 0,
+      partnersWithDues: partners,
+    );
+  }
+}
+
+class Partner {
+  final int id;
+  final String name;
+  final double amountDue;
+
+  Partner({
+    required this.id,
+    required this.name,
+    required this.amountDue,
+  });
+
+  factory Partner.fromJson(Map<String, dynamic> json) {
+    return Partner(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      amountDue: (json['amount_due'] ?? 0.0).toDouble(),
+    );
+  }
+}
+
+class AdditionalMetrics {
+  final int totalCustomers;
+  final int todayVisits;
+  final int newCustomersThisMonth;
+
+  AdditionalMetrics({
+    required this.totalCustomers,
+    required this.todayVisits,
+    required this.newCustomersThisMonth,
+  });
+
+  factory AdditionalMetrics.fromJson(Map<String, dynamic> json) {
+    return AdditionalMetrics(
+      totalCustomers: json['total_customers'] ?? 0,
+      todayVisits: json['today_visits'] ?? 0,
+      newCustomersThisMonth: json['new_customers_this_month'] ?? 0,
     );
   }
 }

@@ -664,6 +664,18 @@
 "notesRequired": "ملخص الزياره مطلوب",
 "@notesRequired": {
   "description": "Message shown when notes are required for a transaction"
+},
+"currentBalance": "رصيدك الحالي",
+"@currentBalance": {
+  "description": "Label for current balance"
+},
+"hideBalance": "إخفاء الرصيد",
+"@hideBalance": {
+  "description": "Text for the button or option to hide the current balance"
+},
+"dataLoadError": "خطأ في تحميل البيانات",
+"@dataLoadError": {
+  "description": "Message shown when data fails to load"
 }
 
 

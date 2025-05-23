@@ -28,10 +28,9 @@ class S {
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final name =
-        (locale.countryCode?.isEmpty ?? false)
-            ? locale.languageCode
-            : locale.toString();
+    final name = (locale.countryCode?.isEmpty ?? false)
+        ? locale.languageCode
+        : locale.toString();
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -2621,6 +2620,36 @@ class S {
     return Intl.message(
       'Notes are required',
       name: 'notesRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current Balance`
+  String get currentBalance {
+    return Intl.message(
+      'Current Balance',
+      name: 'currentBalance',
+      desc: 'Label for current balance',
+      args: [],
+    );
+  }
+
+  /// `Hide Balance`
+  String get hideBalance {
+    return Intl.message(
+      'Hide Balance',
+      name: 'hideBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load data. Please try again.`
+  String get dataLoadError {
+    return Intl.message(
+      'Failed to load data. Please try again.',
+      name: 'dataLoadError',
       desc: '',
       args: [],
     );

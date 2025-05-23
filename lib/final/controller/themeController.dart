@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,7 +10,7 @@ class ThemeController extends GetxController {
 
   // Custom accent color options
   final List<Color> accentColors = [
-    Colors.blue,
+    Color(0xFF4FC3F7), // Matches dark mode accentColor
     Colors.purple,
     Colors.teal,
     Colors.amber,
@@ -63,34 +64,36 @@ class ThemeController extends GetxController {
 }
 
 class AppColors {
-  // Base neutral colors
+  // Light theme colors (unchanged)
   static const Color lightBackground = Color(0xFFF5F7FA);
-  static const Color darkBackground = Color(0xFF121820);
-  
-  // Text colors
   static const Color lightTextPrimary = Color(0xFF1A1C1E);
   static const Color lightTextSecondary = Color(0xFF4D5156);
-  static const Color darkTextPrimary = Color(0xFFF5F7FA);
-  static const Color darkTextSecondary = Color(0xFFBDC1C6);
-  
-  // Surface colors
   static const Color lightSurface = Colors.white;
-  static const Color darkSurface = Color(0xFF1E2429);
-  static const Color darkSurfaceVariant = Color(0xFF2A3036);
-  
-  // Border and divider colors
   static const Color lightDivider = Color(0xFFEAECEF);
-  static const Color darkDivider = Color(0xFF2A3036);
+
+  // Dark theme colors (updated to match SalesDashboard)
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkTextPrimary = Colors.white;
+  static const Color darkTextSecondary = Color(0xFFB0B0B0);
+  static const Color darkSurface = Color(0xFF1A1A1A);
+  static const Color darkDivider = Color(0xFF2A2A2A);
+  static const Color darkShimmerBase = Color(0xFF262626);
+  static const Color darkShimmerHighlight = Color(0xFF303030);
 }
 
 class AppTheme {
-  // Light theme builder that takes an accent color
+  // Light theme builder (unchanged)
   static ThemeData light(Color accentColor) {
     final ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: accentColor,
       brightness: Brightness.light,
       background: AppColors.lightBackground,
       surface: AppColors.lightSurface,
+      onSurface: AppColors.lightTextPrimary,
+      onSurfaceVariant: AppColors.lightTextSecondary,
+      primary: accentColor,
+      onPrimary: Colors.white,
+      outline: AppColors.lightDivider,
     );
     
     return ThemeData(
@@ -263,13 +266,20 @@ class AppTheme {
     );
   }
 
-  // Dark theme builder that takes an accent color
+  // Dark theme builder with updated colors
   static ThemeData dark(Color accentColor) {
     final ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: accentColor,
       brightness: Brightness.dark,
-      background: AppColors.darkBackground,
-      surface: AppColors.darkSurface,
+      background: AppColors.darkBackground, // 0xFF121212
+      surface: AppColors.darkSurface, // 0xFF1A1A1A
+      onSurface: AppColors.darkTextPrimary, // Colors.white
+      onSurfaceVariant: AppColors.darkTextSecondary, // 0xFFB0B0B0
+      primary: Color(0xFF4FC3F7), // Dark mode accentColor
+      onPrimary: Colors.black,
+      outline: AppColors.darkDivider, // 0xFF2A2A2A
+      surfaceContainer: AppColors.darkShimmerBase, // 0xFF262626
+      surfaceContainerHigh: AppColors.darkShimmerHighlight, // 0xFF303030
     );
     
     return ThemeData(
@@ -370,7 +380,7 @@ class AppTheme {
       // Input decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurfaceVariant,
+        fillColor: colorScheme.surfaceVariant,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

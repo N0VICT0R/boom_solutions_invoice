@@ -982,5 +982,11 @@
 "cancel": "Cancel",
 "update": "Update",
 "payment_successful": "Payment successfully",
-  "notesRequired": "Notes are required"
+  "notesRequired": "Notes are required",
+  "currentBalance": "Current Balance",
+"@currentBalance": {
+  "description": "Label for current balance"
+},
+  "hideBalance": "Hide Balance",
+  "dataLoadError": "Failed to load data. Please try again."
           }

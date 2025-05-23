@@ -103,6 +103,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "countryLabel": MessageLookupByLibrary.simpleMessage("الدولة"),
     "credit": MessageLookupByLibrary.simpleMessage("دائن"),
     "currency": MessageLookupByLibrary.simpleMessage("العملة"),
+    "currentBalance": MessageLookupByLibrary.simpleMessage("رصيدك الحالي"),
     "customer": MessageLookupByLibrary.simpleMessage("عميل"),
     "customerNotFound": MessageLookupByLibrary.simpleMessage(
       "العميل غير موجود.",
@@ -123,6 +124,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "customersTitle": MessageLookupByLibrary.simpleMessage("العملاء"),
     "darkModeTitle": MessageLookupByLibrary.simpleMessage("الوضع المظلم"),
     "dashboard": MessageLookupByLibrary.simpleMessage("لوحة التحكم"),
+    "dataLoadError": MessageLookupByLibrary.simpleMessage(
+      "خطأ في تحميل البيانات",
+    ),
     "date": MessageLookupByLibrary.simpleMessage("التاريخ"),
     "dateRange": MessageLookupByLibrary.simpleMessage("النطاق الزمني"),
     "day": MessageLookupByLibrary.simpleMessage("يوم"),
@@ -196,6 +200,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forgotApiToken": MessageLookupByLibrary.simpleMessage(
       "هل نسيت رمز API الخاص بك؟",
     ),
+    "hideBalance": MessageLookupByLibrary.simpleMessage("إخفاء الرصيد"),
     "inspirationalQuotes": MessageLookupByLibrary.simpleMessage(
       "النجاح ليس غياب العقبات، بل الشجاعة لتخطيها.\nالحد الوحيد لإدراكنا للمستقبل هو شكوكنا في الحاضر.\nوقتك محدود، فلا تهدره في عيش حياة شخص آخر.\nالمستقبل ملك لأولئك الذين يؤمنون بجمال أحلامهم.\nافعل ما تستطيع، بما لديك، حيثما كنت.\nكل لحظة هي بداية جديدة.\nأفضل طريقة للتنبؤ بالمستقبل هي صنعه.\nابقَ جائعًا، ابقَ أحمقًا.\nستفوتك 100% من الفرص التي لا تأخذها.\nاحلم كبيرًا، اعمل بجد، ركز.",
     ),

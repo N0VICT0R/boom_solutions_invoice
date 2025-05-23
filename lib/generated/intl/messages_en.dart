@@ -116,6 +116,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "countryLabel": MessageLookupByLibrary.simpleMessage("Country"),
     "credit": MessageLookupByLibrary.simpleMessage("CREDIT"),
     "currency": MessageLookupByLibrary.simpleMessage("Currency"),
+    "currentBalance": MessageLookupByLibrary.simpleMessage("Current Balance"),
     "customer": MessageLookupByLibrary.simpleMessage("Customer"),
     "customerNotFound": MessageLookupByLibrary.simpleMessage(
       "Customer not found.",
@@ -137,6 +138,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "customersTitle": MessageLookupByLibrary.simpleMessage("Customers"),
     "darkModeTitle": MessageLookupByLibrary.simpleMessage("Dark Mode"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
+    "dataLoadError": MessageLookupByLibrary.simpleMessage(
+      "Failed to load data. Please try again.",
+    ),
     "date": MessageLookupByLibrary.simpleMessage("DATE"),
     "dateRange": MessageLookupByLibrary.simpleMessage("Date Range"),
     "day": MessageLookupByLibrary.simpleMessage("Day"),
@@ -208,6 +212,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forgotApiToken": MessageLookupByLibrary.simpleMessage(
       "Forgot your API Token?",
     ),
+    "hideBalance": MessageLookupByLibrary.simpleMessage("Hide Balance"),
     "inspirationalQuotes": MessageLookupByLibrary.simpleMessage(
       "Success is not the absence of obstacles, but the courage to push through them.",
     ),
