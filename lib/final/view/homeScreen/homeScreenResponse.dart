@@ -49,6 +49,9 @@ class CashJournal {
       currency: json['currency'] ?? '',
       currencySymbol: json['currency_symbol'] ?? '',
       balance: (json['balance'] ?? 0.0).toDouble(),
+      additionalMetrics:
+          AdditionalMetrics.fromJson(json['additional_metrics'] ?? {}),
+      cashJournal: CashJournal.fromJson(json['cash_journal'] ?? {}),
     );
   }
 }
@@ -172,7 +175,34 @@ class AdditionalMetrics {
     return AdditionalMetrics(
       totalCustomers: json['total_customers'] ?? 0,
       todayVisits: json['today_visits'] ?? 0,
+      todayVisits: json['today_visits'],
       newCustomersThisMonth: json['new_customers_this_month'] ?? 0,
+    );
+  }
+}
+
+class CashJournal {
+  final int journalId;
+  final String journalName;
+  final String currency;
+  final String currencySymbol;
+  final double balance;
+
+  CashJournal({
+    required this.journalId,
+    required this.journalName,
+    required this.currency,
+    required this.currencySymbol,
+    required this.balance,
+  });
+
+  factory CashJournal.fromJson(Map<String, dynamic> json) {
+    return CashJournal(
+      journalId: json['journal_id'] ?? 0,
+      journalName: json['journal_name'] ?? '',
+      currency: json['currency'] ?? '',
+      currencySymbol: json['currency_symbol'] ?? '',
+      balance: (json['balance'] ?? 0.0).toDouble(),
     );
   }
 }
