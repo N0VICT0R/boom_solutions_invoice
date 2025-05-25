@@ -1524,10 +1524,11 @@ class CashJournal {
     required this.currencySymbol,
     required this.balance,
   });
-
   factory CashJournal.fromJson(Map<String, dynamic> json) {
+    final journalId = json['journal_id'] ?? 0;
+    GetStorage().write('journalId', journalId);
     return CashJournal(
-      journalId: json['journal_id'] ?? 0,
+      journalId: journalId,
       journalName: json['journal_name'] ?? '',
       currency: json['currency'] ?? '',
       currencySymbol: json['currency_symbol'] ?? '',

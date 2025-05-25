@@ -676,7 +676,9 @@
 "dataLoadError": "خطأ في تحميل البيانات",
 "@dataLoadError": {
   "description": "Message shown when data fails to load"
-}
+},
+"invalid_payment_method": "طريقة الدفع غير صالحة",
+"no_journal_id": "لا يوجد رقم "
 
 
     }

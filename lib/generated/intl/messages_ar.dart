@@ -211,6 +211,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalid_partner_id": MessageLookupByLibrary.simpleMessage(
       "خطأ: معرف شريك غير صالح",
     ),
+    "invalid_payment_method": MessageLookupByLibrary.simpleMessage(
+      "طريقة الدفع غير صالحة",
+    ),
     "inventory": MessageLookupByLibrary.simpleMessage("المخزون"),
     "invoice_date": MessageLookupByLibrary.simpleMessage("تاريخ الفاتورة"),
     "invoices": MessageLookupByLibrary.simpleMessage("فواتير"),
@@ -321,6 +324,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "no_data_available": MessageLookupByLibrary.simpleMessage(
       "لا توجد بيانات متاحة",
     ),
+    "no_journal_id": MessageLookupByLibrary.simpleMessage("لا يوجد رقم "),
     "no_message_provided": MessageLookupByLibrary.simpleMessage(
       "لم يتم تقديم رسالة",
     ),

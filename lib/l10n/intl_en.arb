@@ -988,5 +988,7 @@
   "description": "Label for current balance"
 },
   "hideBalance": "Hide Balance",
-  "dataLoadError": "Failed to load data. Please try again."
+  "dataLoadError": "Failed to load data. Please try again.",
+  "invalid_payment_method": "Invalid payment method",
+  "no_journal_id": "No journal ID found"
           }

@@ -223,6 +223,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalid_partner_id": MessageLookupByLibrary.simpleMessage(
       "Error: Invalid partner ID",
     ),
+    "invalid_payment_method": MessageLookupByLibrary.simpleMessage(
+      "Invalid payment method",
+    ),
     "inventory": MessageLookupByLibrary.simpleMessage("Inventory"),
     "invoice_date": MessageLookupByLibrary.simpleMessage("INVOICE DATE"),
     "invoices": MessageLookupByLibrary.simpleMessage("invoices"),
@@ -331,6 +334,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "no_data": MessageLookupByLibrary.simpleMessage("No Data"),
     "no_data_available": MessageLookupByLibrary.simpleMessage(
       "No data available",
+    ),
+    "no_journal_id": MessageLookupByLibrary.simpleMessage(
+      "No journal ID found",
     ),
     "no_message_provided": MessageLookupByLibrary.simpleMessage(
       "No message provided",

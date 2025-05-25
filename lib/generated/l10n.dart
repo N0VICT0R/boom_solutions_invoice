@@ -2654,6 +2654,26 @@ class S {
       args: [],
     );
   }
+
+  /// `Invalid payment method`
+  String get invalid_payment_method {
+    return Intl.message(
+      'Invalid payment method',
+      name: 'invalid_payment_method',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No journal ID found`
+  String get no_journal_id {
+    return Intl.message(
+      'No journal ID found',
+      name: 'no_journal_id',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
