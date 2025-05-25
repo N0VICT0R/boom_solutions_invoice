@@ -673,7 +673,7 @@ class Payment extends GetView<CustomerController> {
       final salesData = controller.salesData.value;
       if (salesData == null) return const SizedBox.shrink();
 
-      return InkWell(
+      return GestureDetector(
         onTap: () async {
           final partnerId = Get.arguments['partnerId'] ?? 0;
           if (partnerId == 0) {

@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
@@ -21,8 +22,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
   final scaleFactor = screenWidth / 400;
-  return (baseFontSize * scaleFactor)
-      .clamp(baseFontSize * 0.8, baseFontSize * 1.2);
+  return (baseFontSize * scaleFactor).clamp(baseFontSize * 0.8, baseFontSize * 1.2);
 }
 
 String formatNumber(double value, {bool isCurrency = true}) {
@@ -67,8 +67,7 @@ class SalesDashboard extends StatefulWidget {
   State<SalesDashboard> createState() => _SalesDashboardState();
 }
 
-class _SalesDashboardState extends State<SalesDashboard>
-    with SingleTickerProviderStateMixin {
+class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   String selectedRange = '7d';
@@ -90,8 +89,8 @@ class _SalesDashboardState extends State<SalesDashboard>
   DateTime _currentDateTime = DateTime.now();
   Timer? _clockTimer;
   String? _csrfToken;
-  bool isBalanceVisible = false; // State for balance card visibility
-  int _retryCount = 0; // Track retry attempts for data fetching
+  bool isBalanceVisible = false;
+  int _retryCount = 0;
 
   @override
   void initState() {
@@ -111,13 +110,10 @@ class _SalesDashboardState extends State<SalesDashboard>
     _startPolling();
     _startClock();
     _checkConnectivity();
-    _connectivitySubscription = Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       bool wasOffline = isOffline;
       setState(() {
-        isOffline =
-            results.every((result) => result == ConnectivityResult.none);
+        isOffline = results.every((result) => result == ConnectivityResult.none);
       });
       if (wasOffline && !isOffline) {
         _fetchCsrfToken().then((_) => _fetchAllData());
@@ -206,8 +202,6 @@ class _SalesDashboardState extends State<SalesDashboard>
     if (isOffline) {
       setState(() {
         errorMessage = S.of(context).checkConnection ?? 'Check your connection';
-        errorMessage =
-            S.of(context)?.checkConnection ?? 'Check your connection';
         isLoading = false;
       });
       if (_selectedIndex != 2) _onItemTapped(2);
@@ -226,22 +220,15 @@ class _SalesDashboardState extends State<SalesDashboard>
       await Get.find<DashboardController>().fetchNotes();
       setState(() {
         isLoading = false;
-        _retryCount = 0; // Reset retry count on success
+        _retryCount = 0;
       });
     } catch (e) {
-      if (e.toString().contains('400') &&
-          e.toString().contains('invalid CSRF token')) {
+      if (e.toString().contains('400') && e.toString().contains('invalid CSRF token')) {
         if (await _refreshToken()) {
           await _fetchAllData();
           return;
         }
       }
-      setState(() {
-        errorMessage =
-            S.of(context)?.checkConnection ?? 'Check your connection';
-        isLoading = false;
-      });
-      if (_selectedIndex != 2) _onItemTapped(2);
       if (_retryCount < 3) {
         _retryCount++;
         debugPrint('Retrying fetchAllData, attempt $_retryCount of 3');
@@ -266,8 +253,7 @@ class _SalesDashboardState extends State<SalesDashboard>
       if (apiUrl.isEmpty || token.isEmpty || userId == null) {
         throw Exception('Missing API URL, token, or user ID');
       }
-      final url = Uri.parse(
-          '$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
+      final url = Uri.parse('$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
       final response = await http.get(
         url,
         headers: {
@@ -280,8 +266,7 @@ class _SalesDashboardState extends State<SalesDashboard>
         setState(() {
           homeData = HomeScreenResponse.fromJson(jsonData);
         });
-      } else if (response.statusCode == 400 &&
-          response.body.contains('invalid CSRF token')) {
+      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
         throw Exception('400: invalid CSRF token');
       } else {
         throw Exception('Failed to load data: ${response.statusCode}');
@@ -337,10 +322,8 @@ class _SalesDashboardState extends State<SalesDashboard>
           setState(() {
             displayData = fullData.where((item) {
               final itemDate = item['date'] as DateTime;
-              return (itemDate.isAfter(startDate!) ||
-                      itemDate.isAtSameMomentAs(startDate!)) &&
-                  (itemDate.isBefore(endDate!) ||
-                      itemDate.isAtSameMomentAs(endDate!));
+              return (itemDate.isAfter(startDate!) || itemDate.isAtSameMomentAs(startDate!)) &&
+                  (itemDate.isBefore(endDate!) || itemDate.isAtSameMomentAs(endDate!));
             }).toList();
           });
           return;
@@ -375,162 +358,218 @@ class _SalesDashboardState extends State<SalesDashboard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final screenSize = MediaQuery.of(context).size;
     final isTablet = screenSize.width > 600;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authController = Get.find<AuthController>();
     final l10n = S.of(context);
     final bool isRTL = Get.locale?.languageCode == 'ar';
     final bool isArabic = isRTL;
 
-    final Color bgColor = isDark ? Color(0xFF121212) : Color(0xFFFAFAFA);
-    final Color cardBackground = isDark ? Color(0xFF1A1A1A) : Colors.white;
-    final Color cardBorder = isDark ? Color(0xFF2A2A2A) : Color(0xFFE0E0E0);
-    final Color primaryTextColor = isDark ? Colors.white : Color(0xFF212121);
-    final Color secondaryTextColor = isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
-    final Color accentColor = isDark ? Color(0xFF4FC3F7) : Color(0xFF1976D2);
-    final Color shimmerBaseColor = isDark ? Color(0xFF262626) : Colors.grey[300]!;
-    final Color shimmerHighlightColor = isDark ? Color(0xFF303030) : Colors.grey[100]!;
-
     final List<Widget> pages = [
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0, vertical: 16.0),
-                child: _buildShimmerLoading(
-                    shimmerBaseColor, shimmerHighlightColor, isTablet),
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildShimmerLoading(isTablet),
               ),
             )
-          : SafeArea(
-              child: RefreshIndicator(
-                onRefresh: _fetchAllData,
-                color: accentColor,
-                // backgroundColor: cardBackground,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12.0, vertical: 16.0),
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FadeInDown(
-                            duration: Duration(milliseconds: 400),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          l10n.welcomeBack,
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: getResponsiveFontSize(
-                                                context, 13),
-                                            color: secondaryTextColor,
-                                          ),
+          : Scaffold(
+              backgroundColor: theme.colorScheme.background,
+            body: SafeArea(
+              
+                child: RefreshIndicator(
+                  onRefresh: _fetchAllData,
+                  color: theme.colorScheme.primary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            FadeInDown(
+                              duration: Duration(milliseconds: 400),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.welcomeBack,
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: getResponsiveFontSize(context, 13),
+                                          color: theme.colorScheme.onSurfaceVariant,
                                         ),
-                                        SizedBox(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              200, // Screen width minus fixed amount
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        authController.currentUser.value?.name ?? 'admin',
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: getResponsiveFontSize(context, 20),
+                                          color: theme.colorScheme.onSurface,
                                         ),
-                                        if (homeData?.cashJournal?.balance !=
-                                            null)
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  accentColor.withOpacity(0.08),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.account_balance_wallet,
-                                                  size: 16,
-                                                  color: accentColor,
-                                                ),
-                                                SizedBox(width: 4),
-                                                Text(
-                                                  formatNumber(homeData!
-                                                      .cashJournal!.balance!),
-                                                  style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize:
-                                                        getResponsiveFontSize(
-                                                            context, 13),
-                                                    color: accentColor,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      authController.currentUser.value?.name ??
-                                          'admin',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize:
-                                            getResponsiveFontSize(context, 20),
-                                        color: primaryTextColor,
                                       ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      _formatDateTime(
-                                          _currentDateTime, isArabic),
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize:
-                                            getResponsiveFontSize(context, 12),
-                                        color: secondaryTextColor,
+                                      SizedBox(height: 4),
+                                      Text(
+                                        _formatDateTime(_currentDateTime, isArabic),
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: getResponsiveFontSize(context, 12),
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    isBalanceVisible ? Icons.visibility_off : Icons.account_balance_wallet,
-                                    color: accentColor,
-                                    size: 24,
+                                    ],
                                   ),
-                                  tooltip: isBalanceVisible ? l10n.hideBalance : l10n.currentBalance,
-                                  onPressed: () {
-                                    setState(() {
-                                      isBalanceVisible = !isBalanceVisible;
-                                    });
-                                  },
-                                ),
-                              ],
+                                  IconButton(
+                                    icon: Icon(
+                                      isBalanceVisible ? Icons.visibility_off : Icons.account_balance_wallet,
+                                      color: theme.colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    tooltip: isBalanceVisible ? l10n.hideBalance : l10n.currentBalance,
+                                    onPressed: () {
+                                      setState(() {
+                                        isBalanceVisible = !isBalanceVisible;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 20),
-                          // Collapsible Balance Card
-                          AnimatedCrossFade(
-                            firstChild: Container(), // Empty when hidden
-                            secondChild: FadeInDown(
-                              duration: Duration(milliseconds: 450),
+                            SizedBox(height: 20),
+                            AnimatedCrossFade(
+                              firstChild: Container(),
+                              secondChild: FadeInDown(
+                                duration: Duration(milliseconds: 450),
+                                from: 30,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: theme.colorScheme.surface,
+                                    border: Border.all(color: theme.colorScheme.outline, width: 1),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.colorScheme.shadow.withOpacity(0.05),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: isLoading
+                                          ? Shimmer.fromColors(
+                                              baseColor: theme.colorScheme.surfaceContainer,
+                                              highlightColor: theme.colorScheme.surfaceContainerHigh,
+                                              child: _buildBalanceShimmer(),
+                                            )
+                                          : (homeData?.cashJournal?.balance != null && errorMessage == null)
+                                              ? Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          l10n.currentBalance,
+                                                          style: GoogleFonts.poppins(
+                                                            fontWeight: FontWeight.w600,
+                                                            fontSize: getResponsiveFontSize(context, 16),
+                                                            color: theme.colorScheme.onSurface,
+                                                          ),
+                                                        ),
+                                                        SizedBox(height: 8),
+                                                        Row(
+                                                          children: [
+                                                            Text(
+                                                              formatNumber(homeData!.cashJournal!.balance),
+                                                              style: GoogleFonts.poppins(
+                                                                fontWeight: FontWeight.w700,
+                                                                fontSize: getResponsiveFontSize(context, 20),
+                                                                color: theme.colorScheme.primary,
+                                                              ),
+                                                            ),
+                                                            SizedBox(width: 4),
+                                                            Text(
+                                                              homeData?.cashJournal?.currencySymbol ?? 'LE',
+                                                              style: GoogleFonts.poppins(
+                                                                fontWeight: FontWeight.w500,
+                                                                fontSize: getResponsiveFontSize(context, 16),
+                                                                color: theme.colorScheme.onSurfaceVariant,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Container(
+                                                      padding: EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: theme.colorScheme.primary.withOpacity(0.1),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.account_balance,
+                                                        size: 24,
+                                                        color: theme.colorScheme.primary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              : Column(
+                                                  children: [
+                                                    Text(
+                                                      l10n.dataLoadError,
+                                                      style: GoogleFonts.poppins(
+                                                        fontWeight: FontWeight.w500,
+                                                        fontSize: getResponsiveFontSize(context, 14),
+                                                        color: theme.colorScheme.error,
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 8),
+                                                    ElevatedButton(
+                                                      onPressed: _fetchAllData,
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: theme.colorScheme.primary,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        l10n.retry,
+                                                        style: GoogleFonts.poppins(
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: getResponsiveFontSize(context, 12),
+                                                          color: theme.colorScheme.onPrimary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              crossFadeState: isBalanceVisible ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                              duration: Duration(milliseconds: 300),
+                            ),
+                            SizedBox(height: isBalanceVisible ? 20 : 0),
+                                 FadeInUp(
+                              duration: Duration(milliseconds: 500),
                               from: 30,
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  color: cardBackground,
-                                  border: Border.all(color: cardBorder, width: 1),
+                                  color: theme.colorScheme.surface,
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.05),
@@ -541,398 +580,209 @@ class _SalesDashboardState extends State<SalesDashboard>
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: isLoading
-                                        ? Shimmer.fromColors(
-                                            baseColor: shimmerBaseColor,
-                                            highlightColor: shimmerHighlightColor,
-                                            child: _buildBalanceShimmer(),
-                                          )
-                                        : (homeData?.cashJournal?.balance != null && errorMessage == null)
-                                            ? Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        l10n.currentBalance,
-                                                        style: GoogleFonts.poppins(
-                                                          fontWeight: FontWeight.w600,
-                                                          fontSize: getResponsiveFontSize(context, 16),
-                                                          color: primaryTextColor,
-                                                        ),
-                                                      ),
-                                                      SizedBox(height: 8),
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                            formatNumber(homeData!.cashJournal!.balance),
-                                                            style: GoogleFonts.poppins(
-                                                              fontWeight: FontWeight.w700,
-                                                              fontSize: getResponsiveFontSize(context, 20),
-                                                              color: accentColor,
-                                                            ),
-                                                          ),
-                                                          SizedBox(width: 4),
-                                                          Text(
-                                                            homeData?.cashJournal?.currencySymbol ?? 'LE',
-                                                            style: GoogleFonts.poppins(
-                                                              fontWeight: FontWeight.w500,
-                                                              fontSize: getResponsiveFontSize(context, 16),
-                                                              color: secondaryTextColor,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Container(
-                                                    padding: EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: accentColor.withOpacity(0.1),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.attach_money,
-                                                      size: 24,
-                                                      color: accentColor,
-                                                    ),
-                                                  ),
-                                                ],
-                                              )
-                                            : Column(
-                                                children: [
-                                                  Text(
-                                                    l10n.dataLoadError,
-                                                    style: GoogleFonts.poppins(
-                                                      fontWeight: FontWeight.w500,
-                                                      fontSize: getResponsiveFontSize(context, 14),
-                                                      color: Colors.red[400],
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  ElevatedButton(
-                                                    onPressed: _fetchAllData,
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: accentColor,
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(8),
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      l10n.retry,
-                                                      style: GoogleFonts.poppins(
-                                                        fontWeight: FontWeight.w600,
-                                                        fontSize: getResponsiveFontSize(context, 12),
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
+                                  child: SalesChartView(),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            isLoading
+                                ? _buildShimmerLoading(isTablet)
+                                : errorMessage != null
+                                    ? _buildErrorView(errorMessage!, l10n)
+                                    : FadeInUp(
+                                        duration: Duration(milliseconds: 600),
+                                        from: 30,
+                                        child: Column(
+                                          children: [
+                                            SizedBox(height: 12),
+                                            GridView.builder(
+                                              shrinkWrap: true,
+                                              physics: NeverScrollableScrollPhysics(),
+                                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: isTablet ? 2 : 2,
+                                                crossAxisSpacing: 12,
+                                                mainAxisSpacing: 12,
+                                                childAspectRatio: 1.0,
                                               ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            crossFadeState: isBalanceVisible ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                            duration: Duration(milliseconds: 300),
-                          ),
-                          SizedBox(height: isBalanceVisible ? 20 : 0),
-                          FadeInUp(
-                            duration: Duration(milliseconds: 500),
-                            from: 30,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: cardBackground,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: SalesChartView(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          isLoading
-                              ? _buildShimmerLoading(shimmerBaseColor,
-                                  shimmerHighlightColor, isTablet)
-                              : errorMessage != null
-                                  ? _buildErrorView(
-                                      errorMessage!, accentColor, isDark, l10n)
-                                  : FadeInUp(
-                                      duration: Duration(milliseconds: 600),
-                                      from: 30,
-                                      child: Column(
-                                        children: [
-                                          SizedBox(height: 12),
-                                          GridView.builder(
-                                            shrinkWrap: true,
-                                            physics:
-                                                NeverScrollableScrollPhysics(),
-                                            gridDelegate:
-                                                SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: isTablet ? 2 : 2,
-                                              crossAxisSpacing: 12,
-                                              mainAxisSpacing: 12,
-                                              childAspectRatio: 1.0,
+                                              itemCount: 4,
+                                              itemBuilder: (context, index) {
+                                                return FadeInUp(
+                                                  duration: Duration(milliseconds: 600 + index * 100),
+                                                  from: 30,
+                                                  child: _MetricCard(
+                                                    title: [
+                                                      l10n.salesTarget,
+                                                      l10n.collections,
+                                                      l10n.visits,
+                                                      l10n.newCustomers,
+                                                    ][index],
+                                                    value: [
+                                                      homeData?.monthlySales?.metrics?.totalAmount != null &&
+                                                              homeData?.monthlySales?.metrics?.monthTarget != null
+                                                          ? '${formatNumber(homeData!.monthlySales!.metrics!.totalAmount!)}/${formatNumber(homeData!.monthlySales!.metrics!.monthTarget!)}'
+                                                          : 'N/A',
+                                                      homeData?.receivables?.amountDueToday != null
+                                                          ? formatNumber(homeData!.receivables!.amountDueToday!)
+                                                          : 'N/A',
+                                                      homeData?.additionalMetrics?.todayVisits != null
+                                                          ? '${homeData!.additionalMetrics!.todayVisits}'
+                                                          : 'N/A',
+                                                      homeData?.additionalMetrics?.newCustomersThisMonth != null
+                                                          ? '${homeData!.additionalMetrics!.newCustomersThisMonth}'
+                                                          : 'N/A',
+                                                    ][index],
+                                                    subtitle: [
+                                                      l10n.ofTarget(homeData?.monthlySales?.metrics?.achievementPercentage ?? 0),
+                                                      l10n.partners(homeData?.receivables?.partnerCount ?? 0),
+                                                      l10n.completedToday,
+                                                      l10n.thisMonth,
+                                                    ][index],
+                                                    icon: [
+                                                      Icons.show_chart,
+                                                      Icons.account_balance_wallet,
+                                                      Icons.check_circle_outline,
+                                                      Icons.person_add_alt,
+                                                    ][index],
+                                                    achievementPercentage: homeData?.monthlySales?.metrics?.achievementPercentage ?? 0,
+                                                  ),
+                                                );
+                                              },
                                             ),
-                                            itemCount: 4,
-                                            itemBuilder: (context, index) {
-                                              return FadeInUp(
-                                                duration: Duration(
-                                                    milliseconds:
-                                                        600 + index * 100),
-                                                from: 30,
-                                                child: _MetricCard(
-                                                  title: [
-                                                    l10n.salesTarget,
-                                                    l10n.collections,
-                                                    l10n.visits,
-                                                    l10n.newCustomers,
-                                                  ][index],
-                                                  value: [
-                                                    homeData
-                                                                    ?.monthlySales
-                                                                    ?.metrics
-                                                                    ?.totalAmount !=
-                                                                null &&
-                                                            homeData
-                                                                    ?.monthlySales
-                                                                    ?.metrics
-                                                                    ?.monthTarget !=
-                                                                null
-                                                        ? '${formatNumber(homeData!.monthlySales!.metrics!.totalAmount!)}/${formatNumber(homeData!.monthlySales!.metrics!.monthTarget!)}'
-                                                        : 'N/A',
-                                                    homeData?.receivables
-                                                                ?.amountDueToday !=
-                                                            null
-                                                        ? formatNumber(homeData!
-                                                            .receivables!
-                                                            .amountDueToday!)
-                                                        : 'N/A',
-                                                    homeData?.additionalMetrics
-                                                                ?.todayVisits !=
-                                                            null
-                                                        ? '${homeData!.additionalMetrics!.todayVisits}'
-                                                        : 'N/A',
-                                                    homeData?.additionalMetrics
-                                                                ?.newCustomersThisMonth !=
-                                                            null
-                                                        ? '${homeData!.additionalMetrics!.newCustomersThisMonth}'
-                                                        : 'N/A',
-                                                  ][index],
-                                                  subtitle: [
-                                                    l10n.ofTarget(homeData
-                                                            ?.monthlySales
-                                                            ?.metrics
-                                                            ?.achievementPercentage ??
-                                                        0),
-                                                    l10n.partners(homeData
-                                                            ?.receivables
-                                                            ?.partnerCount ??
-                                                        0),
-                                                    l10n.completedToday,
-                                                    l10n.thisMonth,
-                                                  ][index],
-                                                  icon: [
-                                                    Icons.show_chart,
-                                                    Icons
-                                                        .account_balance_wallet,
-                                                    Icons.check_circle_outline,
-                                                    Icons.person_add_alt,
-                                                  ][index],
-                                                  iconColor: [
-                                                    (homeData
-                                                                    ?.monthlySales
-                                                                    ?.metrics
-                                                                    ?.achievementPercentage ??
-                                                                0) >=
-                                                            80
-                                                        ? Colors.green[400]!
-                                                        : Colors.orange[400]!,
-                                                    Colors.amber[400]!,
-                                                    Colors.green[400]!,
-                                                    Colors.blue[400]!,
-                                                  ][index],
-                                                  isDark: isDark,
-                                                  accentColor: accentColor,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
+                            SizedBox(height: 20),
+                            FadeInUp(
+                              duration: Duration(milliseconds: 700),
+                              from: 30,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.quickActions,
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: getResponsiveFontSize(context, 16),
+                                      color: theme.colorScheme.onSurface,
                                     ),
-                          SizedBox(height: 20),
-                          FadeInUp(
-                            duration: Duration(milliseconds: 700),
-                            from: 30,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.quickActions,
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize:
-                                        getResponsiveFontSize(context, 16),
-                                    color: primaryTextColor,
                                   ),
-                                ),
-                                SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _ActionButton(
-                                        icon: Icons.place,
-                                        label: l10n.nearbyCustomers,
-                                        onTap: () {
-                                          debugPrint('Tapped Nearby Customers');
-                                          if (Get.isRegistered<
-                                              DashboardController>()) {
-                                            Get.toNamed('/nearbycustomer');
-                                          } else {
-                                            debugPrint(
-                                                'DashboardController not found');
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      'Navigation error: Controller not found')),
-                                            );
-                                          }
-                                        },
-                                        isDark: isDark,
-                                        accentColor: accentColor,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _ActionButton(
-                                        icon: Icons.inventory_2,
-                                        label: l10n.stock,
-                                        onTap: () {
-                                          debugPrint('Tapped Stock');
-                                          if (Get.isRegistered<
-                                              DashboardController>()) {
-                                            try {
-                                              Get.find<DashboardController>()
-                                                  .createNewDeal();
-                                              Get.toNamed('/stock');
-                                            } catch (e) {
-                                              debugPrint(
-                                                  'Error in Stock tap: $e');
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        'Navigation error: $e')),
+                                  SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _ActionButton(
+                                          icon: Icons.place,
+                                          label: l10n.nearbyCustomers,
+                                          onTap: () {
+                                            debugPrint('Tapped Nearby Customers');
+                                            if (Get.isRegistered<DashboardController>()) {
+                                              Get.toNamed('/nearbycustomer');
+                                            } else {
+                                              debugPrint('DashboardController not found');
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Navigation error: Controller not found')),
                                               );
                                             }
-                                          } else {
-                                            debugPrint(
-                                                'DashboardController not found');
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      'Navigation error: Controller not found')),
-                                            );
-                                          }
-                                        },
-                                        isDark: isDark,
-                                        accentColor: accentColor,
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          FadeInUp(
-                            duration: Duration(milliseconds: 800),
-                            from: 30,
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [],
-                                ),
-                                SizedBox(height: 12),
-                                Container(
-                                  height: screenSize.height * 0.3,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: cardBackground,
-                                    border:
-                                        Border.all(color: cardBorder, width: 1),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4),
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: _ActionButton(
+                                          icon: Icons.inventory_2,
+                                          label: l10n.stock,
+                                          onTap: () {
+                                            debugPrint('Tapped Stock');
+                                            if (Get.isRegistered<DashboardController>()) {
+                                              try {
+                                                Get.find<DashboardController>().createNewDeal();
+                                                Get.toNamed('/stock');
+                                              } catch (e) {
+                                                debugPrint('Error in Stock tap: $e');
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Navigation error: $e')),
+                                                );
+                                              }
+                                            } else {
+                                              debugPrint('DashboardController not found');
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Navigation error: Controller not found')),
+                                              );
+                                            }
+                                          },
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: NotesWidget(
-                                      height: screenSize.height * 0.3,
-                                      scrollController: _scrollController,
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            FadeInUp(
+                              duration: Duration(milliseconds: 800),
+                              from: 30,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [],
+                                  ),
+                                  SizedBox(height: 12),
+                                  Container(
+                                    height: screenSize.height * 0.3,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: theme.colorScheme.surface,
+                                      border: Border.all(color: theme.colorScheme.outline, width: 1),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: theme.colorScheme.shadow.withOpacity(0.05),
+                                          blurRadius: 8,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: NotesWidget(
+                                        height: screenSize.height * 0.3,
+                                        scrollController: _scrollController,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 16),
-                        ],
+                            SizedBox(height: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
+          ),
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0, vertical: 16.0),
-                child: _buildCustomersShimmer(
-                    shimmerBaseColor, shimmerHighlightColor),
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildCustomersShimmer(),
               ),
             )
           : Center(child: CustomersListScreen()),
       Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co/web/login?redirect=%2Fodoo%3F')),
-      Center(
-          child: WebViewScreen(
-              url: GetStorage().read('webViewUrl') ??
-                  'https://onix.boom-solutions.co//web/login?redirect=%2Fodoo%3F')),
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0, vertical: 16.0),
-                child: _buildSettingsShimmer(
-                    shimmerBaseColor, shimmerHighlightColor),
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                child: _buildSettingsShimmer(),
               ),
             )
           : Center(child: SettingsScreen()),
     ];
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: theme.colorScheme.surface,
       body: Directionality(
         textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
         child: PageView(
@@ -949,21 +799,20 @@ class _SalesDashboardState extends State<SalesDashboard>
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildBottomNavigationBar(isDark, accentColor),
+          _buildBottomNavigationBar(),
           if (isOffline)
             Container(
-              color: Colors.red[600],
+              color: theme.colorScheme.error,
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4,
-                      color: Colors.white, size: 16),
+                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4, color: theme.colorScheme.onError, size: 16),
                   SizedBox(width: 8),
                   Text(
                     l10n.youAreOffline,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: theme.colorScheme.onError,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -976,8 +825,6 @@ class _SalesDashboardState extends State<SalesDashboard>
     );
   }
 
-  Widget _buildShimmerLoading(
-      Color baseColor, Color highlightColor, bool isTablet) {
   Widget _buildBalanceShimmer() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -989,7 +836,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 120,
               height: 16,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -998,7 +845,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 100,
               height: 20,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1008,7 +855,7 @@ class _SalesDashboardState extends State<SalesDashboard>
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.grey[300],
+            color: Theme.of(context).colorScheme.surfaceContainer,
             shape: BoxShape.circle,
           ),
         ),
@@ -1016,10 +863,10 @@ class _SalesDashboardState extends State<SalesDashboard>
     );
   }
 
-  Widget _buildShimmerLoading(Color baseColor, Color highlightColor, bool isTablet) {
+  Widget _buildShimmerLoading(bool isTablet) {
     return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
+      baseColor: Theme.of(context).colorScheme.surfaceContainer,
+      highlightColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -1029,7 +876,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 150,
               height: 20,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1038,7 +885,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 100,
               height: 24,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1046,7 +893,7 @@ class _SalesDashboardState extends State<SalesDashboard>
             Container(
               height: 200,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -1064,7 +911,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               itemBuilder: (context, index) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: baseColor,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
@@ -1076,7 +923,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: Theme.of(context).colorScheme.surfaceContainer,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1085,7 +932,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           width: 80,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -1094,7 +941,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           width: 60,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -1103,7 +950,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           width: 90,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -1118,7 +965,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 120,
               height: 20,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1129,7 +976,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                   child: Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      color: baseColor,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -1139,7 +986,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                   child: Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      color: baseColor,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -1151,7 +998,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               width: 120,
               height: 20,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1159,7 +1006,7 @@ class _SalesDashboardState extends State<SalesDashboard>
             Container(
               height: 300,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -1169,10 +1016,10 @@ class _SalesDashboardState extends State<SalesDashboard>
     );
   }
 
-  Widget _buildCustomersShimmer(Color baseColor, Color highlightColor) {
+  Widget _buildCustomersShimmer() {
     return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
+      baseColor: Theme.of(context).colorScheme.surfaceContainer,
+      highlightColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -1186,7 +1033,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                         height: 60,
                         width: 180,
                         decoration: BoxDecoration(
-                          color: baseColor,
+                          color: Theme.of(context).colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Padding(
@@ -1195,10 +1042,10 @@ class _SalesDashboardState extends State<SalesDashboard>
                             alignment: Alignment.centerLeft,
                             child: Text(
                               S.of(context).customers,
-                              style: TextStyle(
+                              style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
-                                color: Colors.grey[700],
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -1213,7 +1060,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                   bottom: 0,
                   child: IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.add, color: Colors.grey[700]),
+                    icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
               ],
@@ -1226,12 +1073,15 @@ class _SalesDashboardState extends State<SalesDashboard>
                     height: 45,
                     width: 180,
                     decoration: BoxDecoration(
-                      color: baseColor,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-                IconButton(onPressed: () {}, icon: Icon(Icons.sort_by_alpha)),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.sort_by_alpha, color: Theme.of(context).colorScheme.onSurface),
+                ),
               ],
             ),
             Column(
@@ -1241,7 +1091,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                   child: Container(
                     height: 80,
                     decoration: BoxDecoration(
-                      color: baseColor,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Padding(
@@ -1252,7 +1102,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: baseColor,
+                              color: Theme.of(context).colorScheme.surfaceContainer,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -1266,7 +1116,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                                   width: 100,
                                   height: 14,
                                   decoration: BoxDecoration(
-                                    color: baseColor,
+                                    color: Theme.of(context).colorScheme.surfaceContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -1275,7 +1125,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                                   width: 60,
                                   height: 12,
                                   decoration: BoxDecoration(
-                                    color: baseColor,
+                                    color: Theme.of(context).colorScheme.surfaceContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -1295,10 +1145,10 @@ class _SalesDashboardState extends State<SalesDashboard>
     );
   }
 
-  Widget _buildSettingsShimmer(Color baseColor, Color highlightColor) {
+  Widget _buildSettingsShimmer() {
     return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
+      baseColor: Theme.of(context).colorScheme.surfaceContainer,
+      highlightColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -1306,7 +1156,7 @@ class _SalesDashboardState extends State<SalesDashboard>
             Container(
               height: 100,
               decoration: BoxDecoration(
-                color: baseColor,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
               margin: EdgeInsets.only(bottom: 16),
@@ -1318,7 +1168,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: baseColor,
+                        color: Theme.of(context).colorScheme.surfaceContainer,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -1332,7 +1182,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                             width: 120,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: baseColor,
+                              color: Theme.of(context).colorScheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1341,7 +1191,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                             width: 80,
                             height: 12,
                             decoration: BoxDecoration(
-                              color: baseColor,
+                              color: Theme.of(context).colorScheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1358,7 +1208,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                   height: 60,
                   margin: EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: baseColor,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
@@ -1369,7 +1219,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: baseColor,
+                            color: Theme.of(context).colorScheme.surfaceContainer,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1378,7 +1228,7 @@ class _SalesDashboardState extends State<SalesDashboard>
                           child: Container(
                             height: 14,
                             decoration: BoxDecoration(
-                              color: baseColor,
+                              color: Theme.of(context).colorScheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1395,8 +1245,7 @@ class _SalesDashboardState extends State<SalesDashboard>
     );
   }
 
-  Widget _buildErrorView(
-      String message, Color accentColor, bool isDark, S l10n) {
+  Widget _buildErrorView(String message, S l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1406,7 +1255,7 @@ class _SalesDashboardState extends State<SalesDashboard>
             child: Text(
               l10n.checkConnection,
               style: GoogleFonts.poppins(
-                color: Colors.red[400],
+                color: Theme.of(context).colorScheme.error,
                 fontSize: getResponsiveFontSize(context, 14),
               ),
               textAlign: TextAlign.center,
@@ -1419,35 +1268,29 @@ class _SalesDashboardState extends State<SalesDashboard>
               debugPrint('Tapped Retry');
               _fetchAllData();
             },
-            isDark: isDark,
-            accentColor: accentColor,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNavigationBar(bool isDark, Color accentColor) {
+  Widget _buildBottomNavigationBar() {
     return SafeArea(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard,
-              S.of(context).dashboard, accentColor, isDark),
-          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt,
-              S.of(context).customers, accentColor, isDark),
-          _buildNavItem(2, Icons.public_outlined, Icons.public,
-              S.of(context).odoo, accentColor, isDark),
-          _buildNavItem(3, Icons.settings_outlined, Icons.settings,
-              S.of(context).settings, accentColor, isDark),
+          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, S.of(context).dashboard),
+          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt, S.of(context).customers),
+          _buildNavItem(2, Icons.public_outlined, Icons.public, S.of(context).odoo),
+          _buildNavItem(3, Icons.settings_outlined, Icons.settings, S.of(context).settings),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon,
-      String label, Color accentColor, bool isDark) {
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
     bool isSelected = _selectedIndex == index;
+    final theme = Theme.of(context);
 
     return InkWell(
       onTap: () => _onItemTapped(index),
@@ -1457,7 +1300,7 @@ class _SalesDashboardState extends State<SalesDashboard>
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? accentColor.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : Colors.transparent,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1465,11 +1308,7 @@ class _SalesDashboardState extends State<SalesDashboard>
             Icon(
               isSelected ? activeIcon : icon,
               size: 22,
-              color: isSelected
-                  ? accentColor
-                  : isDark
-                      ? Color(0xFF757575)
-                      : Color(0xFFBDBDBD),
+              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
             ),
             SizedBox(height: 4),
             Text(
@@ -1477,11 +1316,7 @@ class _SalesDashboardState extends State<SalesDashboard>
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? accentColor
-                    : isDark
-                        ? Color(0xFF757575)
-                        : Color(0xFFBDBDBD),
+                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -1507,33 +1342,34 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final IconData icon;
-  final Color iconColor;
-  final bool isDark;
-  final Color accentColor;
+  final double achievementPercentage;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
-    required this.iconColor,
-    required this.isDark,
-    required this.accentColor,
+    required this.achievementPercentage,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Color cardColor = isDark ? Color(0xFF1A1A1A) : Colors.white;
-    final Color textColor = isDark ? Colors.white : Color(0xFF212121);
-    final Color subtitleColor = isDark ? Color(0xFFB0B0B0) : Color(0xFF757575);
+    final theme = Theme.of(context);
+    final iconColor = title == S.of(context).salesTarget
+        ? (achievementPercentage >= 80 ? theme.colorScheme.primary : theme.colorScheme.secondary)
+        : title == S.of(context).collections
+            ? theme.colorScheme.secondary
+            : title == S.of(context).visits
+                ? theme.colorScheme.primary
+                : theme.colorScheme.primary;
 
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: theme.colorScheme.shadow.withOpacity(0.05),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -1562,7 +1398,7 @@ class _MetricCard extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w500,
                 fontSize: getResponsiveFontSize(context, 15),
-                color: subtitleColor,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1572,7 +1408,7 @@ class _MetricCard extends StatelessWidget {
               value,
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
-                color: textColor,
+                color: theme.colorScheme.onSurface,
                 fontSize: getResponsiveFontSize(context, 18),
               ),
               maxLines: 1,
@@ -1584,7 +1420,7 @@ class _MetricCard extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w400,
                 fontSize: getResponsiveFontSize(context, 13),
-                color: subtitleColor,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1600,24 +1436,21 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool isDark;
-  final Color accentColor;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
-    required this.isDark,
-    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isDark ? accentColor.withOpacity(0.2) : accentColor,
-        foregroundColor: isDark ? Colors.white : Colors.white,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -1637,6 +1470,7 @@ class _ActionButton extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
                 fontSize: getResponsiveFontSize(context, 14),
+                color: theme.colorScheme.onPrimary,
               ),
               overflow: TextOverflow.ellipsis,
             ),

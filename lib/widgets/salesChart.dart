@@ -21,11 +21,11 @@ extension IterableExtension<T> on Iterable<T> {
 class ThemeModes {
   static final lightTheme = ThemeData.light().copyWith(
     scaffoldBackgroundColor: Colors.grey[100],
-    cardTheme: CardTheme(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.white,
-    ),
+    // cardTheme: CardTheme(
+    //   elevation: 4,
+    //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    //   color: Colors.white,
+    // ),
     colorScheme: const ColorScheme.light().copyWith(
       primary: Colors.blueAccent,
       secondary: Colors.lightBlueAccent,
@@ -40,11 +40,11 @@ class ThemeModes {
 
   static final darkTheme = ThemeData.dark().copyWith(
     scaffoldBackgroundColor: Colors.black,
-    cardTheme: CardTheme(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFF1E1E1E),
-    ),
+    // cardTheme: CardTheme(
+    //   elevation: 4,
+    //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    //   color: const Color(0xFF1E1E1E),
+    // ),
     colorScheme: const ColorScheme.dark().copyWith(
       primary: Colors.blueAccent,
       secondary: Colors.lightBlueAccent,
@@ -342,6 +342,7 @@ class SalesChartView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = S.of(context);
     return Container(
+      // color: Colors.white,
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,13 +380,13 @@ class SalesChartView extends StatelessWidget {
             children: [
               TextButton(
                 style: TextButton.styleFrom(
-                  // backgroundColor: Colors.transparent,
+                  backgroundColor: Colors.transparent,
                   iconColor: theme.colorScheme.primary,
                 ),
                 onPressed: () => controller.fetchData(),
                 child: Icon(Icons.refresh),
               ),
-                
+                SizedBox(width: 3,),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

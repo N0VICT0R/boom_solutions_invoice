@@ -26,7 +26,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
 import 'package:boom_solutions_invoice/final/view/auth_Getx.dart';
-import 'package:boom_solutions_invoice/final/view/homeScreen/dashboard_Getx.dart';
+import 'package:boom_solutions_invoice/final/view/homeScreen/dashboard_Getx.dart' hide ThemeController;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'CustomerDetail/controllers/CustomerDetailController.dart';
 import 'screens/invoice_detail_screen.dart';
@@ -77,8 +77,8 @@ class InvoiceApp extends StatelessWidget {
       title: 'Invoice App',
       // locale: Get.deviceLocale,
       fallbackLocale: const Locale('en', 'US'),
-  theme: AppTheme.light(themeController.accentColor),
-      darkTheme: AppTheme.dark(themeController.accentColor),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode: themeController.theme,
       // themeMode: Get.find<ThemeController>().theme,
       debugShowCheckedModeBanner: false,

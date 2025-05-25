@@ -29,24 +29,24 @@ class NotesWidget extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = Get.find<DashboardController>();
 
-    return Container(
-      height: height,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: isDark ? 20 : 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+    return Card(
+      // height: height,
+      // width: double.infinity,
+      // decoration: BoxDecoration(
+      //   color: isDark ? Colors.grey[900] : Colors.white,
+      //   borderRadius: BorderRadius.circular(16),
+      //   border: Border.all(
+      //     color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+      //     width: 1,
+      //   ),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+      //       blurRadius: isDark ? 20 : 10,
+      //       offset: const Offset(0, 5),
+      //     ),
+      //   ],
+      // ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -76,131 +76,128 @@ class NotesWidget extends StatelessWidget {
                 // Prevent scroll propagation in other cases
                 return true;
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  
-                  if (controller.errorMessage.value.isNotEmpty) {
-                    return Center(
-                      child: Text(
-                        controller.errorMessage.value,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                if (controller.errorMessage.value.isNotEmpty) {
+                  return Center(
+                    child: Text(
+                      controller.errorMessage.value,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
                       ),
-                    );
-                  }
-                  
-                  if (controller.notes.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            S.of(context)!.noNotesYet,
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[500] : Colors.grey[400],
-                              fontStyle: FontStyle.italic,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '"${getRandomQuote(context)}"',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  
-                  // Notes list with proper scroll physics
-                  return ListView.separated(
-                    controller: scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    separatorBuilder: (_, __) => Divider(
-                      height: 1,
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      textAlign: TextAlign.center,
                     ),
-                    itemCount: controller.notes.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == controller.notes.length) {
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            '"${getRandomQuote(context)}"',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                  );
+                }
+                
+                if (controller.notes.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          S.of(context)!.noNotesYet,
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[500] : Colors.grey[400],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 14,
                           ),
-                        );
-                      }
-                      
-                      final note = controller.notes[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 1),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 12,
+                        const SizedBox(height: 10),
+                        Text(
+                          '"${getRandomQuote(context)}"',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 12,
                           ),
-                          leading: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: controller.getPriorityColor(note['priority']),
-                            ),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                // SizedBox(height: 10,);
+                // Notes list with proper scroll physics
+                return ListView.separated(
+                  controller: scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  separatorBuilder: (_, __) => Divider(
+                    // height: 1,
+                    // color: isDark ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                  itemCount: controller.notes.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == controller.notes.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          '"${getRandomQuote(context)}"',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 12,
                           ),
-                          title: Text(
-                            note['title'],
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          subtitle: Text(
-                            note['message'],
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 14,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: Text(
-                            note['priority_text'],
-                            style: TextStyle(
-                              color: controller.getPriorityColor(note['priority']),
-                              fontSize: 12,
-                            ),
-                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       );
-                    },
-                  );
-                }),
-              ),
+                    }
+                    
+                    final note = controller.notes[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 1),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 5,
+                          horizontal: 12,
+                        ),
+                        leading: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: controller.getPriorityColor(note['priority']),
+                          ),
+                        ),
+                        title: Text(
+                          note['title'],
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        subtitle: Text(
+                          note['message'],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: 14,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Text(
+                          note['priority_text'],
+                          style: TextStyle(
+                            color: controller.getPriorityColor(note['priority']),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
             ),
           ),
         ],

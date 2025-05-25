@@ -333,31 +333,34 @@ class _CustomersListScreenState extends State<CustomersListScreen>
   }
 
   Widget _buildCustomerCard(PartnerList partner, S l10n) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        title: Text(
-          partner.name,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: ListTile(
+            contentPadding: EdgeInsets.all(16),
+          title: Text(
+            partner.name,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 4),
+              if (partner.address?.isNotEmpty ?? false)
+                _buildInfoRow(Icons.location_on, partner.address!, l10n.addressLabel),
+              if (partner.phone != null && partner.phone.toString().isNotEmpty)
+                _buildInfoRow(Icons.phone, partner.phone.toString(), l10n.phoneLabel),
+              if (partner.mobile != null && partner.mobile.toString().isNotEmpty)
+                _buildInfoRow(Icons.phone_iphone, partner.mobile.toString(), l10n.mobileLabel),
+              if (partner.country?.isNotEmpty ?? false)
+                _buildInfoRow(Icons.public, partner.country!, l10n.countryLabel),
+            ],
+          ),
+          trailing: Icon(Icons.chevron_right),
+          onTap: () => Get.to(() => CustomerDetailScreen(partnerId: partner.id),
+              arguments: {'partnerId': partner.id}),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4),
-            if (partner.address?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.location_on, partner.address!, l10n.addressLabel),
-            if (partner.phone != null && partner.phone.toString().isNotEmpty)
-              _buildInfoRow(Icons.phone, partner.phone.toString(), l10n.phoneLabel),
-            if (partner.mobile != null && partner.mobile.toString().isNotEmpty)
-              _buildInfoRow(Icons.phone_iphone, partner.mobile.toString(), l10n.mobileLabel),
-            if (partner.country?.isNotEmpty ?? false)
-              _buildInfoRow(Icons.public, partner.country!, l10n.countryLabel),
-          ],
-        ),
-        trailing: Icon(Icons.chevron_right),
-        onTap: () => Get.to(() => CustomerDetailScreen(partnerId: partner.id),
-            arguments: {'partnerId': partner.id}),
       ),
     );
   }

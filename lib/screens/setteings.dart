@@ -191,25 +191,25 @@ class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     primarySwatch: Colors.grey,
-    cardTheme: CardTheme(
-      color: Colors.white,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
+    // cardTheme: CardTheme(
+    //   color: Colors.white,
+    //   elevation: 4,
+    //   shape: RoundedRectangleBorder(
+    //     borderRadius: BorderRadius.circular(12),
+    //   ),
+    // ),
   );
 
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primarySwatch: Colors.grey,
-    cardTheme: CardTheme(
-      color: Colors.grey[850],
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
+    // cardTheme: CardTheme(
+    //   color: Colors.grey[850],
+    //   elevation: 4,
+    //   shape: RoundedRectangleBorder(
+    //     borderRadius: BorderRadius.circular(12),
+    //   ),
+    // ),
   );
 }
 

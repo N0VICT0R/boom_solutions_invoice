@@ -1,10 +1,9 @@
 import 'dart:convert';
-
+import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/services.dart';
-import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:http/http.dart' as http;
 
 class InvoicePaymentPage extends StatefulWidget {
@@ -21,16 +20,12 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
   final token = GetStorage().read('token') ?? '';
   String? selectedPaymentMethod;
 
-  final List<Map<String, dynamic>> paymentMethods = [
-    {'id': '1', 'name': S.current.cash},
-    {'id': '2', 'name': S.current.card},
-  ];
-
   @override
   void initState() {
     super.initState();
     controller.fetchInvoices(widget.partnerId, token);
-    selectedPaymentMethod = '1'; // Default to Cash
+    controller.fetchPaymentMethods(token); // Fetch payment methods
+    selectedPaymentMethod = null; // Set to null initially
   }
 
   @override
@@ -89,10 +84,10 @@ class _InvoicePaymentPageState extends State<InvoicePaymentPage> {
                           vertical: 12,
                         ),
                       ),
-                      items: paymentMethods.map((method) {
+                      items: controller.paymentMethods.map((method) {
                         return DropdownMenuItem<String>(
                           value: method['id'],
-                          child: Text(method['name']),
+                          child: Text('${method['name']} (${method['type']})'),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
@@ -495,12 +490,14 @@ class MaxAmountInputFormatter extends TextInputFormatter {
     return newValue;
   }
 }
+
 class InvoiceController extends GetxController {
   var isLoading = false.obs;
   var invoices = <InvoiceData>[].obs;
   var partnerName = ''.obs;
   var currency = ''.obs;
   var totalPayment = 0.0.obs;
+  var paymentMethods = <Map<String, dynamic>>[].obs; // Reactive list for payment methods
   final Map<int, TextEditingController> textControllers = {};
 
   double getTotalPayment() {
@@ -567,134 +564,172 @@ class InvoiceController extends GetxController {
     }
   }
 
-Future<void> payAllInvoices(BuildContext context, int partnerId, String token, int paymentMethodId) async {
-  print('Starting payAllInvoices: partnerId=$partnerId, token=$token, paymentMethodId=$paymentMethodId');
-  if (token.isEmpty) {
-    print('Empty token detected');
-    Get.snackbar(
-      S.of(context).error,
-      S.of(context).no_token,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
-    return;
-  }
+  Future<void> fetchPaymentMethods(String token) async {
+    try {
+      final apiurl = GetStorage().read("apiUrl") ?? 'https://onix.boom-solutions.co';
+      final url = Uri.parse('$apiurl/api/v1/payment-methods?api_token=$token');
+      print('Fetching payment methods, token: $token');
+      final response = await http.get(
+        url,
+        headers: {"Accept": "application/json"},
+      ).timeout(const Duration(seconds: 10));
 
-  List<Map<String, dynamic>> invoicePayments = [];
-  for (var invoice in invoices) {
-    final amount = double.tryParse(textControllers[invoice.id]!.text) ?? 0.0;
-    if (amount > 0) {
-      invoicePayments.add({
-        "invoice_id": invoice.number,
-        "amount": amount,
+      print('Fetch payment methods response: ${response.statusCode}');
+      print('Fetch payment methods body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          paymentMethods.assignAll(
+            (data['payment_methods'] as List).map((method) => {
+              'id': method['id'].toString(),
+              'name': method['name'],
+              'type': method['type'],
+            }).toList(),
+          );
+        } else {
+          throw Exception('Failed to fetch payment methods: ${data['message']}');
+        }
+      } else {
+        throw Exception('Failed to fetch payment methods: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching payment methods: $e');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.snackbar(
+          'Error',
+          'Failed to fetch payment methods: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
       });
     }
   }
 
-  if (invoicePayments.isEmpty) {
-    print('No valid invoice payments');
-    Get.snackbar(
-      S.of(context).error,
-      S.of(context).please_enter_valid_amounts,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
-    return;
-  }
-
-  try {
-    final apiurl = GetStorage().read("apiUrl") ?? 'https://onix.boom-solutions.co';
-    final url = Uri.parse('$apiurl/api/v1/partners/$partnerId/payments');
-    final requestBody = json.encode({
-      'api_token': token,
-      'amount': totalPayment.value,
-      'payment_method_id': paymentMethodId,
-      'memo': "Payment for ${invoicePayments.length} invoices",
-      'post_immediately': true,
-      'invoices': invoicePayments,
-    });
-    print('Posting payment to: $url');
-    print('Payment body: $requestBody');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: requestBody,
-    ).timeout(const Duration(seconds: 10));
-
-    print('Payment response status: ${response.statusCode}');
-    print('Payment response body: ${response.body}');
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      for (var controller in textControllers.values) {
-        controller.clear();
-      }
-      await fetchInvoices(partnerId, token);
-      
-      // Solution: Use Future.delayed to ensure the navigation happens after the UI has settled
-      print('Preparing navigation with success');
-      
-      // Show a simple dialog instead of snackbar before navigation
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(S.of(context).success),
-            content: Text(S.of(context).payment_successful),
-            actions: [
-              TextButton(
-                child: Text(S.of(context).ok),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-              ),
-            ],
-          );
-        },
-      );
-      
-      // Safe navigation back after dialog is closed
-      print('Navigating back with result: true');
-      try {
-        // Use Navigator directly instead of Get.back to avoid potential conflicts
-        Navigator.of(context).pop(true);
-      } catch (e, stackTrace) {
-        print('Error during navigation: $e');
-        print('Stack trace: $stackTrace');
-      }
-    } else {
-      final errorMessage = json.decode(response.body)['message'] ?? S.of(context).payment_failed;
-      print('API error: $errorMessage');
+  Future<void> payAllInvoices(BuildContext context, int partnerId, String token, int paymentMethodId) async {
+    print('Starting payAllInvoices: partnerId=$partnerId, token=$token, paymentMethodId=$paymentMethodId');
+    if (token.isEmpty) {
+      print('Empty token detected');
       Get.snackbar(
         S.of(context).error,
-        errorMessage,
+        S.of(context).no_token,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    List<Map<String, dynamic>> invoicePayments = [];
+    for (var invoice in invoices) {
+      final amount = double.tryParse(textControllers[invoice.id]!.text) ?? 0.0;
+      if (amount > 0) {
+        invoicePayments.add({
+          "invoice_id": invoice.number,
+          "amount": amount,
+        });
+      }
+    }
+
+    if (invoicePayments.isEmpty) {
+      print('No valid invoice payments');
+      Get.snackbar(
+        S.of(context).error,
+        S.of(context).please_enter_valid_amounts,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    try {
+      final apiurl = GetStorage().read("apiUrl") ?? 'https://onix.boom-solutions.co';
+      final url = Uri.parse('$apiurl/api/v1/partners/$partnerId/payments');
+      final requestBody = json.encode({
+        'api_token': token,
+        'amount': totalPayment.value,
+        'payment_method_id': paymentMethodId,
+        'memo': "Payment for ${invoicePayments.length} invoices",
+        'post_immediately': true,
+        'invoices': invoicePayments,
+      });
+      print('Posting payment to: $url');
+      print('Payment body: $requestBody');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: requestBody,
+      ).timeout(const Duration(seconds: 10));
+
+      print('Payment response status: ${response.statusCode}');
+      print('Payment response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        for (var controller in textControllers.values) {
+          controller.clear();
+        }
+        await fetchInvoices(partnerId, token);
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(S.of(context).success),
+              content: Text(S.of(context).payment_successful),
+              actions: [
+                TextButton(
+                  child: Text(S.of(context).ok),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+
+        print('Navigating back with result: true');
+        try {
+          Navigator.of(context).pop(true);
+        } catch (e, stackTrace) {
+          print('Error during navigation: $e');
+          print('Stack trace: $stackTrace');
+        }
+      } else {
+        final errorMessage = json.decode(response.body)['message'] ?? S.of(context).payment_failed;
+        print('API error: $errorMessage');
+        Get.snackbar(
+          S.of(context).error,
+          errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('Error posting payment: $e');
+      print('Stack trace: $stackTrace');
+      Get.snackbar(
+        S.of(context).error,
+        'Failed to process payment: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
     }
-  } catch (e, stackTrace) {
-    print('Error posting payment: $e');
-    print('Stack trace: $stackTrace');
-    Get.snackbar(
-      S.of(context).error,
-      'Failed to process payment: $e',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
   }
-}
 }
 
 class InvoiceData {
@@ -737,3 +772,5 @@ class InvoiceData {
     );
   }
 }
+
+// Mock S class for localization (replace with your actual localization class)
