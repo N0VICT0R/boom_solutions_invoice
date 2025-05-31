@@ -860,9 +860,9 @@
               "@addNotes": {
                 "description": "Hint text for notes input field"
               },
-              "checkIn": "Check In",
+              "checkIn": "Add visit Note",
               "@checkIn": {
-                "description": "Label for check-in button"
+                "description": "Label for visit Note button"
               },
               "distanceWarning": "Distance Warning",
               "@distanceWarning": {

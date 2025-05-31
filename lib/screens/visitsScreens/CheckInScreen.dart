@@ -182,31 +182,31 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
       return;
     }
 
-    if (_distanceToCustomer != null && _distanceToCustomer! > 10) {
-      bool? proceed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: Text(S.of(context).distanceWarning, style: const TextStyle(color: Colors.orange)),
-          content: Text(
-            S.of(context).distanceWarningMessage,
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(S.of(context).cancel, style: const TextStyle(color: Colors.grey)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(S.of(context).proceed, style: const TextStyle(color: Color(0xFF42A5F5))),
-            ),
-          ],
-        ),
-      );
+    // if (_distanceToCustomer != null && _distanceToCustomer! > 10) {
+    //   bool? proceed = await showDialog<bool>(
+    //     context: context,
+    //     builder: (context) => AlertDialog(
+    //       backgroundColor: const Color(0xFF1A1A1A),
+    //       title: Text(S.of(context).distanceWarning, style: const TextStyle(color: Colors.orange)),
+    //       content: Text(
+    //         S.of(context).distanceWarningMessage,
+    //         style: const TextStyle(color: Colors.white70),
+    //       ),
+    //       actions: [
+    //         TextButton(
+    //           onPressed: () => Navigator.pop(context, false),
+    //           child: Text(S.of(context).cancel, style: const TextStyle(color: Colors.grey)),
+    //         ),
+    //         TextButton(
+    //           onPressed: () => Navigator.pop(context, true),
+    //           child: Text(S.of(context).proceed, style: const TextStyle(color: Color(0xFF42A5F5))),
+    //         ),
+    //       ],
+    //     ),
+      // );
 
-      if (proceed != true) return;
-    }
+    //   if (proceed != true) return;
+    // }
 
     setState(() {
       _isLoading = true;
@@ -382,6 +382,7 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                           ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
+                              margin: const EdgeInsets.all(16),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -389,67 +390,78 @@ class _CheckInScreenState extends State<CheckInScreen> with SingleTickerProvider
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFF1976D2).withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
+                                    blurRadius:80,
+                                    spreadRadius: 80,
                                   ),
                                 ],
                               ),
-                              child: const Icon(Icons.delivery_dining, color: Colors.white, size: 32),
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const SizedBox(height: 75),
-                              CustomPaint(
-                                size: const Size(80, 2),
-                                painter: GradientDashedLinePainter(gradient: gradient),
-                              ),
-                              const SizedBox(height: 15),
-                              Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  _distanceToCustomer != null
-                                      ? S.of(context).distanceValue(_distanceToCustomer!.toStringAsFixed(2))
-                                      : S.of(context).notAvailable,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                              child: SizedBox(
+                                width: 150,
+                                height: 150,
+                                child: Container(
+                                  margin: const EdgeInsets.all(16),
+                                  child: Image.asset(
+                                    'lib/assets/speech.png',
+                                    width: 150,
+                                    height: 150,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(width: 16),
-                          ScaleTransition(
-                            scale: _pulseAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: gradient,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF42A5F5).withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.person, color: Colors.white, size: 32),
                             ),
                           ),
+                          // Column(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: [
+                          //     const SizedBox(height: 75),
+                          //     // CustomPaint(
+                          //     //   size: const Size(80, 2),
+                          //     //   painter: GradientDashedLinePainter(gradient: gradient),
+                          //     // ),
+                          //     const SizedBox(height: 15),
+                          //     // Container(
+                          //     //   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                          //     //   decoration: BoxDecoration(
+                          //     //     color: Theme.of(context).colorScheme.primary,
+                          //     //     borderRadius: BorderRadius.circular(12),
+                          //     //     boxShadow: [
+                          //     //       BoxShadow(
+                          //     //         blurRadius: 8,
+                          //     //         offset: const Offset(0, 4),
+                          //     //       ),
+                          //     //     ],
+                          //     //   ),
+                          //     //   // child: Text(
+                          //     //   //   _distanceToCustomer != null
+                          //     //   //       ? S.of(context).distanceValue(_distanceToCustomer!.toStringAsFixed(2))
+                          //     //   //       : S.of(context).notAvailable,
+                          //     //   //   style: GoogleFonts.poppins(
+                          //     //   //     fontSize: 16,
+                          //     //   //     fontWeight: FontWeight.w600,
+                          //     //   //     color: Colors.white,
+                          //     //   //   ),
+                          //     //   // ),
+                          //     // ),
+                          //   ],
+                          // ),
+                          // const SizedBox(width: 16),
+                          // ScaleTransition(
+                          //   scale: _pulseAnimation,
+                          //   child: Container(
+                          //     padding: const EdgeInsets.all(12),
+                          //     decoration: BoxDecoration(
+                          //       shape: BoxShape.circle,
+                          //       gradient: gradient,
+                          //       boxShadow: [
+                          //         BoxShadow(
+                          //           color: const Color(0xFF42A5F5).withOpacity(0.3),
+                          //           blurRadius: 8,
+                          //           spreadRadius: 2,
+                          //         ),
+                          //       ],
+                          //     ),
+                          //     child: const Icon(Icons.person_pin_outlined, color: Colors.white, size: 32),
+                          //   ),
+                          // ),
                         ],
                       ),
               ),

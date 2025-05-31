@@ -2195,12 +2195,12 @@ class S {
     );
   }
 
-  /// `Check In`
+  /// `Add visit Note`
   String get checkIn {
     return Intl.message(
-      'Check In',
+      'Add visit Note',
       name: 'checkIn',
-      desc: 'Label for check-in button',
+      desc: 'Label for visit Note button',
       args: [],
     );
   }

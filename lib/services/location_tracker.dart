@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:isolate' show SendPort;
-import 'dart:io' show Platform, SocketException;
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,10 +10,12 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:boom_solutions_invoice/final/controller/auth_controller.dart'; // Ensure this path matches your project
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:boom_solutions_invoice/final/controller/auth_controller.dart';
 
 class LocationTrackerController extends GetxController with WidgetsBindingObserver {
   static LocationTrackerController get to => Get.find<LocationTrackerController>();
@@ -36,6 +38,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   bool _isSendingBatch = false;
   bool _isForegroundTaskRunning = false;
   Timer? _debounceTimer;
+  Database? _database;
 
   // Reactive variables for UI
   final Rx<LocationData?> currentLocation = Rx<LocationData?>(null);
@@ -46,7 +49,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   final int _maxUpdateInterval = 300000; // 5 minutes
   final double _movementThreshold = 20; // meters
   final int _batchSize = 6;
-  final String _apiUrl = GetStorage().read('apiUrl') ?? 'https://onix.boom-solutions.co/api/v1/user/locations/batch';
+  final String _apiUrl = 'https://onix.boom-solutions.co/api/v1/user/locations/batch'; // Hardcoded for reliability
   final int _maxRetries = 3;
   final Duration _debounceDuration = Duration(milliseconds: 500);
 
@@ -55,7 +58,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
     await initialize();
-    _listenToAuthState(); // Start listening to auth state changes
+    _listenToAuthState();
   }
 
   @override
@@ -67,7 +70,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     super.onClose();
   }
 
-  // Listen to authentication state changes based on currentUser
   void _listenToAuthState() {
     final authController = Get.find<AuthController>();
     ever(authController.currentUser, (User? user) {
@@ -78,8 +80,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
       } else {
         _startTracking();
         debugPrint('User logged in, starting location tracking');
-        // Set API token when user logs in
-        Get.find<LocationTrackerController>().setApiToken(authController.storage.read('token') ?? '');
+        setApiToken(authController.storage.read('token') ?? '');
       }
     });
   }
@@ -113,7 +114,10 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
 
   Future<void> initialize() async {
     debugPrint('Initializing LocationTracker...');
+    debugPrint('GetStorage apiUrl: ${GetStorage().read('apiUrl')}');
     locationStatus.value = 'Checking location service...';
+
+    await _initDatabase();
 
     final prefs = await SharedPreferences.getInstance();
     _deviceId = prefs.getString('device_id') ?? await _generateDeviceId();
@@ -154,8 +158,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
         } catch (e) {
           debugPrint('Error requesting battery optimization exemption: $e');
         }
-      } else {
-        debugPrint('Battery optimization already ignored');
       }
     }
 
@@ -228,7 +230,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
   }
 
   void _startTracking() async {
-    // Check if user is logged in before starting tracking
     final authController = Get.find<AuthController>();
     if (authController.currentUser.value == null) {
       debugPrint('User not logged in, skipping tracking start');
@@ -360,6 +361,7 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
       'longitude': location.longitude,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
       'accuracy': location.accuracy,
+      'created_at': DateTime.now().toIso8601String(),
     };
 
     debugPrint('Adding to batch: $locationData');
@@ -419,22 +421,16 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
           break;
         } else {
           debugPrint('Batch send failed with status: ${response.statusCode}');
-          retryCount++;
-          if (retryCount == _maxRetries) {
-            // _showErrorSnackbar(' internet connection Error', 'Please check your internet connection..');
+          if (response.statusCode == 401) {
+            final authController = Get.find<AuthController>();
+            // await authController.refreshToken(); // Method does not exist, consider implementing or updating token retrieval logic
+            _apiToken = authController.storage.read('token') ?? _apiToken;
           }
+          retryCount++;
         }
       } catch (e) {
         debugPrint('Error sending location batch: $e');
         retryCount++;
-        if (retryCount == _maxRetries) {
-          String errorMessage = 'Failed to send location data. Data will be saved locally.';
-          if (e is SocketException && e.message.contains('Failed host lookup')) {
-            errorMessage = 'Cannot reach server (DNS error). Data will be saved locally.';
-          } else if (e is TimeoutException) {
-            errorMessage = 'Request timed out. Data will be saved locally.';
-          }
-        }
       }
 
       if (retryCount < _maxRetries) {
@@ -452,35 +448,6 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     _isSendingBatch = false;
   }
 
-  Future<void> _saveBatchToStorage() async {
-    if (_locationBatch.isEmpty) {
-      debugPrint('No locations to save');
-      return;
-    }
-
-    debugPrint('Saving ${_locationBatch.length} locations to storage');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pending_location_batch', jsonEncode(_locationBatch));
-  }
-
-  Future<void> _loadPendingBatches() async {
-    debugPrint('Loading pending batches...');
-    final prefs = await SharedPreferences.getInstance();
-    final storedBatch = prefs.getString('pending_location_batch');
-
-    if (storedBatch != null) {
-      try {
-        final batch = (jsonDecode(storedBatch) as List).map((item) => Map<String, dynamic>.from(item as Map)).toList();
-        debugPrint('Loaded ${batch.length} pending locations');
-        _locationBatch.addAll(batch);
-      } catch (e) {
-        debugPrint('Error loading pending batches: $e');
-      }
-    } else {
-      debugPrint('No pending batches found');
-    }
-  }
-
   Future<void> _sendPendingBatches() async {
     if (_locationBatch.isNotEmpty) {
       debugPrint('Sending ${_locationBatch.length} pending locations');
@@ -490,10 +457,116 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     }
   }
 
+  // Initialize SQLite database
+  Future<void> _initDatabase() async {
+    try {
+      final databasesPath = await getDatabasesPath();
+      final path = join(databasesPath, 'location_tracker.db');
+      _database = await openDatabase(
+        path,
+        version: 2,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE locations (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              latitude REAL NOT NULL,
+              longitude REAL NOT NULL,
+              timestamp INTEGER NOT NULL,
+              accuracy REAL,
+              created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+          ''');
+          debugPrint('SQLite database created at $path');
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            // Check if created_at exists
+            final columns = await db.rawQuery('PRAGMA table_info(locations)');
+            final hasCreatedAt = columns.any((col) => col['name'] == 'created_at');
+            if (!hasCreatedAt) {
+              await db.execute('ALTER TABLE locations ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP');
+              debugPrint('Added created_at column');
+            } else {
+              debugPrint('created_at column already exists, skipping migration');
+            }
+          }
+        },
+        onOpen: (db) async {
+          // Log table schema for debugging
+          final columns = await db.rawQuery('PRAGMA table_info(locations)');
+          debugPrint('Table schema: $columns');
+        },
+      );
+      debugPrint('SQLite database opened successfully');
+    } catch (e) {
+      debugPrint('Error initializing SQLite database: $e');
+      // Continue with _database as null to avoid crashing
+    }
+  }
+
+  // Save batch to SQLite
+  Future<void> _saveBatchToStorage() async {
+    if (_locationBatch.isEmpty || _database == null) {
+      debugPrint('No locations to save or database not initialized');
+      return;
+    }
+
+    debugPrint('Saving ${_locationBatch.length} locations to SQLite');
+    try {
+      final batch = _database!.batch();
+      for (final location in _locationBatch) {
+        batch.insert('locations', {
+          'latitude': location['latitude'] as double,
+          'longitude': location['longitude'] as double,
+          'timestamp': location['timestamp'] as int,
+          'accuracy': location['accuracy'] as double?,
+          'created_at': location['created_at'] as String? ?? DateTime.now().toIso8601String(),
+        });
+      }
+      await batch.commit(noResult: true);
+      debugPrint('Batch saved to SQLite');
+    } catch (e) {
+      debugPrint('Error saving to SQLite: $e');
+    }
+  }
+
+  // Load pending batches from SQLite
+  Future<void> _loadPendingBatches() async {
+    debugPrint('Loading pending batches from SQLite...');
+    if (_database == null) {
+      debugPrint('Database not initialized');
+      return;
+    }
+
+    try {
+      final result = await _database!.query('locations');
+      _locationBatch.clear();
+      _locationBatch.addAll(result.map((row) => {
+            'latitude': row['latitude'],
+            'longitude': row['longitude'],
+            'timestamp': row['timestamp'],
+            'accuracy': row['accuracy'],
+            'created_at': row['created_at'],
+          }));
+      debugPrint('Loaded ${_locationBatch.length} locations');
+    } catch (e) {
+      debugPrint('Error loading from SQLite: $e');
+    }
+  }
+
+  // Clear stored batches from SQLite
   Future<void> _clearStoredBatch() async {
-    debugPrint('Clearing stored batch');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('pending_location_batch');
+    debugPrint('Clearing stored batch from SQLite');
+    if (_database == null) {
+      debugPrint('Database not initialized');
+      return;
+    }
+    try {
+      await _database!.delete('locations');
+      debugPrint('Stored batch cleared');
+    } catch (e) {
+      debugPrint('Error clearing SQLite batch: $e');
+    }
   }
 
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -502,11 +575,9 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     final phi2 = lat2 * pi / 180;
     final deltaPhi = (lat2 - lat1) * pi / 180;
     final deltaLambda = (lon2 - lon1) * pi / 180;
-
     final a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
         cos(phi1) * cos(phi2) * sin(deltaLambda / 2) * sin(deltaLambda / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
     return r * c;
   }
 
@@ -531,7 +602,10 @@ class LocationTrackerController extends GetxController with WidgetsBindingObserv
     debugPrint('Disposing LocationTracker');
     await _saveBatchToStorage();
     stopTracking();
-    await _sendBatch();
+    if (_database != null) {
+      await _database!.close();
+      debugPrint('SQLite database closed');
+    }
   }
 }
 
@@ -549,10 +623,6 @@ class LocationTaskHandler extends TaskHandler {
   Future<void> onRepeatEvent(DateTime timestamp) async {
     debugPrint('Background task update at $timestamp');
     if (Get.isRegistered<LocationTrackerController>()) {
-      await Get.find<LocationTrackerController>()._sendPendingBatches();
-    } else {
-      Get.put(LocationTrackerController());
-      await Get.find<LocationTrackerController>().initialize();
       await Get.find<LocationTrackerController>()._sendPendingBatches();
     }
   }

@@ -45,22 +45,22 @@
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
-
     <!-- Location permissions -->
+
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>We need your location to track your movements.</string>
+    <string>This app needs location access to track your location for business purposes.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>We need your location to track your movements even when the app is in the background.</string>
+    <string>This app needs background location access to track your location when the app is not active.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>We need your location to track your movements even when the app is not in use.</string>
+    <string>This app needs background location access to track your location when the app is not active.</string>
 
     <!-- Background modes -->
     <key>UIBackgroundModes</key>
     <array>
         <string>location</string>
+        <string>background-processing</string>
+        <string>background-fetch</string>
     </array>
-    <key>NSFaceIDUsageDescription</key>
-    <string>This app uses Face ID for secure authentication</string>
 
     <!-- Supported Localizations -->
     <key>CFBundleLocalizations</key>

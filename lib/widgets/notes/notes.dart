@@ -1,16 +1,18 @@
+import 'dart:async';
+
 import 'package:boom_solutions_invoice/final/controller/dashbord_Controller.dart';
 import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:math';
+import 'dart:math' as math;
 
 class NotesWidget extends StatelessWidget {
   final double height;
   final ScrollController? scrollController;
 
   const NotesWidget({
-    super.key, 
-    required this.height, 
+    super.key,
+    required this.height,
     this.scrollController,
   });
 
@@ -19,9 +21,87 @@ class NotesWidget extends StatelessWidget {
   }
 
   String getRandomQuote(BuildContext context) {
-    final random = Random();
-    final quotes = getInspirationalQuotes(context);
-    return quotes[random.nextInt(quotes.length)];
+    final quotes = getInspirationalQuotes(context).split(';');
+    return quotes[math.Random().nextInt(quotes.length)].trim();
+  }
+
+  void _showAllNotesDialog(BuildContext context, List<Map<String, dynamic>> notes) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[900]
+            : Colors.white,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+            maxWidth: 400,
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                S.of(context)!.addNotes,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: notes.length,
+                  separatorBuilder: (context, _) => Divider(
+                    color: Theme.of(context).dividerColor.withOpacity(0.3),
+                  ),
+                  itemBuilder: (context, index) {
+                    final note = notes[index];
+                    final title = note['title']?.toString() ?? 'No Title';
+                    final message = note['message']?.toString() ?? 'No Message';
+                    final priority = note['priority'] ?? 0;
+                    final controller = Get.find<DashboardController>();
+                    
+                    return ListTile(
+                      title: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: controller.getPriorityColor(priority),
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      subtitle: Text(
+                        message,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                style: TextButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text(S.of(context)!.close),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -29,178 +109,210 @@ class NotesWidget extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = Get.find<DashboardController>();
 
-    return Card(
-      // height: height,
-      // width: double.infinity,
-      // decoration: BoxDecoration(
-      //   color: isDark ? Colors.grey[900] : Colors.white,
-      //   borderRadius: BorderRadius.circular(16),
-      //   border: Border.all(
-      //     color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-      //     width: 1,
-      //   ),
-      //   boxShadow: [
-      //     BoxShadow(
-      //       color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-      //       blurRadius: isDark ? 20 : 10,
-      //       offset: const Offset(0, 5),
-      //     ),
-      //   ],
-      // ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              S.of(context)!.notes,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isDark ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                    fontSize: 18,
-                  ),
+    return NotificationListener<OverscrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.axisDirection == AxisDirection.down &&
+            notification.overscroll < 0 &&
+            scrollController?.position.pixels == 0) {
+          return false;
+        }
+        return true;
+      },
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.errorMessage.value.isNotEmpty) {
+          return Text(
+            controller.errorMessage.value,
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 14,
             ),
-          ),
-          
-          Expanded(
-            child: NotificationListener<OverscrollNotification>(
-              // Prevent parent widget from scrolling when this list is handling scrolling
-              onNotification: (notification) {
-                if (notification.metrics.axisDirection == AxisDirection.down && 
-                    notification.overscroll < 0 &&
-                    scrollController?.position.pixels == 0) {
-                  // At top edge and trying to scroll up - let parent handle it
-                  return false;
-                }
-                // Prevent scroll propagation in other cases
-                return true;
-              },
-              child: Obx(() {
-                if (controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                if (controller.errorMessage.value.isNotEmpty) {
-                  return Center(
-                    child: Text(
-                      controller.errorMessage.value,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                }
-                
-                if (controller.notes.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          S.of(context)!.noNotesYet,
-                          style: TextStyle(
-                            color: isDark ? Colors.grey[500] : Colors.grey[400],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '"${getRandomQuote(context)}"',
-                          style: TextStyle(
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                // SizedBox(height: 10,);
-                // Notes list with proper scroll physics
-                return ListView.separated(
-                  controller: scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  separatorBuilder: (_, __) => Divider(
-                    // height: 1,
-                    // color: isDark ? Colors.grey[800] : Colors.grey[200],
+            textAlign: TextAlign.center,
+          );
+        }
+
+        if (controller.notes.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  S.of(context)!.noNotesYet,
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[400],
+                    fontStyle: FontStyle.italic,
+                    fontSize: 14,
                   ),
-                  itemCount: controller.notes.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == controller.notes.length) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          '"${getRandomQuote(context)}"',
-                          style: TextStyle(
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }
-                    
-                    final note = controller.notes[index];
-                    return Container(
-                      margin: const EdgeInsets.symmetric(vertical: 1),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 5,
-                          horizontal: 12,
-                        ),
-                        leading: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: controller.getPriorityColor(note['priority']),
-                          ),
-                        ),
-                        title: Text(
-                          note['title'],
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        subtitle: Text(
-                          note['message'],
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 14,
-                              ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          note['priority_text'],
-                          style: TextStyle(
-                            color: controller.getPriorityColor(note['priority']),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }),
+                ),
+                const SizedBox(height: 10),
+                // Text(
+                //   '"${getRandomQuote(context)}"',
+                //   style: TextStyle(
+                //     color: isDark ? Colors.grey[400] : Colors.grey[600],
+                //     fontStyle: FontStyle.italic,
+                //     fontSize: 12,
+                //   ),
+                //   textAlign: TextAlign.center,
+                //   maxLines: 3,
+                //   overflow: TextOverflow.ellipsis,
+                // ),
+              ],
             ),
+          );
+        }
+
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () => _showAllNotesDialog(context, controller.notes),
+              child: AutoFadeText(
+                notes: controller.notes,
+              ),
+            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: Text(
+            //     '"${getRandomQuote(context)}"',
+            //     style: TextStyle(
+            //       color: isDark ? Colors.grey[400] : Colors.grey[600],
+            //       fontStyle: FontStyle.italic,
+            //       fontSize: 12,
+            //     ),
+            //     textAlign: TextAlign.center,
+            //     maxLines: 3,
+            //     overflow: TextOverflow.ellipsis,
+            //   ),
+            // ),
+          ],
+        );
+      }),
+    );
+  }
+}
+
+class AutoFadeText extends StatefulWidget {
+  final List<Map<String, dynamic>> notes;
+
+  const AutoFadeText({
+    super.key,
+    required this.notes,
+  });
+
+  @override
+  _AutoFadeTextState createState() => _AutoFadeTextState();
+}
+
+class _AutoFadeTextState extends State<AutoFadeText> with SingleTickerProviderStateMixin {
+  int _currentIndex = 0;
+  late Timer _timer;
+  final controller = Get.find<DashboardController>();
+  bool _isVisible = true;
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0.0, 0.1), // Slight upward shift
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+    _startAutoFade();
+  }
+
+  void _startAutoFade() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (widget.notes.isEmpty) return;
+      final note = widget.notes[_currentIndex];
+      final priority = note['priority'] ?? 0;
+      final duration = controller.getPriorityColor(priority) == Colors.red ? 6 : 3;
+
+      if (timer.tick % duration == 0) {
+        _animationController.forward().then((_) {
+          setState(() {
+            _currentIndex = (_currentIndex + 1) % widget.notes.length;
+            _isVisible = true;
+          });
+          _animationController.reverse();
+        });
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(AutoFadeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.notes.length != oldWidget.notes.length) {
+      _timer.cancel();
+      _currentIndex = 0;
+      _startAutoFade();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    if (widget.notes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final note = widget.notes[_currentIndex];
+    final title = note['title']?.toString() ?? 'No Title';
+    final message = note['message']?.toString() ?? 'No Message';
+    final priority = note['priority'] ?? 0;
+    final fullText = '$title: $message';
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: fullText,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: 2,
+    )..layout(maxWidth: MediaQuery.of(context).size.width - 48);
+    final isLongText = textPainter.didExceedMaxLines;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final slideAnimation = Tween<Offset>(
+          begin: const Offset(0.0, 0.1), // Slide in from bottom
+          end: Offset.zero,
+        ).animate(animation);
+        return SlideTransition(
+          position: slideAnimation,
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
           ),
-        ],
+        );
+      },
+      child: Text(
+        key: ValueKey<int>(_currentIndex), // Unique key for AnimatedSwitcher
+        fullText,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontSize: isLongText ? 12 : 14,
+          color: controller.getPriorityColor(priority),
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
       ),
     );
   }

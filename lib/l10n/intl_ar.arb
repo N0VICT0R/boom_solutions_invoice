@@ -535,7 +535,7 @@
 "@addNotes": {
 "description": "Hint text for notes input field"
 },
-"checkIn": " ملخص الزيارة",
+"checkIn": " ملخص الزيارة ",
 "@checkIn": {
 "description": "Label for check-in button"
 },

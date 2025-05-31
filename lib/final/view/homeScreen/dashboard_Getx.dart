@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
@@ -9,7 +8,8 @@ import 'package:boom_solutions_invoice/final/view/web_view.dart';
 import 'package:boom_solutions_invoice/generated/l10n.dart';
 import 'package:boom_solutions_invoice/screens/SetteingsScreen.dart';
 import 'package:boom_solutions_invoice/widgets/notes/notes.dart';
-import 'package:boom_solutions_invoice/widgets/salesChart.dart' show SalesChartView, SalesChartController;
+import 'package:boom_solutions_invoice/widgets/salesChart.dart'
+    show SalesChartView, SalesChartController;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -22,7 +22,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 double getResponsiveFontSize(BuildContext context, double baseFontSize) {
   final screenWidth = MediaQuery.of(context).size.width;
   final scaleFactor = screenWidth / 400;
-  return (baseFontSize * scaleFactor).clamp(baseFontSize * 0.8, baseFontSize * 1.2);
+  return (baseFontSize * scaleFactor)
+      .clamp(baseFontSize * 0.8, baseFontSize * 1.2);
 }
 
 String formatNumber(double value, {bool isCurrency = true}) {
@@ -67,7 +68,8 @@ class SalesDashboard extends StatefulWidget {
   State<SalesDashboard> createState() => _SalesDashboardState();
 }
 
-class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProviderStateMixin {
+class _SalesDashboardState extends State<SalesDashboard>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   String selectedRange = '7d';
@@ -91,6 +93,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   String? _csrfToken;
   bool isBalanceVisible = false;
   int _retryCount = 0;
+  final DashboardController _dashboardController =
+      Get.find<DashboardController>();
 
   @override
   void initState() {
@@ -110,10 +114,13 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     _startPolling();
     _startClock();
     _checkConnectivity();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    _connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
       bool wasOffline = isOffline;
       setState(() {
-        isOffline = results.every((result) => result == ConnectivityResult.none);
+        isOffline =
+            results.every((result) => result == ConnectivityResult.none);
       });
       if (wasOffline && !isOffline) {
         _fetchCsrfToken().then((_) => _fetchAllData());
@@ -145,7 +152,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
   Future<void> _checkConnectivity() async {
     var connectivityResults = await Connectivity().checkConnectivity();
     setState(() {
-      isOffline = connectivityResults.every((result) => result == ConnectivityResult.none);
+      isOffline = connectivityResults
+          .every((result) => result == ConnectivityResult.none);
     });
     if (isOffline && _selectedIndex != 2) {
       _onItemTapped(2);
@@ -176,14 +184,16 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       final userId = GetStorage().read('user_id');
       if (apiUrl.isEmpty || userId == null) return false;
       final url = Uri.parse('$apiUrl/api/v1/users/$userId/refresh-token');
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
-        },
-        body: jsonEncode({}),
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (_csrfToken != null) 'X-CSRF-Token': _csrfToken!,
+            },
+            body: jsonEncode({}),
+          )
+          .timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final newToken = jsonData['token'];
@@ -217,13 +227,14 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       await _fetchHomeScreenData();
       final salesChartController = Get.find<SalesChartController>();
       await salesChartController.fetchData();
-      await Get.find<DashboardController>().fetchNotes();
+      await _dashboardController.fetchNotes();
       setState(() {
         isLoading = false;
         _retryCount = 0;
       });
     } catch (e) {
-      if (e.toString().contains('400') && e.toString().contains('invalid CSRF token')) {
+      if (e.toString().contains('400') &&
+          e.toString().contains('invalid CSRF token')) {
         if (await _refreshToken()) {
           await _fetchAllData();
           return;
@@ -236,7 +247,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         await _fetchAllData();
       } else {
         setState(() {
-          errorMessage = S.of(context).checkConnection ?? 'Check your connection';
+          errorMessage =
+              S.of(context).checkConnection ?? 'Check your connection';
           isLoading = false;
         });
         if (_selectedIndex != 2) _onItemTapped(2);
@@ -253,7 +265,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       if (apiUrl.isEmpty || token.isEmpty || userId == null) {
         throw Exception('Missing API URL, token, or user ID');
       }
-      final url = Uri.parse('$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
+      final url = Uri.parse(
+          '$apiUrl/api/v1/users/$userId/home-screen?api_token=$token');
       final response = await http.get(
         url,
         headers: {
@@ -266,7 +279,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         setState(() {
           homeData = HomeScreenResponse.fromJson(jsonData);
         });
-      } else if (response.statusCode == 400 && response.body.contains('invalid CSRF token')) {
+      } else if (response.statusCode == 400 &&
+          response.body.contains('invalid CSRF token')) {
         throw Exception('400: invalid CSRF token');
       } else {
         throw Exception('Failed to load data: ${response.statusCode}');
@@ -322,8 +336,10 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
           setState(() {
             displayData = fullData.where((item) {
               final itemDate = item['date'] as DateTime;
-              return (itemDate.isAfter(startDate!) || itemDate.isAtSameMomentAs(startDate!)) &&
-                  (itemDate.isBefore(endDate!) || itemDate.isAtSameMomentAs(endDate!));
+              return (itemDate.isAfter(startDate!) ||
+                      itemDate.isAtSameMomentAs(startDate!)) &&
+                  (itemDate.isBefore(endDate!) ||
+                      itemDate.isAtSameMomentAs(endDate!));
             }).toList();
           });
           return;
@@ -335,7 +351,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     setState(() {
       displayData = fullData.where((item) {
         final itemDate = item['date'] as DateTime;
-        return itemDate.isAfter(filterDate) || itemDate.isAtSameMomentAs(filterDate);
+        return itemDate.isAfter(filterDate) ||
+            itemDate.isAtSameMomentAs(filterDate);
       }).toList();
     });
   }
@@ -366,23 +383,35 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
     final bool isRTL = Get.locale?.languageCode == 'ar';
     final bool isArabic = isRTL;
 
+    // Get the current note from DashboardController
+    final currentNote = _dashboardController.notes.isNotEmpty
+        ? _dashboardController.notes[_dashboardController.currentIndex %
+            _dashboardController.notes.length]
+        : {'title': 'No Note', 'message': '', 'priority': 0};
+    final noteTitle = currentNote['title']?.toString() ?? 'No Title';
+    final noteMessage = currentNote['message']?.toString() ?? '';
+    final priority = currentNote['priority'] ?? 0;
+    final noteText = '$noteTitle: $noteMessage';
+    final noteColor = _dashboardController.getPriorityColor(priority);
+
     final List<Widget> pages = [
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
                 child: _buildShimmerLoading(isTablet),
               ),
             )
           : Scaffold(
               backgroundColor: theme.colorScheme.background,
-            body: SafeArea(
-              
+              body: SafeArea(
                 child: RefreshIndicator(
                   onRefresh: _fetchAllData,
                   color: theme.colorScheme.primary,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 16.0),
                     child: SingleChildScrollView(
                       controller: _scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -394,51 +423,62 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             FadeInDown(
                               duration: Duration(milliseconds: 400),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         l10n.welcomeBack,
                                         style: GoogleFonts.poppins(
                                           fontWeight: FontWeight.w400,
-                                          fontSize: getResponsiveFontSize(context, 13),
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontSize: getResponsiveFontSize(
+                                              context, 13),
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                       SizedBox(height: 2),
                                       Text(
-                                        authController.currentUser.value?.name ?? 'admin',
+                                        authController
+                                                .currentUser.value?.name ??
+                                            'admin',
                                         style: GoogleFonts.poppins(
                                           fontWeight: FontWeight.w600,
-                                          fontSize: getResponsiveFontSize(context, 20),
+                                          fontSize: getResponsiveFontSize(
+                                              context, 20),
                                           color: theme.colorScheme.onSurface,
                                         ),
                                       ),
                                       SizedBox(height: 4),
-                                      Text(
-                                        _formatDateTime(_currentDateTime, isArabic),
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: getResponsiveFontSize(context, 12),
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
+                                    NotesWidget(
+                                      height: 30,
+                                    ),
                                     ],
                                   ),
-                                  IconButton(
-                                    icon: Icon(
-                                      isBalanceVisible ? Icons.visibility_off : Icons.account_balance_wallet,
-                                      color: theme.colorScheme.primary,
-                                      size: 24,
-                                    ),
-                                    tooltip: isBalanceVisible ? l10n.hideBalance : l10n.currentBalance,
-                                    onPressed: () {
-                                      setState(() {
-                                        isBalanceVisible = !isBalanceVisible;
-                                      });
-                                    },
+                                  Column(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          isBalanceVisible
+                                              ? Icons.visibility_off
+                                              : Icons.account_balance_wallet,
+                                          color: theme.colorScheme.primary,
+                                          size: 24,
+                                        ),
+                                        tooltip: isBalanceVisible
+                                            ? l10n.hideBalance
+                                            : l10n.currentBalance,
+                                        onPressed: () {
+                                          setState(() {
+                                            isBalanceVisible =
+                                                !isBalanceVisible;
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -453,10 +493,13 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
                                     color: theme.colorScheme.surface,
-                                    border: Border.all(color: theme.colorScheme.outline, width: 1),
+                                    border: Border.all(
+                                        color: theme.colorScheme.outline,
+                                        width: 1),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: theme.colorScheme.shadow.withOpacity(0.05),
+                                        color: theme.colorScheme.shadow
+                                            .withOpacity(0.05),
                                         blurRadius: 8,
                                         offset: Offset(0, 4),
                                       ),
@@ -468,43 +511,79 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                       padding: EdgeInsets.all(16),
                                       child: isLoading
                                           ? Shimmer.fromColors(
-                                              baseColor: theme.colorScheme.surfaceContainer,
-                                              highlightColor: theme.colorScheme.surfaceContainerHigh,
+                                              baseColor: theme
+                                                  .colorScheme.surfaceContainer,
+                                              highlightColor: theme.colorScheme
+                                                  .surfaceContainerHigh,
                                               child: _buildBalanceShimmer(),
                                             )
-                                          : (homeData?.cashJournal?.balance != null && errorMessage == null)
+                                          : (homeData?.cashJournal?.balance !=
+                                                      null &&
+                                                  errorMessage == null)
                                               ? Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
                                                   children: [
                                                     Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
                                                         Text(
                                                           l10n.currentBalance,
-                                                          style: GoogleFonts.poppins(
-                                                            fontWeight: FontWeight.w600,
-                                                            fontSize: getResponsiveFontSize(context, 16),
-                                                            color: theme.colorScheme.onSurface,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize:
+                                                                getResponsiveFontSize(
+                                                                    context,
+                                                                    16),
+                                                            color: theme
+                                                                .colorScheme
+                                                                .onSurface,
                                                           ),
                                                         ),
                                                         SizedBox(height: 8),
                                                         Row(
                                                           children: [
                                                             Text(
-                                                              formatNumber(homeData!.cashJournal!.balance),
-                                                              style: GoogleFonts.poppins(
-                                                                fontWeight: FontWeight.w700,
-                                                                fontSize: getResponsiveFontSize(context, 20),
-                                                                color: theme.colorScheme.primary,
+                                                              formatNumber(
+                                                                  homeData!
+                                                                      .cashJournal!
+                                                                      .balance),
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                fontSize:
+                                                                    getResponsiveFontSize(
+                                                                        context,
+                                                                        20),
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .primary,
                                                               ),
                                                             ),
                                                             SizedBox(width: 4),
                                                             Text(
-                                                              homeData?.cashJournal?.currencySymbol ?? 'LE',
-                                                              style: GoogleFonts.poppins(
-                                                                fontWeight: FontWeight.w500,
-                                                                fontSize: getResponsiveFontSize(context, 16),
-                                                                color: theme.colorScheme.onSurfaceVariant,
+                                                              homeData?.cashJournal
+                                                                      ?.currencySymbol ??
+                                                                  'LE',
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                fontSize:
+                                                                    getResponsiveFontSize(
+                                                                        context,
+                                                                        16),
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onSurfaceVariant,
                                                               ),
                                                             ),
                                                           ],
@@ -512,15 +591,19 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                       ],
                                                     ),
                                                     Container(
-                                                      padding: EdgeInsets.all(8),
+                                                      padding:
+                                                          EdgeInsets.all(8),
                                                       decoration: BoxDecoration(
-                                                        color: theme.colorScheme.primary.withOpacity(0.1),
+                                                        color: theme
+                                                            .colorScheme.primary
+                                                            .withOpacity(0.1),
                                                         shape: BoxShape.circle,
                                                       ),
                                                       child: Icon(
                                                         Icons.account_balance,
                                                         size: 24,
-                                                        color: theme.colorScheme.primary,
+                                                        color: theme.colorScheme
+                                                            .primary,
                                                       ),
                                                     ),
                                                   ],
@@ -529,27 +612,44 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                   children: [
                                                     Text(
                                                       l10n.dataLoadError,
-                                                      style: GoogleFonts.poppins(
-                                                        fontWeight: FontWeight.w500,
-                                                        fontSize: getResponsiveFontSize(context, 14),
-                                                        color: theme.colorScheme.error,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        fontSize:
+                                                            getResponsiveFontSize(
+                                                                context, 14),
+                                                        color: theme
+                                                            .colorScheme.error,
                                                       ),
                                                     ),
                                                     SizedBox(height: 8),
                                                     ElevatedButton(
                                                       onPressed: _fetchAllData,
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: theme.colorScheme.primary,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(8),
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor: theme
+                                                            .colorScheme
+                                                            .primary,
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
                                                         ),
                                                       ),
                                                       child: Text(
                                                         l10n.retry,
-                                                        style: GoogleFonts.poppins(
-                                                          fontWeight: FontWeight.w600,
-                                                          fontSize: getResponsiveFontSize(context, 12),
-                                                          color: theme.colorScheme.onPrimary,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize:
+                                                              getResponsiveFontSize(
+                                                                  context, 12),
+                                                          color: theme
+                                                              .colorScheme
+                                                              .onPrimary,
                                                         ),
                                                       ),
                                                     ),
@@ -559,11 +659,13 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   ),
                                 ),
                               ),
-                              crossFadeState: isBalanceVisible ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                              crossFadeState: isBalanceVisible
+                                  ? CrossFadeState.showSecond
+                                  : CrossFadeState.showFirst,
                               duration: Duration(milliseconds: 300),
                             ),
                             SizedBox(height: isBalanceVisible ? 20 : 0),
-                                 FadeInUp(
+                            FadeInUp(
                               duration: Duration(milliseconds: 500),
                               from: 30,
                               child: Container(
@@ -597,9 +699,12 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                             SizedBox(height: 12),
                                             GridView.builder(
                                               shrinkWrap: true,
-                                              physics: NeverScrollableScrollPhysics(),
-                                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: isTablet ? 2 : 2,
+                                              physics:
+                                                  NeverScrollableScrollPhysics(),
+                                              gridDelegate:
+                                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount:
+                                                    isTablet ? 2 : 2,
                                                 crossAxisSpacing: 12,
                                                 mainAxisSpacing: 12,
                                                 childAspectRatio: 1.0,
@@ -607,7 +712,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                               itemCount: 4,
                                               itemBuilder: (context, index) {
                                                 return FadeInUp(
-                                                  duration: Duration(milliseconds: 600 + index * 100),
+                                                  duration: Duration(
+                                                      milliseconds:
+                                                          600 + index * 100),
                                                   from: 30,
                                                   child: _MetricCard(
                                                     title: [
@@ -617,33 +724,62 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                                       l10n.newCustomers,
                                                     ][index],
                                                     value: [
-                                                      homeData?.monthlySales?.metrics?.totalAmount != null &&
-                                                              homeData?.monthlySales?.metrics?.monthTarget != null
+                                                      homeData
+                                                                      ?.monthlySales
+                                                                      ?.metrics
+                                                                      ?.totalAmount !=
+                                                                  null &&
+                                                              homeData
+                                                                      ?.monthlySales
+                                                                      ?.metrics
+                                                                      ?.monthTarget !=
+                                                                  null
                                                           ? '${formatNumber(homeData!.monthlySales!.metrics!.totalAmount!)}/${formatNumber(homeData!.monthlySales!.metrics!.monthTarget!)}'
                                                           : 'N/A',
-                                                      homeData?.receivables?.amountDueToday != null
-                                                          ? formatNumber(homeData!.receivables!.amountDueToday!)
+                                                      homeData?.receivables
+                                                                  ?.amountDueToday !=
+                                                              null
+                                                          ? formatNumber(homeData!
+                                                              .receivables!
+                                                              .amountDueToday!)
                                                           : 'N/A',
-                                                      homeData?.additionalMetrics?.todayVisits != null
+                                                      homeData?.additionalMetrics
+                                                                  ?.todayVisits !=
+                                                              null
                                                           ? '${homeData!.additionalMetrics!.todayVisits}'
                                                           : 'N/A',
-                                                      homeData?.additionalMetrics?.newCustomersThisMonth != null
+                                                      homeData?.additionalMetrics
+                                                                  ?.newCustomersThisMonth !=
+                                                              null
                                                           ? '${homeData!.additionalMetrics!.newCustomersThisMonth}'
                                                           : 'N/A',
                                                     ][index],
                                                     subtitle: [
-                                                      l10n.ofTarget(homeData?.monthlySales?.metrics?.achievementPercentage ?? 0),
-                                                      l10n.partners(homeData?.receivables?.partnerCount ?? 0),
+                                                      l10n.ofTarget(homeData
+                                                              ?.monthlySales
+                                                              ?.metrics
+                                                              ?.achievementPercentage ??
+                                                          0),
+                                                      l10n.partners(homeData
+                                                              ?.receivables
+                                                              ?.partnerCount ??
+                                                          0),
                                                       l10n.completedToday,
                                                       l10n.thisMonth,
                                                     ][index],
                                                     icon: [
                                                       Icons.show_chart,
-                                                      Icons.account_balance_wallet,
-                                                      Icons.check_circle_outline,
+                                                      Icons
+                                                          .account_balance_wallet,
+                                                      Icons
+                                                          .check_circle_outline,
                                                       Icons.person_add_alt,
                                                     ][index],
-                                                    achievementPercentage: homeData?.monthlySales?.metrics?.achievementPercentage ?? 0,
+                                                    achievementPercentage: homeData
+                                                            ?.monthlySales
+                                                            ?.metrics
+                                                            ?.achievementPercentage ??
+                                                        0,
                                                   ),
                                                 );
                                               },
@@ -662,7 +798,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                     l10n.quickActions,
                                     style: GoogleFonts.poppins(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: getResponsiveFontSize(context, 16),
+                                      fontSize:
+                                          getResponsiveFontSize(context, 16),
                                       color: theme.colorScheme.onSurface,
                                     ),
                                   ),
@@ -674,13 +811,19 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                           icon: Icons.place,
                                           label: l10n.nearbyCustomers,
                                           onTap: () {
-                                            debugPrint('Tapped Nearby Customers');
-                                            if (Get.isRegistered<DashboardController>()) {
+                                            debugPrint(
+                                                'Tapped Nearby Customers');
+                                            if (Get.isRegistered<
+                                                DashboardController>()) {
                                               Get.toNamed('/nearbycustomer');
                                             } else {
-                                              debugPrint('DashboardController not found');
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Navigation error: Controller not found')),
+                                              debugPrint(
+                                                  'DashboardController not found');
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Navigation error: Controller not found')),
                                               );
                                             }
                                           },
@@ -693,20 +836,30 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                           label: l10n.stock,
                                           onTap: () {
                                             debugPrint('Tapped Stock');
-                                            if (Get.isRegistered<DashboardController>()) {
+                                            if (Get.isRegistered<
+                                                DashboardController>()) {
                                               try {
-                                                Get.find<DashboardController>().createNewDeal();
+                                                Get.find<DashboardController>()
+                                                    .createNewDeal();
                                                 Get.toNamed('/stock');
                                               } catch (e) {
-                                                debugPrint('Error in Stock tap: $e');
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Navigation error: $e')),
+                                                debugPrint(
+                                                    'Error in Stock tap: $e');
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Navigation error: $e')),
                                                 );
                                               }
                                             } else {
-                                              debugPrint('DashboardController not found');
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Navigation error: Controller not found')),
+                                              debugPrint(
+                                                  'DashboardController not found');
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Navigation error: Controller not found')),
                                               );
                                             }
                                           },
@@ -723,33 +876,28 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                               from: 30,
                               child: Column(
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [],
-                                  ),
                                   SizedBox(height: 12),
-                                  Container(
-                                    height: screenSize.height * 0.3,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: theme.colorScheme.surface,
-                                      border: Border.all(color: theme.colorScheme.outline, width: 1),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: theme.colorScheme.shadow.withOpacity(0.05),
-                                          blurRadius: 8,
-                                          offset: Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: NotesWidget(
-                                        height: screenSize.height * 0.3,
-                                        scrollController: _scrollController,
-                                      ),
-                                    ),
-                                  ),
+                                  // Container(
+                                  //   decoration: BoxDecoration(
+                                  //     borderRadius: BorderRadius.circular(12),
+                                  //     color: theme.colorScheme.surface,
+                                  //     border: Border.all(
+                                  //         color: theme.colorScheme.outline,
+                                  //         width: 1),
+                                  //     boxShadow: [
+                                  //       BoxShadow(
+                                  //         color: theme.colorScheme.shadow
+                                  //             .withOpacity(0.05),
+                                  //         blurRadius: 8,
+                                  //         offset: Offset(0, 4),
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  //   child: NotesWidget(
+                                  //     height: screenSize.height * 0.3,
+                                  //     scrollController: _scrollController,
+                                  //   ),
+                                  // ),
                                 ],
                               ),
                             ),
@@ -761,20 +909,25 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                   ),
                 ),
               ),
-          ),
+            ),
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
                 child: _buildCustomersShimmer(),
               ),
             )
           : Center(child: CustomersListScreen()),
-      Center(child: WebViewScreen(url: GetStorage().read('webViewUrl') ?? 'https://onix.boom-solutions.co/web/login?redirect=%2Fodoo%3F')),
+      Center(
+          child: WebViewScreen(
+              url: GetStorage().read('webViewUrl') ??
+                  'https://onix.boom-solutions.co/web/login?redirect=%2Fodoo%3F')),
       isOffline
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 16.0),
                 child: _buildSettingsShimmer(),
               ),
             )
@@ -807,7 +960,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4, color: theme.colorScheme.onError, size: 16),
+                  Icon(Icons.signal_wifi_statusbar_connected_no_internet_4,
+                      color: theme.colorScheme.onError, size: 16),
                   SizedBox(width: 8),
                   Text(
                     l10n.youAreOffline,
@@ -923,7 +1077,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            color:
+                                Theme.of(context).colorScheme.surfaceContainer,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -932,7 +1087,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           width: 80,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            color:
+                                Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -941,7 +1097,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           width: 60,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            color:
+                                Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -950,7 +1107,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           width: 90,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            color:
+                                Theme.of(context).colorScheme.surfaceContainer,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -1060,7 +1218,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                   bottom: 0,
                   child: IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface),
+                    icon: Icon(Icons.add,
+                        color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
               ],
@@ -1080,7 +1239,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                 ),
                 IconButton(
                   onPressed: () {},
-                  icon: Icon(Icons.sort_by_alpha, color: Theme.of(context).colorScheme.onSurface),
+                  icon: Icon(Icons.sort_by_alpha,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
               ],
             ),
@@ -1102,7 +1262,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -1116,7 +1278,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   width: 100,
                                   height: 14,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surfaceContainer,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -1125,7 +1289,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                                   width: 60,
                                   height: 12,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surfaceContainer,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainer,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -1182,7 +1348,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             width: 120,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1191,7 +1359,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                             width: 80,
                             height: 12,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1219,7 +1389,8 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            color:
+                                Theme.of(context).colorScheme.surfaceContainer,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1228,7 +1399,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
                           child: Container(
                             height: 14,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1279,16 +1452,21 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, S.of(context).dashboard),
-          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt, S.of(context).customers),
-          _buildNavItem(2, Icons.public_outlined, Icons.public, S.of(context).odoo),
-          _buildNavItem(3, Icons.settings_outlined, Icons.settings, S.of(context).settings),
+          _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard,
+              S.of(context).dashboard),
+          _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt,
+              S.of(context).customers),
+          _buildNavItem(
+              2, Icons.public_outlined, Icons.public, S.of(context).odoo),
+          _buildNavItem(3, Icons.settings_outlined, Icons.settings,
+              S.of(context).settings),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(
+      int index, IconData icon, IconData activeIcon, String label) {
     bool isSelected = _selectedIndex == index;
     final theme = Theme.of(context);
 
@@ -1300,7 +1478,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected
+              ? theme.colorScheme.primary.withOpacity(0.1)
+              : Colors.transparent,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1308,7 +1488,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
             Icon(
               isSelected ? activeIcon : icon,
               size: 22,
-              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             SizedBox(height: 4),
             Text(
@@ -1316,7 +1498,9 @@ class _SalesDashboardState extends State<SalesDashboard> with SingleTickerProvid
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -1356,7 +1540,9 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final iconColor = title == S.of(context).salesTarget
-        ? (achievementPercentage >= 80 ? theme.colorScheme.primary : theme.colorScheme.secondary)
+        ? (achievementPercentage >= 80
+            ? theme.colorScheme.primary
+            : theme.colorScheme.secondary)
         : title == S.of(context).collections
             ? theme.colorScheme.secondary
             : title == S.of(context).visits
@@ -1504,7 +1690,8 @@ class HomeScreenResponse {
       user: User.fromJson(json['user'] ?? {}),
       monthlySales: MonthlySales.fromJson(json['monthly_sales'] ?? {}),
       receivables: Receivables.fromJson(json['receivables'] ?? {}),
-      additionalMetrics: AdditionalMetrics.fromJson(json['additional_metrics'] ?? {}),
+      additionalMetrics:
+          AdditionalMetrics.fromJson(json['additional_metrics'] ?? {}),
       cashJournal: CashJournal.fromJson(json['cash_journal'] ?? {}),
     );
   }

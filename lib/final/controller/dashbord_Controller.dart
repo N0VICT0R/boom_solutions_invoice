@@ -25,6 +25,8 @@ class DashboardController extends GetxController {
   final noteController = TextEditingController();
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+    int currentIndex = 0;
+
   final ConnectivityService connectivityService = Get.find<ConnectivityService>();
 
   @override
@@ -148,7 +150,7 @@ class DashboardController extends GetxController {
       case '2':
         return Colors.redAccent;
       case '1':
-        return Colors.yellowAccent;
+        return Colors.yellow;
       case '0':
         return Colors.greenAccent;
       default:

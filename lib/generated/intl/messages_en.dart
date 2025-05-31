@@ -98,7 +98,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkConnection": MessageLookupByLibrary.simpleMessage(
       "Check your internet connection or try again later.",
     ),
-    "checkIn": MessageLookupByLibrary.simpleMessage("Check In"),
+    "checkIn": MessageLookupByLibrary.simpleMessage("Add visit Note"),
     "checkInternetConnection": MessageLookupByLibrary.simpleMessage(
       "Check your internet connection or try again later.",
     ),

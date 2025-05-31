@@ -15,8 +15,10 @@ import 'package:boom_solutions_invoice/generated/l10n.dart'; // Import localizat
 // Location Service
 //=======================
 class LocationService {
-  static const String baseUrl = 'http://137.184.205.67:2710';
+  // static const String baseUrl = 'http://137.184.205.67:2710';
   static String get apiToken => GetStorage().read('token') ?? '';
+              final apiUrl = GetStorage().read('apiUrl');
+
 
   Future<(bool, String?)> _checkAndRequestLocationPermissions() async {
     try {
@@ -78,7 +80,7 @@ class LocationService {
         return (false, locationError);
       }
 
-      final url = Uri.parse('$baseUrl/api/v1/partners/$partnerId/location');
+      final url = Uri.parse('$apiUrl/api/v1/partners/$partnerId/location');
       print('Updating location for partner ID $partnerId at URL: $url');
 
       final body = jsonEncode({
@@ -123,12 +125,14 @@ Future<void> launchGoogleMapsByPartnerId({
   required int partnerId,
   required BuildContext context,
 }) async {
-  final String baseUrl = 'http://137.184.205.67:2710/';
+  // final String baseUrl = 'http://137.184.205.67:2710/';
   final String token = GetStorage().read('token') ?? '';
+              final apiUrl = GetStorage().read('apiUrl');
+
 
   try {
     final response = await http.get(
-      Uri.parse('$baseUrl/api/v1/partners/map?api_token=$token'),
+      Uri.parse('$apiUrl/api/v1/partners/map?api_token=$token'),
     );
 
     if (response.statusCode == 200) {
@@ -312,12 +316,13 @@ class CustomerController extends GetxController {
       hasError(false);
 
       final token = GetStorage().read('token') ?? "";
+            final apiUrl = GetStorage().read('apiUrl');
       if (token.isEmpty) {
         hasError(true);
         return;
       }
 
-      final url = "http://137.184.205.67:2710/api/v1/partners/$partnerId/balance?api_token=$token";
+      final url = "$apiUrl/api/v1/partners/$partnerId/balance?api_token=$token";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -358,7 +363,7 @@ class PartnerController extends GetxController {
         return;
       }
 
-      final apiurl = GetStorage().read("apiUrl") ?? 'http://137.184.205.67:2710';
+      final apiurl = GetStorage().read("apiUrl") ;
       final url = '$apiurl/api/v1/partners/$partnerId/balance?api_token=$token';
       final response = await http.get(Uri.parse(url));
 
@@ -446,8 +451,10 @@ class CustomerDetailScreen extends StatelessWidget {
 
     try {
       // Check if partner already has a valid location
-      final String baseUrl = 'http://137.184.205.67:2710/';
+      // final String baseUrl = 'http://137.184.205.67:2710/';
       final String token = GetStorage().read('token') ?? '';
+                  final apiUrl = GetStorage().read('apiUrl');
+
       if (token.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.of(context).no_token)),
@@ -456,7 +463,7 @@ class CustomerDetailScreen extends StatelessWidget {
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/v1/partners/map?api_token=$token'),
+        Uri.parse('$apiUrl/api/v1/partners/map?api_token=$token'),
       );
 
       bool hasValidLocation = false;

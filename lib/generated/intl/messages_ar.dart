@@ -86,7 +86,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cancelButton": MessageLookupByLibrary.simpleMessage("إلغاء"),
     "card": MessageLookupByLibrary.simpleMessage("بطاقة"),
     "cash": MessageLookupByLibrary.simpleMessage("نقدًا"),
-    "checkIn": MessageLookupByLibrary.simpleMessage(" ملخص الزيارة"),
+    "checkIn": MessageLookupByLibrary.simpleMessage(" ملخص الزيارة "),
     "checkInternetConnection": MessageLookupByLibrary.simpleMessage(
       "تحقق من اتصالك بالإنترنت أو حاول مرة أخرى لاحقًا.",
     ),

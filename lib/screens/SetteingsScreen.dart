@@ -87,6 +87,7 @@ class SettingsScreen extends StatelessWidget {
 
             // Theme Settings Card
             _buildThemeSettingsCard(themeController, l10n),
+            SizedBox(height: 16),
 
             _buildLanguageSettingsCard    (l10n),
             SizedBox(height: 16),
