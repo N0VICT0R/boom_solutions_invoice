@@ -453,8 +453,12 @@ class _SalesDashboardState extends State<SalesDashboard>
                                         ),
                                       ),
                                       SizedBox(height: 4),
-                                    NotesWidget(
-                                      height: 30,
+                                    Container(
+                                      width: MediaQuery.of(context).size.width*0.8,
+                                      child: NotesWidget(
+                                        
+                                        height: 30,
+                                      ),
                                     ),
                                     ],
                                   ),

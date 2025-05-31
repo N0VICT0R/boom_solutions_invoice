@@ -73,12 +73,24 @@ class NotesWidget extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                       ),
-                      subtitle: Text(
-                        message,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                        subtitle: LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Calculate max lines based on available width
+                          double width = constraints.maxWidth;
+                          int maxLines = 7;
+                          if (width > 350) {
+                          maxLines =5;
+                          } else if (width > 250) {
+                          maxLines = 7;
+                          }
+                          return Text(
+                          message,
+                          maxLines: maxLines,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          );
+                        },
+                        ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     );
                   },
@@ -136,31 +148,47 @@ class NotesWidget extends StatelessWidget {
 
         if (controller.notes.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  S.of(context)!.noNotesYet,
-                  style: TextStyle(
-                    color: isDark ? Colors.grey[500] : Colors.grey[400],
-                    fontStyle: FontStyle.italic,
-                    fontSize: 14,
-                  ),
+            child:  Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Notes',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[300],
                 ),
-                const SizedBox(height: 10),
-                // Text(
-                //   '"${getRandomQuote(context)}"',
-                //   style: TextStyle(
-                //     color: isDark ? Colors.grey[400] : Colors.grey[600],
-                //     fontStyle: FontStyle.italic,
-                //     fontSize: 12,
-                //   ),
-                //   textAlign: TextAlign.center,
-                //   maxLines: 3,
-                //   overflow: TextOverflow.ellipsis,
-                // ),
-              ],
+          ),
+          if (controller.notes.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${controller.notes.length}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
             ),
+        ],
+      ),
+    ),
+    GestureDetector(
+      onTap: () => _showAllNotesDialog(context, controller.notes),
+      child: AutoFadeText(
+        notes: controller.notes,
+      ),
+    ),
+  ],
+)
           );
         }
 
@@ -283,7 +311,7 @@ class _AutoFadeTextState extends State<AutoFadeText> with SingleTickerProviderSt
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
       ),
       textDirection: TextDirection.ltr,
-      maxLines: 2,
+      maxLines: 1,
     )..layout(maxWidth: MediaQuery.of(context).size.width - 48);
     final isLongText = textPainter.didExceedMaxLines;
 
@@ -310,7 +338,7 @@ class _AutoFadeTextState extends State<AutoFadeText> with SingleTickerProviderSt
           color: controller.getPriorityColor(priority),
           fontWeight: FontWeight.w500,
         ),
-        maxLines: 2,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
       ),
